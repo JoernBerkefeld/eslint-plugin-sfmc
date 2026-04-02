@@ -760,6 +760,10 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             code: 'Platform.Function.Now();',
         },
         {
+            // Now accepts an optional boolean (0-1 args are both valid)
+            code: 'Platform.Function.Now(true);',
+        },
+        {
             code: 'Platform.Function.Trim("hello");',
         },
         {
@@ -772,7 +776,8 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             errors: [{ messageId: 'tooFewArgs' }],
         },
         {
-            code: 'Platform.Function.Now("extra");',
+            // Now accepts at most 1 arg; 2 args should be flagged
+            code: 'Platform.Function.Now(true, "tooMany");',
             errors: [{ messageId: 'tooManyArgs' }],
         },
         {
