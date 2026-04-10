@@ -33,9 +33,13 @@ export default {
             },
 
             SetStatement(node) {
-                if (!node.target) return;
+                if (!node.target) {
+                    return;
+                }
                 const name = node.target.value;
-                if (name.startsWith('@@')) return;
+                if (name.startsWith('@@')) {
+                    return;
+                }
                 if (!declared.has(name.toLowerCase())) {
                     context.report({
                         node: node.target,

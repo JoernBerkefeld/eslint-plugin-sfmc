@@ -49,8 +49,7 @@ export default {
 
             'Program:exit'() {
                 if (!hasPlatformLoad) {
-                    for (let i = 0; i < pendingReports.length; i++) {
-                        const { node, name } = pendingReports[i];
+                    for (const [i, { node, name }] of pendingReports.entries()) {
                         context.report({
                             node,
                             messageId: 'missingLoad',
@@ -97,7 +96,9 @@ function isPlatformLoadCall(node) {
 
 function getCoreObjectUsage(node) {
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') return null;
+    if (callee.type !== 'MemberExpression') {
+        return null;
+    }
 
     if (
         callee.object.type === 'MemberExpression' &&

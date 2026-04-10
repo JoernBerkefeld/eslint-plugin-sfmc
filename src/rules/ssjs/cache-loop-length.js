@@ -32,7 +32,9 @@ export default {
         return {
             ForStatement(node) {
                 const test = node.test;
-                if (!test || test.type !== 'BinaryExpression') return;
+                if (!test || test.type !== 'BinaryExpression') {
+                    return;
+                }
 
                 let lengthExpr = null;
                 if (containsMemberLength(test.right)) {
@@ -41,7 +43,9 @@ export default {
                     lengthExpr = test.left;
                 }
 
-                if (!lengthExpr) return;
+                if (!lengthExpr) {
+                    return;
+                }
 
                 context.report({
                     node: test,
@@ -54,7 +58,9 @@ export default {
 };
 
 function containsMemberLength(node) {
-    if (!node) return false;
+    if (!node) {
+        return false;
+    }
     if (
         node.type === 'MemberExpression' &&
         node.property.type === 'Identifier' &&
@@ -81,7 +87,7 @@ function buildCacheSuggestion(forNode, lengthExpr, context) {
             messageId: 'suggestCacheLength',
             data: { obj: objText },
             fix(fixer) {
-                const lastDecl = init.declarations[init.declarations.length - 1];
+                const lastDecl = init.declarations.at(-1);
                 return [
                     fixer.insertTextAfter(lastDecl, `, ${lenVar} = ${objText}.length`),
                     fixer.replaceText(lengthExpr, lenVar),

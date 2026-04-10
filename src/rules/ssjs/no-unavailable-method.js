@@ -94,11 +94,15 @@ export default {
             // Array.prototype.map = ...  /  Array.isArray = ...  /  String.prototype.trim = ...
             AssignmentExpression(node) {
                 const left = node.left;
-                if (left.type !== 'MemberExpression') return;
+                if (left.type !== 'MemberExpression') {
+                    return;
+                }
 
                 const obj = left.object;
                 const prop = left.property;
-                if (prop.type !== 'Identifier') return;
+                if (prop.type !== 'Identifier') {
+                    return;
+                }
 
                 // Array.X = ...
                 if (obj.type === 'Identifier' && obj.name === 'Array') {
@@ -120,10 +124,14 @@ export default {
 
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
 
                 const prop = callee.property;
-                if (prop.type !== 'Identifier') return;
+                if (prop.type !== 'Identifier') {
+                    return;
+                }
 
                 const methodName = prop.name;
                 const receiver = callee.object;
@@ -134,20 +142,28 @@ export default {
                     receiver.name === 'Array' &&
                     polyfillByStaticName.has(methodName)
                 ) {
-                    if (ignored.has(methodName)) return;
+                    if (ignored.has(methodName)) {
+                        return;
+                    }
                     const entry = polyfillByStaticName.get(methodName);
                     pendingReports.push({ node: prop, entry });
                     return;
                 }
 
                 // ── Prototype methods ─────────────────────────────────────────
-                if (!polyfillByPrototypeName.has(methodName)) return;
-                if (ignored.has(methodName)) return;
+                if (!polyfillByPrototypeName.has(methodName)) {
+                    return;
+                }
+                if (ignored.has(methodName)) {
+                    return;
+                }
 
                 const entry = polyfillByPrototypeName.get(methodName);
 
                 // Skip known SFMC top-level objects to avoid false positives.
-                if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) return;
+                if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
+                    return;
+                }
 
                 // For methods that also exist on String.prototype in ES3
                 // (indexOf, lastIndexOf), only flag when the receiver is
@@ -161,7 +177,9 @@ export default {
                         (receiver.type === 'CallExpression' &&
                             receiver.callee.type === 'MemberExpression' &&
                             polyfillByPrototypeName.has(receiver.callee.property.name));
-                    if (!isDefinitelyArray) return;
+                    if (!isDefinitelyArray) {
+                        return;
+                    }
                 }
 
                 pendingReports.push({ node: prop, entry });
@@ -169,7 +187,9 @@ export default {
 
             'Program:exit'() {
                 for (const { node, entry } of pendingReports) {
-                    if (isAlreadyPolyfilled(entry.method)) continue;
+                    if (isAlreadyPolyfilled(entry.method)) {
+                        continue;
+                    }
 
                     context.report({
                         node,

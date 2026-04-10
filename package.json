@@ -1,18 +1,14 @@
 {
     "name": "eslint-plugin-sfmc",
     "version": "0.1.3",
-    "description": "ESLint plugin for Salesforce Marketing Cloud — AMPscript and Server-Side JavaScript (SSJS)",
+    "description": "ESLint plugin for Salesforce Marketing Cloud â€” AMPscript and Server-Side JavaScript (SSJS)",
     "type": "module",
     "main": "src/index.js",
     "exports": {
         ".": "./src/index.js",
         "./parser": "./src/ampscript-parser.js"
     },
-    "files": [
-        "src",
-        "docs",
-        "LICENSE"
-    ],
+    "files": ["src", "docs", "LICENSE"],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/JoernBerkefeld/eslint-plugin-sfmc.git"
@@ -40,13 +36,24 @@
         "eslint": ">=9.0.0"
     },
     "scripts": {
-        "test": "node --test tests/rules.test.js"
+        "test": "node --test tests/rules.test.js",
+        "lint": "eslint .",
+        "lint:fix": "eslint --fix .",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
     },
     "license": "MIT",
     "engines": {
         "node": ">=18.0.0"
     },
     "devDependencies": {
-        "eslint": "^10.1.0"
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.1.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-jsdoc": "^62.0.0",
+        "eslint-plugin-prettier": "^5.5.0",
+        "eslint-plugin-unicorn": "^64.0.0",
+        "globals": "^17.4.0",
+        "prettier": "^3.8.1"
     }
 }

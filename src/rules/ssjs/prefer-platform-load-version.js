@@ -66,10 +66,7 @@ export default {
                         messageId: 'outdatedVersion',
                         data: { actual: '(none)', expected: expectedVersion },
                         fix(fixer) {
-                            return fixer.insertTextAfter(
-                                arguments_[0],
-                                `, "${expectedVersion}"`,
-                            );
+                            return fixer.insertTextAfter(arguments_[0], `, "${expectedVersion}"`);
                         },
                     });
                     return;

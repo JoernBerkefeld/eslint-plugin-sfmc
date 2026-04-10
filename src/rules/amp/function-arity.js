@@ -20,7 +20,9 @@ export default {
         return {
             FunctionCall(node) {
                 const entry = functionLookup.get(node.name.toLowerCase());
-                if (!entry) return;
+                if (!entry) {
+                    return;
+                }
 
                 const actual = node.arguments.length;
 

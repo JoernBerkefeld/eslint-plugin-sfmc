@@ -14,11 +14,11 @@ export default {
         fixable: 'code',
         docs: {
             description:
-                "Require concatenating an empty string to Platform.Function.ParseJSON() arguments to prevent 500 errors",
+                'Require concatenating an empty string to Platform.Function.ParseJSON() arguments to prevent 500 errors',
         },
         messages: {
             unsafeArg:
-                "Platform.Function.ParseJSON() may throw a 500 if the argument is undefined. " +
+                'Platform.Function.ParseJSON() may throw a 500 if the argument is undefined. ' +
                 "Concatenate an empty string to be safe: ParseJSON({{argText}} + '').",
         },
         schema: [],
@@ -27,12 +27,18 @@ export default {
     create(context) {
         return {
             CallExpression(node) {
-                if (!isParseJSONCall(node)) return;
-                if (node.arguments.length === 0) return;
+                if (!isParseJSONCall(node)) {
+                    return;
+                }
+                if (node.arguments.length === 0) {
+                    return;
+                }
 
                 const arg = node.arguments[0];
 
-                if (isAlreadySafe(arg)) return;
+                if (isAlreadySafe(arg)) {
+                    return;
+                }
 
                 context.report({
                     node: arg,
@@ -75,10 +81,12 @@ function isParseJSONCall(node) {
 
 function isAlreadySafe(arg) {
     // arg + ''  or  '' + arg
-    if (arg.type === 'BinaryExpression' && arg.operator === '+') {
-        if (isEmptyString(arg.left) || isEmptyString(arg.right)) {
-            return true;
-        }
+    if (
+        arg.type === 'BinaryExpression' &&
+        arg.operator === '+' &&
+        (isEmptyString(arg.left) || isEmptyString(arg.right))
+    ) {
+        return true;
     }
 
     // String literal passed directly — already a string

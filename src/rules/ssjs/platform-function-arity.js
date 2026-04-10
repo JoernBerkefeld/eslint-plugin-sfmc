@@ -26,7 +26,9 @@ export default {
         return {
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
 
                 if (
                     callee.object.type === 'MemberExpression' &&
@@ -38,7 +40,9 @@ export default {
                 ) {
                     const methodName = callee.property.name;
                     const entry = platformFunctionLookup.get(methodName.toLowerCase());
-                    if (!entry) return;
+                    if (!entry) {
+                        return;
+                    }
 
                     const actual = node.arguments.length;
 

@@ -51,11 +51,19 @@ export default {
 
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
-                if (callee.object.type !== 'Identifier') return;
-                if (callee.property.type !== 'Identifier') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
+                if (callee.object.type !== 'Identifier') {
+                    return;
+                }
+                if (callee.property.type !== 'Identifier') {
+                    return;
+                }
 
-                if (!wsproxyVariables.has(callee.object.name)) return;
+                if (!wsproxyVariables.has(callee.object.name)) {
+                    return;
+                }
 
                 const methodName = callee.property.name;
                 if (!wsproxyMethodNames.has(methodName.toLowerCase())) {

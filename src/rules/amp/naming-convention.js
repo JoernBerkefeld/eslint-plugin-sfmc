@@ -39,10 +39,14 @@ export default {
         return {
             Variable(node) {
                 const name = node.value;
-                if (!name.startsWith('@') || name.startsWith('@@')) return;
+                if (!name.startsWith('@') || name.startsWith('@@')) {
+                    return;
+                }
 
                 const key = name.toLowerCase();
-                if (reported.has(key)) return;
+                if (reported.has(key)) {
+                    return;
+                }
 
                 if (!pattern.test(name)) {
                     reported.add(key);

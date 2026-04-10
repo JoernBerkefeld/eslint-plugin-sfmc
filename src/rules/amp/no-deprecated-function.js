@@ -30,10 +30,14 @@ export default {
         return {
             FunctionCall(node) {
                 const functionName = node.name || (node.callee && node.callee.name) || '';
-                if (!functionName) return;
+                if (!functionName) {
+                    return;
+                }
 
                 const entry = deprecatedFunctionLookup.get(functionName.toLowerCase());
-                if (!entry) return;
+                if (!entry) {
+                    return;
+                }
 
                 const report = {
                     node,

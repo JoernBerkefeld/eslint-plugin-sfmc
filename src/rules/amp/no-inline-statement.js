@@ -30,7 +30,9 @@ export default {
         return {
             InlineExpression(node) {
                 const expr = node.expression;
-                if (!expr) return;
+                if (!expr) {
+                    return;
+                }
 
                 if (STATEMENT_TYPES.has(expr.type)) {
                     context.report({

@@ -44,7 +44,9 @@ export default {
             },
 
             'Program:exit'() {
-                if (platformLoadLine === null) return;
+                if (platformLoadLine === null) {
+                    return;
+                }
 
                 for (const usage of coreUsages) {
                     if (usage.line < platformLoadLine) {
@@ -87,7 +89,9 @@ function isPlatformLoadCall(node) {
 
 function getCoreObjectUsage(node) {
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') return null;
+    if (callee.type !== 'MemberExpression') {
+        return null;
+    }
 
     if (
         callee.object.type === 'MemberExpression' &&

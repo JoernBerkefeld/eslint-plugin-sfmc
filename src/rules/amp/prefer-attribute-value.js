@@ -32,10 +32,16 @@ const AMPSCRIPT_KEYWORDS = new Set([
 ]);
 
 function isLikelyPersonalization(node) {
-    if (node.type !== 'Identifier') return false;
+    if (node.type !== 'Identifier') {
+        return false;
+    }
     const lower = node.value.toLowerCase();
-    if (functionNames.has(lower)) return false;
-    if (AMPSCRIPT_KEYWORDS.has(lower)) return false;
+    if (functionNames.has(lower)) {
+        return false;
+    }
+    if (AMPSCRIPT_KEYWORDS.has(lower)) {
+        return false;
+    }
     return true;
 }
 
@@ -51,7 +57,7 @@ export default {
         messages: {
             preferAttributeValue:
                 'Use `AttributeValue("{{name}}")` instead of bare `{{name}}` to safely handle missing attributes.',
-            wrapWithAttributeValue: 'Wrap \'{{name}}\' in AttributeValue() for safe attribute access',
+            wrapWithAttributeValue: "Wrap '{{name}}' in AttributeValue() for safe attribute access",
         },
         schema: [],
     },

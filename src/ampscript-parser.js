@@ -74,8 +74,11 @@ function offsetToLoc(offset, lineStarts) {
     let hi = lineStarts.length - 1;
     while (lo < hi) {
         const mid = (lo + hi + 1) >> 1;
-        if (lineStarts[mid] <= offset) lo = mid;
-        else hi = mid - 1;
+        if (lineStarts[mid] <= offset) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
     }
     return { line: lo + 1, column: offset - lineStarts[lo] };
 }
@@ -83,7 +86,9 @@ function offsetToLoc(offset, lineStarts) {
 // ── AST annotation ────────────────────────────────────────────────────────
 
 function annotateNode(node, lineStarts, comments) {
-    if (!node || typeof node !== 'object') return;
+    if (!node || typeof node !== 'object') {
+        return;
+    }
 
     // Rename colliding ESTree types to Amp-prefixed equivalents
     if (node.type && NODE_RENAME[node.type]) {
@@ -103,7 +108,9 @@ function annotateNode(node, lineStarts, comments) {
     }
 
     const keys = visitorKeys[node.type];
-    if (!keys) return;
+    if (!keys) {
+        return;
+    }
 
     for (const key of keys) {
         const child = node[key];

@@ -17,7 +17,9 @@ const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
 function countNewlinesBefore(text, pos) {
     let count = 0;
     for (let index = 0; index < pos; index++) {
-        if (text[index] === '\n') count++;
+        if (text[index] === '\n') {
+            count++;
+        }
     }
     return count;
 }
@@ -73,7 +75,9 @@ export function preprocess(text, filename) {
                 }
             }
 
-            if (depth !== 0) continue;
+            if (depth !== 0) {
+                continue;
+            }
 
             const fullBlock = text.slice(blockStart, index);
             const padding = '\n'.repeat(countNewlinesBefore(text, blockStart));
@@ -100,7 +104,9 @@ export function preprocess(text, filename) {
                 index++;
             }
 
-            if (!found) continue;
+            if (!found) {
+                continue;
+            }
 
             // Wrap in %%[ ]%% so the AMPscript parser receives valid block syntax.
             // %%[ is 3 chars, same as %%= — column offsets for inner code are preserved.

@@ -161,7 +161,7 @@ ampTester.run('amp-no-smart-quotes', ampNoSmartQuotes, {
         {
             // double curly quotes inside a "-delimited string — switch outer to '
             code: '%%[set @x = "\u201Chello\u201D"]%%',
-            output: "%%[set @x = '\"hello\"']%%",
+            output: '%%[set @x = \'"hello"\']%%',
             errors: [
                 {
                     messageId: 'smartQuote',
@@ -1154,7 +1154,9 @@ ssjsTester.run('ssjs-prefer-platform-load-version', ssjsPreferPlatformLoadVersio
         {
             // Missing version argument — fix inserts the default version
             code: 'Platform.Load("core");',
-            errors: [{ messageId: 'outdatedVersion', data: { actual: '(none)', expected: '1.1.5' } }],
+            errors: [
+                { messageId: 'outdatedVersion', data: { actual: '(none)', expected: '1.1.5' } },
+            ],
             output: 'Platform.Load("core", "1.1.5");',
         },
     ],
@@ -1200,69 +1202,159 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
         // ── Prototype methods (unavailable) ──────────────────────────────────
         {
             code: 'var a = [1,2,3]; a.map(function(x){ return x * 2; });',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'map' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'map' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.filter(function(x){ return x > 1; });',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'filter' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'filter' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.find(function(x){ return x === 2; });',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'find' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'find' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.findIndex(function(x){ return x === 2; });',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'findIndex' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'findIndex' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.forEach(function(x){ Write(x); });',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'forEach' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'forEach' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.reduce(function(acc,x){ return acc + x; }, 0);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'reduce' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'reduce' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.reduceRight(function(acc,x){ return acc + x; }, 0);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'reduceRight' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'reduceRight' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.fill(0);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'fill' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'fill' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.entries();',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'entries' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'entries' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.copyWithin(1, 0);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'copyWithin' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'copyWithin' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: 'var a = [1,2,3]; a.includes(2);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'includes' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'includes' },
+                    suggestions: 1,
+                },
+            ],
         },
 
         // ── indexOf / lastIndexOf on literal arrays (unambiguous) ─────────────
         {
             code: '[1,2,3].indexOf(2);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array.prototype', method: 'indexOf' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array.prototype', method: 'indexOf' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: '[1,2,3].lastIndexOf(2);',
-            errors: [{ messageId: 'broken', data: { owner: 'Array.prototype', method: 'lastIndexOf' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'broken',
+                    data: { owner: 'Array.prototype', method: 'lastIndexOf' },
+                    suggestions: 1,
+                },
+            ],
         },
 
         // ── Broken prototype methods ──────────────────────────────────────────
         {
             code: 'var a = [1,2,3]; a.splice(1, 1);',
-            errors: [{ messageId: 'broken', data: { owner: 'Array.prototype', method: 'splice' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'broken',
+                    data: { owner: 'Array.prototype', method: 'splice' },
+                    suggestions: 1,
+                },
+            ],
         },
 
         // ── Static methods ────────────────────────────────────────────────────
         {
             code: 'Array.of(1, 2, 3);',
-            errors: [{ messageId: 'unavailable', data: { owner: 'Array', method: 'of' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'Array', method: 'of' },
+                    suggestions: 1,
+                },
+            ],
         },
 
         // ── Suggestion inserts polyfill at end of file ────────────────────────
@@ -1277,12 +1369,12 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                             data: { owner: 'Array.prototype', method: 'some' },
                             output:
                                 'var a = [1,2,3]; a.some(function(x){ return x > 2; });\n\n' +
-                                "Array.prototype.some = function (predicate) {\n" +
+                                'Array.prototype.some = function (predicate) {\n' +
                                 "    if (typeof predicate !== 'function') { return false; }\n" +
-                                "    for (var i = 0; i < this.length; i++) {\n" +
-                                "        if (predicate(this[i], i, this)) { return true; }\n" +
-                                "    }\n" +
-                                "    return false;\n" +
+                                '    for (var i = 0; i < this.length; i++) {\n' +
+                                '        if (predicate(this[i], i, this)) { return true; }\n' +
+                                '    }\n' +
+                                '    return false;\n' +
                                 '};',
                         },
                     ],
@@ -1368,11 +1460,23 @@ ssjsTester.run('ssjs-no-unavailable-method (String polyfills)', ssjsNoUnavailabl
     invalid: [
         {
             code: 'var s = "hello "; s.trim();',
-            errors: [{ messageId: 'unavailable', data: { owner: 'String.prototype', method: 'trim' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'String.prototype', method: 'trim' },
+                    suggestions: 1,
+                },
+            ],
         },
         {
             code: '"hello".endsWith("lo");',
-            errors: [{ messageId: 'unavailable', data: { owner: 'String.prototype', method: 'endsWith' }, suggestions: 1 }],
+            errors: [
+                {
+                    messageId: 'unavailable',
+                    data: { owner: 'String.prototype', method: 'endsWith' },
+                    suggestions: 1,
+                },
+            ],
         },
     ],
 });
@@ -1383,7 +1487,7 @@ ssjsTester.run('ssjs-prefer-parsejson-safe-arg', ssjsPreferParsejsonSafeArg, {
     valid: [
         { code: "Platform.Function.ParseJSON(someVar + '');" },
         { code: "Platform.Function.ParseJSON('' + someVar);" },
-        { code: 'Platform.Function.ParseJSON("{\\"a\\":1}");' },
+        { code: String.raw`Platform.Function.ParseJSON("{\"a\":1}");` },
         { code: 'var x = 1;' },
     ],
     invalid: [
@@ -1403,10 +1507,7 @@ ssjsTester.run('ssjs-prefer-parsejson-safe-arg', ssjsPreferParsejsonSafeArg, {
 // ─── 20. ssjs-no-switch-default ──────────────────────────────────────────────
 
 ssjsTester.run('ssjs-no-switch-default', ssjsNoSwitchDefault, {
-    valid: [
-        { code: 'switch(x) { case 1: break; case 2: break; }' },
-        { code: 'var x = 1;' },
-    ],
+    valid: [{ code: 'switch(x) { case 1: break; case 2: break; }' }, { code: 'var x = 1;' }],
     invalid: [
         {
             code: 'switch(x) { case 1: break; default: break; }',
@@ -1425,7 +1526,7 @@ ssjsTester.run('ssjs-no-treatascontent-injection', ssjsNoTreatAsContentInjection
     ],
     invalid: [
         {
-            code: 'Platform.Function.TreatAsContent("%%[ Set @x = Trim(\\"" + myVar + "\\") ]%%");',
+            code: String.raw`Platform.Function.TreatAsContent("%%[ Set @x = Trim(\"" + myVar + "\") ]%%");`,
             errors: [{ messageId: 'injection' }],
         },
         {

@@ -31,7 +31,9 @@ export default {
                 // %%[...]%% blocks cannot contain a nested <script> opening tag in
                 // a way the processor would expose, so skip non-script-tag blocks.
                 SCRIPT_OPEN_RE.lastIndex = 0;
-                if (!SCRIPT_OPEN_RE.test(text)) return;
+                if (!SCRIPT_OPEN_RE.test(text)) {
+                    return;
+                }
 
                 // Reset and find all script open tags in this virtual block.
                 SCRIPT_OPEN_RE.lastIndex = 0;

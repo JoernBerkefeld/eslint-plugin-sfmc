@@ -24,7 +24,9 @@ export default {
         return {
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
 
                 if (
                     callee.object.type === 'MemberExpression' &&

@@ -30,7 +30,9 @@ export default {
         return {
             VariableDeclaration(node) {
                 for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') continue;
+                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                        continue;
+                    }
                     const coreType = getCoreInitType(decl.init);
                     if (coreType) {
                         variableTypes.set(decl.id.name, coreType);
@@ -39,7 +41,9 @@ export default {
             },
 
             AssignmentExpression(node) {
-                if (node.left.type !== 'Identifier') return;
+                if (node.left.type !== 'Identifier') {
+                    return;
+                }
                 const coreType = getCoreInitType(node.right);
                 if (coreType) {
                     variableTypes.set(node.left.name, coreType);
@@ -48,18 +52,28 @@ export default {
 
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
-                if (callee.object.type !== 'Identifier') return;
-                if (callee.property.type !== 'Identifier') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
+                if (callee.object.type !== 'Identifier') {
+                    return;
+                }
+                if (callee.property.type !== 'Identifier') {
+                    return;
+                }
 
                 const objectName = callee.object.name;
                 const method = callee.property.name;
 
                 const coreType = variableTypes.get(objectName);
-                if (!coreType) return;
+                if (!coreType) {
+                    return;
+                }
 
                 const objectDef = coreObjectLookup.get(coreType);
-                if (!objectDef) return;
+                if (!objectDef) {
+                    return;
+                }
 
                 const knownMethods = new Set(objectDef.methods.map((m) => m.toLowerCase()));
                 if (!knownMethods.has(method.toLowerCase())) {
@@ -79,9 +93,13 @@ export default {
 };
 
 function getCoreInitType(node) {
-    if (!node || node.type !== 'CallExpression') return null;
+    if (!node || node.type !== 'CallExpression') {
+        return null;
+    }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') return null;
+    if (callee.type !== 'MemberExpression') {
+        return null;
+    }
 
     if (callee.property.type === 'Identifier' && callee.property.name === 'Init') {
         if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {

@@ -13,15 +13,13 @@ export default {
         type: 'problem',
         fixable: 'code',
         docs: {
-            description:
-                'Disallow %%[ or %%= delimiters inside an already-open AMPscript region.',
+            description: 'Disallow %%[ or %%= delimiters inside an already-open AMPscript region.',
             recommended: true,
         },
         messages: {
             nestedDelimiterInScript:
                 'AMPscript delimiter {{delimiter}} is not needed inside a <script language="ampscript"> block.',
-            nestedDelimiter:
-                'Nested {{delimiter}} inside an already-open AMPscript block.',
+            nestedDelimiter: 'Nested {{delimiter}} inside an already-open AMPscript block.',
         },
         schema: [],
     },
@@ -66,7 +64,9 @@ export default {
                     const end = start + delimiter.length;
 
                     // Skip the outermost %%[ opener (it is the block wrapper, not nested)
-                    if (!isScriptBlock && start === outerOpenStart) continue;
+                    if (!isScriptBlock && start === outerOpenStart) {
+                        continue;
+                    }
 
                     const closeToken = delimiter === '%%[' ? ']%%' : '=%%';
 

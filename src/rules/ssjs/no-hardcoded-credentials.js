@@ -43,7 +43,9 @@ export default {
                     functionName = callee.property.name;
                 }
 
-                if (!functionName || !ENCRYPT_FUNCTIONS.has(functionName.toLowerCase())) return;
+                if (!functionName || !ENCRYPT_FUNCTIONS.has(functionName.toLowerCase())) {
+                    return;
+                }
 
                 for (const index of KEY_ARG_INDICES) {
                     const argument = node.arguments[index];

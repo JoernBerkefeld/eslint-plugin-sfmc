@@ -31,7 +31,9 @@ export default {
 
                 const stmts = body.type === 'BlockStatement' ? body.body : [body];
 
-                if (stmts.length === 0) return;
+                if (stmts.length === 0) {
+                    return;
+                }
 
                 const hasGuard = stmts.some((stmt) => containsHasOwnProperty(stmt));
 
@@ -42,34 +44,32 @@ export default {
                     context.report({
                         node,
                         messageId: 'missingGuard',
-                        suggest:
-                            keyName
-                                ? [
-                                      {
-                                          messageId: 'suggestAddGuard',
-                                          data: { obj: objText, key: keyName },
-                                          fix(fixer) {
-                                              if (body.type === 'BlockStatement') {
-                                                  // Wrap the inner content of the existing block.
-                                                  const inner = context.sourceCode
-                                                      .getText(body)
-                                                      .slice(1, -1);
-                                                  return fixer.replaceText(
-                                                      body,
-                                                      `{ if (${objText}.hasOwnProperty(${keyName})) {${inner}} }`,
-                                                  );
-                                              }
-                                              // Single-statement body — create a new block with guard.
-                                              const stmtText =
-                                                  context.sourceCode.getText(body);
+                        suggest: keyName
+                            ? [
+                                  {
+                                      messageId: 'suggestAddGuard',
+                                      data: { obj: objText, key: keyName },
+                                      fix(fixer) {
+                                          if (body.type === 'BlockStatement') {
+                                              // Wrap the inner content of the existing block.
+                                              const inner = context.sourceCode
+                                                  .getText(body)
+                                                  .slice(1, -1);
                                               return fixer.replaceText(
                                                   body,
-                                                  `{ if (${objText}.hasOwnProperty(${keyName})) { ${stmtText} } }`,
+                                                  `{ if (${objText}.hasOwnProperty(${keyName})) {${inner}} }`,
                                               );
-                                          },
+                                          }
+                                          // Single-statement body — create a new block with guard.
+                                          const stmtText = context.sourceCode.getText(body);
+                                          return fixer.replaceText(
+                                              body,
+                                              `{ if (${objText}.hasOwnProperty(${keyName})) { ${stmtText} } }`,
+                                          );
                                       },
-                                  ]
-                                : [],
+                                  },
+                              ]
+                            : [],
                     });
                 }
             },
@@ -78,7 +78,9 @@ export default {
 };
 
 function containsHasOwnProperty(node) {
-    if (!node) return false;
+    if (!node) {
+        return false;
+    }
 
     if (node.type === 'IfStatement' && node.test && hasOwnPropertyTest(node.test)) {
         return true;
@@ -104,7 +106,9 @@ function containsHasOwnProperty(node) {
 }
 
 function hasOwnPropertyTest(node) {
-    if (!node) return false;
+    if (!node) {
+        return false;
+    }
 
     if (
         node.type === 'CallExpression' &&
@@ -129,6 +133,8 @@ function hasOwnPropertyTest(node) {
 /**
  * Extracts the loop key variable name from a for-in left-hand side.
  * Handles both `for (var k in obj)` and `for (k in obj)`.
+ *
+ * @param left
  */
 function getKeyName(left) {
     if (left.type === 'VariableDeclaration' && left.declarations.length > 0) {

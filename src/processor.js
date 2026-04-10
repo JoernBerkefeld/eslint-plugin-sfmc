@@ -22,7 +22,9 @@ const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
 function countNewlinesBefore(text, pos) {
     let count = 0;
     for (let index = 0; index < pos; index++) {
-        if (text[index] === '\n') count++;
+        if (text[index] === '\n') {
+            count++;
+        }
     }
     return count;
 }
@@ -76,7 +78,9 @@ export function preprocess(text, filename) {
                     index++;
                 }
             }
-            if (depth !== 0) continue;
+            if (depth !== 0) {
+                continue;
+            }
             const fullBlock = text.slice(blockStart, index);
             const padding = '\n'.repeat(countNewlinesBefore(text, blockStart));
             blocks.push({
@@ -99,7 +103,9 @@ export function preprocess(text, filename) {
                 }
                 index++;
             }
-            if (!found) continue;
+            if (!found) {
+                continue;
+            }
             const innerCode = text.slice(exprStart + 3, index - 3);
             const wrappedBlock = `%%[${innerCode}]%%`;
             const padding = '\n'.repeat(countNewlinesBefore(text, exprStart));
@@ -120,7 +126,9 @@ export function preprocess(text, filename) {
         const openEnd = match.index + match[0].length;
         SCRIPT_CLOSE_G.lastIndex = openEnd;
         const closeMatch = SCRIPT_CLOSE_G.exec(text);
-        if (!closeMatch) break;
+        if (!closeMatch) {
+            break;
+        }
 
         const jsCode = text.slice(openEnd, closeMatch.index);
         const linesBefore = text.slice(0, openEnd).split('\n');

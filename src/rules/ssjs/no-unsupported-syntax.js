@@ -36,8 +36,7 @@ export default {
             unsupported: '{{label}} are not supported in SFMC SSJS. {{suggestion}}',
             suggestLogicalOr:
                 "Replace ?? with || (note: semantics differ for falsy values like 0, '', and false)",
-            suggestVarReturn:
-                'Assign the object to a variable, then return the variable',
+            suggestVarReturn: 'Assign the object to a variable, then return the variable',
         },
         schema: [
             {
@@ -65,8 +64,12 @@ export default {
         for (const [nodeType, entries] of unsupportedByNodeType) {
             listeners[nodeType] = function (node) {
                 for (const entry of entries) {
-                    if (allowed.has(entry.feature)) continue;
-                    if (entry.test && !entry.test(node)) continue;
+                    if (allowed.has(entry.feature)) {
+                        continue;
+                    }
+                    if (entry.test && !entry.test(node)) {
+                        continue;
+                    }
 
                     const report = {
                         node,
@@ -90,7 +93,9 @@ export default {
                                         node.right.range[0],
                                     );
                                     const offset = between.indexOf('??');
-                                    if (offset === -1) return null;
+                                    if (offset === -1) {
+                                        return null;
+                                    }
                                     const start = node.left.range[1] + offset;
                                     return fixer.replaceTextRange([start, start + 2], '||');
                                 },

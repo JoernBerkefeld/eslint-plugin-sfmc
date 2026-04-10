@@ -23,9 +23,15 @@ export default {
         return {
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
-                if (callee.object.type !== 'Identifier' || callee.object.name !== 'HTTP') return;
-                if (callee.property.type !== 'Identifier') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
+                if (callee.object.type !== 'Identifier' || callee.object.name !== 'HTTP') {
+                    return;
+                }
+                if (callee.property.type !== 'Identifier') {
+                    return;
+                }
 
                 const methodName = callee.property.name;
                 if (!httpMethodNames.has(methodName.toLowerCase())) {

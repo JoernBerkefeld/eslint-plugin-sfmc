@@ -24,7 +24,9 @@ function isRowCountCall(node) {
 }
 
 function extractRowCountVariables(node, into) {
-    if (!node) return;
+    if (!node) {
+        return;
+    }
 
     if (isRowCountCall(node) && node.arguments && node.arguments.length > 0) {
         const argument = node.arguments[0];

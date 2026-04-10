@@ -51,7 +51,7 @@ export default {
                                 messageId: 'smartQuote',
                                 data: { kind },
                                 fix(fixer) {
-                                    const fixed = node.value.replace(
+                                    const fixed = node.value.replaceAll(
                                         /[\u2018\u2019\u201C\u201D\u201A\u201E\u2039\u203A]/g,
                                         (c) => SMART_TO_ASCII[c],
                                     );

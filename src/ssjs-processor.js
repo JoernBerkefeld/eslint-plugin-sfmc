@@ -20,7 +20,9 @@ export function preprocess(text, filename) {
 
         SCRIPT_CLOSE_RE.lastIndex = openEnd;
         const closeMatch = SCRIPT_CLOSE_RE.exec(text);
-        if (!closeMatch) break;
+        if (!closeMatch) {
+            break;
+        }
 
         const jsCode = text.slice(openEnd, closeMatch.index);
 

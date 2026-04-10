@@ -19,8 +19,8 @@ export default {
         messages: {
             injection:
                 'Concatenating dynamic values into TreatAsContent() risks AMPscript injection. ' +
-                "Use Variable.SetValue() to pass values into AMPscript variables, then reference " +
-                "them with @varName inside the TreatAsContent string.",
+                'Use Variable.SetValue() to pass values into AMPscript variables, then reference ' +
+                'them with @varName inside the TreatAsContent string.',
         },
         schema: [],
     },
@@ -28,8 +28,12 @@ export default {
     create(context) {
         return {
             CallExpression(node) {
-                if (!isTreatAsContentCall(node)) return;
-                if (node.arguments.length === 0) return;
+                if (!isTreatAsContentCall(node)) {
+                    return;
+                }
+                if (node.arguments.length === 0) {
+                    return;
+                }
 
                 const arg = node.arguments[0];
                 if (containsConcatenation(arg)) {
