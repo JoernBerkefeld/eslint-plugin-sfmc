@@ -56,6 +56,8 @@ import ssjsNoUnavailableMethod from './rules/ssjs/no-unavailable-method.js';
 import ssjsPreferParsejsonSafeArg from './rules/ssjs/prefer-parsejson-safe-arg.js';
 import ssjsNoSwitchDefault from './rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from './rules/ssjs/no-treatascontent-injection.js';
+import ssjsArgTypes from './rules/ssjs/ssjs-arg-types.js';
+import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
 
 // ── Processors ────────────────────────────────────────────────────────────────
 
@@ -114,6 +116,8 @@ const plugin = {
         'ssjs-prefer-parsejson-safe-arg': ssjsPreferParsejsonSafeArg,
         'ssjs-no-switch-default': ssjsNoSwitchDefault,
         'ssjs-no-treatascontent-injection': ssjsNoTreatAsContentInjection,
+        'ssjs-arg-types': ssjsArgTypes,
+        'ssjs-core-method-arity': ssjsCoreMethodArity,
     },
 
     processors: {
@@ -191,6 +195,8 @@ const ssjsRecommendedRules = {
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'warn',
     'sfmc/ssjs-no-switch-default': 'warn',
     'sfmc/ssjs-no-treatascontent-injection': 'warn',
+    'sfmc/ssjs-arg-types': 'warn',
+    'sfmc/ssjs-core-method-arity': 'warn',
     'no-cond-assign': 'error',
 };
 
@@ -215,6 +221,8 @@ const ssjsStrictRules = {
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'error',
     'sfmc/ssjs-no-switch-default': 'error',
     'sfmc/ssjs-no-treatascontent-injection': 'error',
+    'sfmc/ssjs-arg-types': 'warn',
+    'sfmc/ssjs-core-method-arity': 'error',
     'no-cond-assign': 'error',
 };
 

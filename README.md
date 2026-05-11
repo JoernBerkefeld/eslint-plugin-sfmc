@@ -85,6 +85,8 @@ export default [
 | [`sfmc/ssjs-prefer-parsejson-safe-arg`](docs/rules/ssjs/prefer-parsejson-safe-arg.md)                   | `warn`  | Require string coercion on `ParseJSON` argument                      |
 | [`sfmc/ssjs-no-switch-default`](docs/rules/ssjs/no-switch-default.md)                                   | `warn`  | Disallow `default` clause in `switch` statements                     |
 | [`sfmc/ssjs-no-treatascontent-injection`](docs/rules/ssjs/no-treatascontent-injection.md)               | `warn`  | Flag dynamic string concatenation in `TreatAsContent` calls          |
+| [`sfmc/ssjs-core-method-arity`](docs/rules/ssjs/core-method-arity.md)                                   | `warn`  | Enforce correct argument counts for Core Library object methods      |
+| [`sfmc/ssjs-arg-types`](docs/rules/ssjs/arg-types.md)                                                   | `warn`  | Check that literal arguments match expected parameter types          |
 
 ## Processors
 

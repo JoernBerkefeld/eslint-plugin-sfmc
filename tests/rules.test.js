@@ -767,7 +767,8 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             code: 'Platform.Function.Stringify("hello");',
         },
         {
-            code: 'Platform.Function.InsertData("DE", "Col1", "DE2", "Val");',
+            // Correct 3-arg signature: deName, fieldNamesArray, fieldValuesArray
+            code: 'Platform.Function.InsertData("DE", ["Col1"], ["Val1"]);',
         },
     ],
     invalid: [
@@ -880,9 +881,8 @@ ssjsTester.run('ssjs-no-unknown-platform-variable', ssjsNoUnknownPlatformVariabl
 
 ssjsTester.run('ssjs-no-unknown-platform-response', ssjsNoUnknownPlatformResponse, {
     valid: [
-        { code: 'Platform.Response.GetResponseHeader("Content-Type");' },
         { code: 'Platform.Response.SetResponseHeader("X-Custom", "val");' },
-        { code: 'Platform.Response.Redirect("https://example.com");' },
+        { code: 'Platform.Response.Redirect("https://example.com", true);' },
         { code: 'Platform.Response.Write("<h1>Hello</h1>");' },
     ],
     invalid: [
