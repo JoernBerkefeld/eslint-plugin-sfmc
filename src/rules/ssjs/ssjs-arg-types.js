@@ -92,11 +92,7 @@ export default {
             VariableDeclaration(node) {
                 for (const decl of node.declarations) {
                     if (!decl.init || !decl.id || decl.id.type !== 'Identifier') continue;
-                    if (
-                        decl.init.type === 'NewExpression' &&
-                        decl.init.callee.type === 'Identifier' &&
-                        decl.init.callee.name === 'WSProxy'
-                    ) {
+                    if (isWSProxyConstructor(decl.init)) {
                         wsproxyVars.add(decl.id.name);
                         continue;
                     }
@@ -107,11 +103,7 @@ export default {
 
             AssignmentExpression(node) {
                 if (node.left.type !== 'Identifier') return;
-                if (
-                    node.right.type === 'NewExpression' &&
-                    node.right.callee.type === 'Identifier' &&
-                    node.right.callee.name === 'WSProxy'
-                ) {
+                if (isWSProxyConstructor(node.right)) {
                     wsproxyVars.add(node.left.name);
                     return;
                 }
@@ -267,4 +259,19 @@ function isTypeCompatible(actual, expected) {
     // 'array' is compatible with typed array variants
     if (allowed.includes('array') && (actual === 'string[]' || actual === 'number[]')) return true;
     return false;
+}
+
+function isWSProxyConstructor(node) {
+    if (!node || node.type !== 'NewExpression') return false;
+    const c = node.callee;
+    return (
+        c.type === 'MemberExpression' &&
+        c.property.type === 'Identifier' &&
+        c.property.name === 'WSProxy' &&
+        c.object.type === 'MemberExpression' &&
+        c.object.property.type === 'Identifier' &&
+        c.object.property.name === 'Util' &&
+        c.object.object.type === 'Identifier' &&
+        c.object.object.name === 'Script'
+    );
 }

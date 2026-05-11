@@ -44,6 +44,8 @@ import ssjsNoUnavailableMethod from '../src/rules/ssjs/no-unavailable-method.js'
 import ssjsPreferParsejsonSafeArg from '../src/rules/ssjs/prefer-parsejson-safe-arg.js';
 import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
+import ssjsArgTypes from '../src/rules/ssjs/ssjs-arg-types.js';
+import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
 
 // ── Processor imports ─────────────────────────────────────────────────────────
 
@@ -825,13 +827,13 @@ ssjsTester.run('ssjs-no-unknown-http-method', ssjsNoUnknownHttpMethod, {
 ssjsTester.run('ssjs-no-unknown-wsproxy-method', ssjsNoUnknownWsproxyMethod, {
     valid: [
         {
-            code: 'var api = new WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
+            code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
         },
         {
-            code: "var api = new WSProxy(); api.createItem('DataExtension', {});",
+            code: "var api = new Script.Util.WSProxy(); api.createItem('DataExtension', {});",
         },
         {
-            code: 'var api = new WSProxy(); api.setClientId(12345);',
+            code: 'var api = new Script.Util.WSProxy(); api.setClientId(12345);',
         },
         {
             code: 'someObj.unknownMethod();',
@@ -839,15 +841,15 @@ ssjsTester.run('ssjs-no-unknown-wsproxy-method', ssjsNoUnknownWsproxyMethod, {
     ],
     invalid: [
         {
-            code: 'var api = new WSProxy(); api.query();',
+            code: 'var api = new Script.Util.WSProxy(); api.query();',
             errors: [{ messageId: 'unknownMethod' }],
         },
         {
-            code: 'var api = new WSProxy(); api.fetch();',
+            code: 'var api = new Script.Util.WSProxy(); api.fetch();',
             errors: [{ messageId: 'unknownMethod' }],
         },
         {
-            code: 'var proxy = new WSProxy(); proxy.send();',
+            code: 'var proxy = new Script.Util.WSProxy(); proxy.send();',
             errors: [{ messageId: 'unknownMethod' }],
         },
     ],
@@ -1450,10 +1452,14 @@ ssjsTester.run('ssjs-no-unsupported-syntax (NewExpression)', ssjsNoUnsupportedSy
         { code: 'var d = new Date();' },
         { code: 'var r = new RegExp("abc");' },
         { code: 'var e = new Error("fail");' },
-        { code: 'var proxy = new WSProxy();' },
+        { code: 'var proxy = new Script.Util.WSProxy();' },
         { code: 'var instance = MyClass();' },
     ],
     invalid: [
+        {
+            code: 'var proxy = new WSProxy();',
+            errors: [{ messageId: 'unsupported' }],
+        },
         {
             code: 'var instance = new MyClass();',
             errors: [{ messageId: 'unsupported' }],
@@ -1728,3 +1734,43 @@ describe('combined SFMC processor', () => {
 });
 
 console.log('All combined processor tests passed.');
+
+// ─── 22. ssjs-arg-types ───────────────────────────────────────────────────────
+
+ssjsTester.run('ssjs-arg-types', ssjsArgTypes, {
+    valid: [
+        { code: 'Platform.Function.Lookup("DE", "field", "key", "val");' },
+        { code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});' },
+    ],
+    invalid: [
+        {
+            code: 'Platform.Function.Now(123);',
+            errors: [{ messageId: 'typeMismatch' }],
+        },
+        {
+            code: 'Platform.Function.Lookup(123, "field", "key", "val");',
+            errors: [{ messageId: 'typeMismatch' }],
+        },
+    ],
+});
+
+// ─── 23. ssjs-core-method-arity ───────────────────────────────────────────────
+
+ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
+    valid: [
+        { code: 'DataExtension.Init("key");' },
+        { code: 'BounceEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 });' },
+    ],
+    invalid: [
+        {
+            code: 'DataExtension.Init();',
+            errors: [{ messageId: 'tooFewArgs' }],
+        },
+        {
+            code: 'DataExtension.Init("key", "extra");',
+            errors: [{ messageId: 'tooManyArgs' }],
+        },
+    ],
+});
+
+console.log('All ssjs-arg-types and ssjs-core-method-arity tests passed.');

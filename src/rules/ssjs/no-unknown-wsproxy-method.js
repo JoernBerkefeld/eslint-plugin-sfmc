@@ -29,9 +29,7 @@ export default {
                         decl.id &&
                         decl.id.type === 'Identifier' &&
                         decl.init &&
-                        decl.init.type === 'NewExpression' &&
-                        decl.init.callee.type === 'Identifier' &&
-                        decl.init.callee.name === 'WSProxy'
+                        isWSProxyConstructor(decl.init)
                     ) {
                         wsproxyVariables.add(decl.id.name);
                     }
@@ -41,9 +39,7 @@ export default {
             AssignmentExpression(node) {
                 if (
                     node.left.type === 'Identifier' &&
-                    node.right.type === 'NewExpression' &&
-                    node.right.callee.type === 'Identifier' &&
-                    node.right.callee.name === 'WSProxy'
+                    isWSProxyConstructor(node.right)
                 ) {
                     wsproxyVariables.add(node.left.name);
                 }
@@ -77,3 +73,17 @@ export default {
         };
     },
 };
+function isWSProxyConstructor(node) {
+    if (!node || node.type !== 'NewExpression') return false;
+    const c = node.callee;
+    return (
+        c.type === 'MemberExpression' &&
+        c.property.type === 'Identifier' &&
+        c.property.name === 'WSProxy' &&
+        c.object.type === 'MemberExpression' &&
+        c.object.property.type === 'Identifier' &&
+        c.object.property.name === 'Util' &&
+        c.object.object.type === 'Identifier' &&
+        c.object.object.name === 'Script'
+    );
+}
