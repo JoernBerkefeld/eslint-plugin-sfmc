@@ -764,10 +764,10 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             code: 'Platform.Function.Now(true);',
         },
         {
-            code: 'Platform.Function.Trim("hello");',
+            code: 'Platform.Function.Stringify("hello");',
         },
         {
-            code: 'Platform.Function.Substring("hello", 0, 3);',
+            code: 'Platform.Function.InsertData("DE", "Col1", "DE2", "Val");',
         },
     ],
     invalid: [
@@ -781,7 +781,8 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             errors: [{ messageId: 'tooManyArgs' }],
         },
         {
-            code: 'Platform.Function.Trim("a", "b");',
+            // Stringify accepts exactly 1 arg; 2 args should be flagged
+            code: 'Platform.Function.Stringify("a", "b");',
             errors: [{ messageId: 'tooManyArgs' }],
         },
     ],
@@ -793,8 +794,6 @@ ssjsTester.run('ssjs-no-unknown-http-method', ssjsNoUnknownHttpMethod, {
     valid: [
         { code: 'HTTP.Get("https://example.com");' },
         { code: 'HTTP.Post("https://example.com", "application/json", "{}");' },
-        { code: 'HTTP.GetRequest();' },
-        { code: 'HTTP.PostRequest();' },
     ],
     invalid: [
         {
@@ -807,6 +806,14 @@ ssjsTester.run('ssjs-no-unknown-http-method', ssjsNoUnknownHttpMethod, {
         },
         {
             code: 'HTTP.Patch("https://example.com");',
+            errors: [{ messageId: 'unknownMethod' }],
+        },
+        {
+            code: 'HTTP.GetRequest();',
+            errors: [{ messageId: 'unknownMethod' }],
+        },
+        {
+            code: 'HTTP.PostRequest();',
             errors: [{ messageId: 'unknownMethod' }],
         },
     ],
@@ -899,13 +906,21 @@ ssjsTester.run('ssjs-no-unknown-platform-response', ssjsNoUnknownPlatformRespons
 ssjsTester.run('ssjs-no-unknown-platform-request', ssjsNoUnknownPlatformRequest, {
     valid: [
         { code: 'Platform.Request.GetQueryStringParameter("id");' },
-        { code: 'Platform.Request.GetFormData("email");' },
+        { code: 'Platform.Request.GetFormField("email");' },
         { code: 'Platform.Request.GetPostData();' },
+        { code: 'Platform.Request.GetCookieValue("session");' },
+        { code: 'Platform.Request.GetUserLanguages();' },
+        { code: 'Platform.Request.GetRequestHeader("Authorization");' },
+        // properties — still in PLATFORM_REQUEST_METHODS so rule accepts them as CallExpression
         { code: 'Platform.Request.HasSSL();' },
         { code: 'Platform.Request.Method();' },
         { code: 'Platform.Request.RequestURL();' },
     ],
     invalid: [
+        {
+            code: 'Platform.Request.GetFormData("email");',
+            errors: [{ messageId: 'unknownMethod' }],
+        },
         {
             code: 'Platform.Request.GetHeader();',
             errors: [{ messageId: 'unknownMethod' }],

@@ -1,13 +1,14 @@
 /**
  * Rule: no-unknown-platform-client-browser
  *
- * Flags calls to Platform.ClientBrowser.* where the method name does not
- * exist in the known SFMC Platform.ClientBrowser catalog.
+ * Flags calls to Platform.ClientBrowser.* — this namespace is deprecated.
+ * The methods previously under Platform.ClientBrowser.* are now available
+ * under Platform.Response.* (e.g. Platform.Response.Redirect,
+ * Platform.Response.SetCookie, Platform.Response.RemoveCookie).
+ * All Platform.ClientBrowser.* calls are flagged as unknown.
  */
 
-import { PLATFORM_CLIENT_BROWSER_METHODS } from 'ssjs-data';
-
-const knownMethods = new Set(PLATFORM_CLIENT_BROWSER_METHODS.map((m) => m.name.toLowerCase()));
+const knownMethods = new Set();
 
 export default {
     meta: {
