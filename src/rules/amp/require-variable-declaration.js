@@ -1,5 +1,5 @@
 /**
- * Requires that @variables are declared with `var` before being used in
+ * Requires that `@variables` are declared with `var` before being used in
  * `set` statements. System variables (@@) and personalization strings
  * (no @ prefix) are not affected.
  *

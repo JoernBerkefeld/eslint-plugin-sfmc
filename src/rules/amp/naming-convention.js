@@ -1,5 +1,5 @@
 /**
- * Enforces a naming convention for @variable names in AMPscript.
+ * Enforces a naming convention for `@variable` names in AMPscript.
  *
  * AMPscript variables are case-insensitive, but consistent casing improves
  * readability and reduces confusion during code reviews.

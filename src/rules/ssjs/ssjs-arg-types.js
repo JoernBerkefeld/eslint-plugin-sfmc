@@ -65,16 +65,24 @@ export default {
         const wsproxyVars = new Set(); // varNames assigned new WSProxy()
 
         function checkArgs(entry, args, callName) {
-            if (!entry || !entry.params || entry.params.length === 0) return;
-            for (let i = 0; i < args.length; i++) {
+            if (!entry || !entry.params || entry.params.length === 0) {
+                return;
+            }
+            for (const [i, arg] of args.entries()) {
                 const param = entry.params[i];
-                if (!param) break; // beyond declared params — arity rule handles this
-                if (!param.type || param.type === 'any') continue;
-                const actual = inferArgType(args[i]);
-                if (actual === null) continue; // unknown type (variable/call) — skip
+                if (!param) {
+                    break;
+                } // beyond declared params — arity rule handles this
+                if (!param.type || param.type === 'any') {
+                    continue;
+                }
+                const actual = inferArgType(arg);
+                if (actual === null) {
+                    continue;
+                } // unknown type (variable/call) — skip
                 if (!isTypeCompatible(actual, param.type)) {
                     context.report({
-                        node: args[i],
+                        node: arg,
                         messageId: 'typeMismatch',
                         data: {
                             pos: String(i + 1),
@@ -91,24 +99,32 @@ export default {
         return {
             VariableDeclaration(node) {
                 for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') continue;
+                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                        continue;
+                    }
                     if (isWSProxyConstructor(decl.init)) {
                         wsproxyVars.add(decl.id.name);
                         continue;
                     }
                     const coreType = getCoreInitType(decl.init);
-                    if (coreType) coreVars.set(decl.id.name, coreType);
+                    if (coreType) {
+                        coreVars.set(decl.id.name, coreType);
+                    }
                 }
             },
 
             AssignmentExpression(node) {
-                if (node.left.type !== 'Identifier') return;
+                if (node.left.type !== 'Identifier') {
+                    return;
+                }
                 if (isWSProxyConstructor(node.right)) {
                     wsproxyVars.add(node.left.name);
                     return;
                 }
                 const coreType = getCoreInitType(node.right);
-                if (coreType) coreVars.set(node.left.name, coreType);
+                if (coreType) {
+                    coreVars.set(node.left.name, coreType);
+                }
             },
 
             CallExpression(node) {
@@ -117,12 +133,18 @@ export default {
                 // Global function: Format(...), String(...), Error(...)
                 if (callee.type === 'Identifier') {
                     const entry = ssjsGlobalsLookup.get(callee.name.toLowerCase());
-                    if (entry) checkArgs(entry, node.arguments, callee.name);
+                    if (entry) {
+                        checkArgs(entry, node.arguments, callee.name);
+                    }
                     return;
                 }
 
-                if (callee.type !== 'MemberExpression') return;
-                if (callee.property.type !== 'Identifier') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
+                if (callee.property.type !== 'Identifier') {
+                    return;
+                }
                 const methodName = callee.property.name;
 
                 // Platform.SubNS.Method(...): Platform.Function.X, Platform.Response.X, …
@@ -136,12 +158,13 @@ export default {
                     const lookup = PLATFORM_SUBNS_LOOKUPS.get(subNs);
                     if (lookup) {
                         const entry = lookup.get(methodName.toLowerCase());
-                        if (entry)
+                        if (entry) {
                             checkArgs(
                                 entry,
                                 node.arguments,
                                 `Platform.${callee.object.property.name}.${methodName}`,
                             );
+                        }
                     }
                     return;
                 }
@@ -154,14 +177,18 @@ export default {
                     const topLookup = TOPLEVEL_LOOKUPS.get(objLower);
                     if (topLookup) {
                         const entry = topLookup.get(methodName.toLowerCase());
-                        if (entry) checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                        if (entry) {
+                            checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                        }
                         return;
                     }
 
                     // WSProxy instance method: proxy.Retrieve(...)
                     if (wsproxyVars.has(objName)) {
                         const entry = wsproxyMethodLookup.get(methodName.toLowerCase());
-                        if (entry) checkArgs(entry, node.arguments, `WSProxy.${methodName}`);
+                        if (entry) {
+                            checkArgs(entry, node.arguments, `WSProxy.${methodName}`);
+                        }
                         return;
                     }
 
@@ -171,8 +198,9 @@ export default {
                         const classLookup = coreMethodArityLookup.get(coreType.toLowerCase());
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
-                            if (entry)
+                            if (entry) {
                                 checkArgs(entry, node.arguments, `${coreType}.${methodName}`);
+                            }
                         }
                         return;
                     }
@@ -182,7 +210,9 @@ export default {
                         const classLookup = coreMethodArityLookup.get(objLower);
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
-                            if (entry) checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                            if (entry) {
+                                checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                            }
                         }
                     }
                     return;
@@ -194,7 +224,9 @@ export default {
                     const classLookup = coreMethodArityLookup.get(objectPath.toLowerCase());
                     if (classLookup) {
                         const entry = classLookup.get(methodName.toLowerCase());
-                        if (entry) checkArgs(entry, node.arguments, `${objectPath}.${methodName}`);
+                        if (entry) {
+                            checkArgs(entry, node.arguments, `${objectPath}.${methodName}`);
+                        }
                     }
                 }
             },
@@ -203,10 +235,16 @@ export default {
 };
 
 function getCoreInitType(node) {
-    if (!node || node.type !== 'CallExpression') return null;
+    if (!node || node.type !== 'CallExpression') {
+        return null;
+    }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') return null;
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') return null;
+    if (callee.type !== 'MemberExpression') {
+        return null;
+    }
+    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+        return null;
+    }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {
         return callee.object.name;
     }
@@ -216,13 +254,17 @@ function getCoreInitType(node) {
         callee.object.property.type === 'Identifier'
     ) {
         const fullName = `${callee.object.object.name}.${callee.object.property.name}`;
-        if (coreObjectNames.has(fullName)) return fullName;
+        if (coreObjectNames.has(fullName)) {
+            return fullName;
+        }
     }
     return null;
 }
 
 function getMemberPath(node) {
-    if (node.type === 'Identifier') return node.name;
+    if (node.type === 'Identifier') {
+        return node.name;
+    }
     if (node.type === 'MemberExpression' && node.property.type === 'Identifier') {
         const obj = getMemberPath(node.object);
         return obj ? `${obj}.${node.property.name}` : null;
@@ -231,38 +273,64 @@ function getMemberPath(node) {
 }
 
 function inferArgType(node) {
-    if (!node || node.type === 'SpreadElement') return null;
-    if (node.type === 'Literal') {
-        if (typeof node.value === 'string') return 'string';
-        if (typeof node.value === 'number') return 'number';
-        if (typeof node.value === 'boolean') return 'boolean';
-        if (node.value === null) return 'null';
+    if (!node || node.type === 'SpreadElement') {
+        return null;
     }
-    if (node.type === 'TemplateLiteral' && !node.tag) return 'string';
+    if (node.type === 'Literal') {
+        if (typeof node.value === 'string') {
+            return 'string';
+        }
+        if (typeof node.value === 'number') {
+            return 'number';
+        }
+        if (typeof node.value === 'boolean') {
+            return 'boolean';
+        }
+        if (node.value === null) {
+            return 'null';
+        }
+    }
+    if (node.type === 'TemplateLiteral' && !node.tag) {
+        return 'string';
+    }
     if (node.type === 'ArrayExpression') {
         const elems = node.elements.filter(Boolean);
-        if (elems.length === 0) return 'array';
-        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'string'))
+        if (elems.length === 0) {
+            return 'array';
+        }
+        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'string')) {
             return 'string[]';
-        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'number'))
+        }
+        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'number')) {
             return 'number[]';
+        }
         return 'array';
     }
-    if (node.type === 'ObjectExpression') return 'object';
+    if (node.type === 'ObjectExpression') {
+        return 'object';
+    }
     return null;
 }
 
 function isTypeCompatible(actual, expected) {
-    if (!expected || expected === 'any') return true;
+    if (!expected || expected === 'any') {
+        return true;
+    }
     const allowed = expected.split('|').map((t) => t.trim());
-    if (allowed.includes(actual)) return true;
+    if (allowed.includes(actual)) {
+        return true;
+    }
     // 'array' is compatible with typed array variants
-    if (allowed.includes('array') && (actual === 'string[]' || actual === 'number[]')) return true;
+    if (allowed.includes('array') && (actual === 'string[]' || actual === 'number[]')) {
+        return true;
+    }
     return false;
 }
 
 function isWSProxyConstructor(node) {
-    if (!node || node.type !== 'NewExpression') return false;
+    if (!node || node.type !== 'NewExpression') {
+        return false;
+    }
     const c = node.callee;
     return (
         c.type === 'MemberExpression' &&

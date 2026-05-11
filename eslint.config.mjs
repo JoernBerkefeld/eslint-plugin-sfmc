@@ -75,6 +75,7 @@ export default [
             'jsdoc/check-line-alignment': 2,
             'jsdoc/require-jsdoc': 'off',
             'jsdoc/require-param-type': 'off',
+            'jsdoc/require-returns-type': 'off',
             'jsdoc/tag-lines': ['warn', 'any', { startLines: 1 }],
             'jsdoc/no-undefined-types': 'off',
             'jsdoc/valid-types': 'off',

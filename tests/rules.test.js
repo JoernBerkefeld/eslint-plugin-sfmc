@@ -1740,7 +1740,9 @@ console.log('All combined processor tests passed.');
 ssjsTester.run('ssjs-arg-types', ssjsArgTypes, {
     valid: [
         { code: 'Platform.Function.Lookup("DE", "field", "key", "val");' },
-        { code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});' },
+        {
+            code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
+        },
     ],
     invalid: [
         {
@@ -1759,7 +1761,9 @@ ssjsTester.run('ssjs-arg-types', ssjsArgTypes, {
 ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
     valid: [
         { code: 'DataExtension.Init("key");' },
-        { code: 'BounceEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 });' },
+        {
+            code: 'BounceEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 });',
+        },
     ],
     invalid: [
         {

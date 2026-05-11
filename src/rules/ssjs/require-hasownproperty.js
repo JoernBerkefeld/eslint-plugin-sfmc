@@ -134,7 +134,8 @@ function hasOwnPropertyTest(node) {
  * Extracts the loop key variable name from a for-in left-hand side.
  * Handles both `for (var k in obj)` and `for (k in obj)`.
  *
- * @param left
+ * @param left - The left-hand side node of a ForInStatement.
+ * @returns The key variable name, or null if it cannot be determined.
  */
 function getKeyName(left) {
     if (left.type === 'VariableDeclaration' && left.declarations.length > 0) {

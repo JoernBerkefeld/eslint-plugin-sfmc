@@ -31,7 +31,9 @@ export default {
         const coreVars = new Map(); // varName → className
 
         function checkArity(entry, args, callName, reportNode) {
-            if (!entry) return;
+            if (!entry) {
+                return;
+            }
             const actual = args.length;
             if (actual < entry.minArgs) {
                 context.report({
@@ -51,22 +53,34 @@ export default {
         return {
             VariableDeclaration(node) {
                 for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') continue;
+                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                        continue;
+                    }
                     const coreType = getCoreInitType(decl.init);
-                    if (coreType) coreVars.set(decl.id.name, coreType);
+                    if (coreType) {
+                        coreVars.set(decl.id.name, coreType);
+                    }
                 }
             },
 
             AssignmentExpression(node) {
-                if (node.left.type !== 'Identifier') return;
+                if (node.left.type !== 'Identifier') {
+                    return;
+                }
                 const coreType = getCoreInitType(node.right);
-                if (coreType) coreVars.set(node.left.name, coreType);
+                if (coreType) {
+                    coreVars.set(node.left.name, coreType);
+                }
             },
 
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') return;
-                if (callee.property.type !== 'Identifier') return;
+                if (callee.type !== 'MemberExpression') {
+                    return;
+                }
+                if (callee.property.type !== 'Identifier') {
+                    return;
+                }
                 const methodName = callee.property.name;
 
                 if (callee.object.type === 'Identifier') {
@@ -124,10 +138,16 @@ export default {
 };
 
 function getCoreInitType(node) {
-    if (!node || node.type !== 'CallExpression') return null;
+    if (!node || node.type !== 'CallExpression') {
+        return null;
+    }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') return null;
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') return null;
+    if (callee.type !== 'MemberExpression') {
+        return null;
+    }
+    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+        return null;
+    }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {
         return callee.object.name;
     }
@@ -137,13 +157,17 @@ function getCoreInitType(node) {
         callee.object.property.type === 'Identifier'
     ) {
         const fullName = `${callee.object.object.name}.${callee.object.property.name}`;
-        if (coreObjectNames.has(fullName)) return fullName;
+        if (coreObjectNames.has(fullName)) {
+            return fullName;
+        }
     }
     return null;
 }
 
 function getMemberPath(node) {
-    if (node.type === 'Identifier') return node.name;
+    if (node.type === 'Identifier') {
+        return node.name;
+    }
     if (node.type === 'MemberExpression' && node.property.type === 'Identifier') {
         const obj = getMemberPath(node.object);
         return obj ? `${obj}.${node.property.name}` : null;

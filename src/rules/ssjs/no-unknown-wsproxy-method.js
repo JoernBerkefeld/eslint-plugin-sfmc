@@ -37,10 +37,7 @@ export default {
             },
 
             AssignmentExpression(node) {
-                if (
-                    node.left.type === 'Identifier' &&
-                    isWSProxyConstructor(node.right)
-                ) {
+                if (node.left.type === 'Identifier' && isWSProxyConstructor(node.right)) {
                     wsproxyVariables.add(node.left.name);
                 }
             },
@@ -74,7 +71,9 @@ export default {
     },
 };
 function isWSProxyConstructor(node) {
-    if (!node || node.type !== 'NewExpression') return false;
+    if (!node || node.type !== 'NewExpression') {
+        return false;
+    }
     const c = node.callee;
     return (
         c.type === 'MemberExpression' &&
