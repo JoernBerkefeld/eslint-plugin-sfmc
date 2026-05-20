@@ -9,7 +9,6 @@
  *   - vscode-sfmc-language (IntelliSense, diagnostics)
  */
 
-import { SSJS_GLOBALS_MAP } from 'ssjs-data';
 import * as ampscriptParser from './ampscript-parser.js';
 
 // ── AMPscript rules ───────────────────────────────────────────────────────────
@@ -38,15 +37,10 @@ import ampNoNestedAmpscriptDelimiter from './rules/amp/no-nested-ampscript-delim
 
 import ssjsRequirePlatformLoad from './rules/ssjs/require-platform-load.js';
 import ssjsNoUnsupportedSyntax from './rules/ssjs/no-unsupported-syntax.js';
-import ssjsNoUnknownPlatformFunction from './rules/ssjs/no-unknown-platform-function.js';
-import ssjsNoUnknownCoreMethod from './rules/ssjs/no-unknown-core-method.js';
+import ssjsNoUnknownFunction from './rules/ssjs/no-unknown-function.js';
+import ssjsNoDeprecatedFunction from './rules/ssjs/no-deprecated-function.js';
+import ssjsNoPropertyCall from './rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from './rules/ssjs/platform-function-arity.js';
-import ssjsNoUnknownHttpMethod from './rules/ssjs/no-unknown-http-method.js';
-import ssjsNoUnknownWsproxyMethod from './rules/ssjs/no-unknown-wsproxy-method.js';
-import ssjsNoUnknownPlatformVariable from './rules/ssjs/no-unknown-platform-variable.js';
-import ssjsNoUnknownPlatformResponse from './rules/ssjs/no-unknown-platform-response.js';
-import ssjsNoUnknownPlatformRequest from './rules/ssjs/no-unknown-platform-request.js';
-import ssjsNoUnknownPlatformClientBrowser from './rules/ssjs/no-unknown-platform-client-browser.js';
 import ssjsCacheLoopLength from './rules/ssjs/cache-loop-length.js';
 import ssjsRequireHasownproperty from './rules/ssjs/require-hasownproperty.js';
 import ssjsRequirePlatformLoadOrder from './rules/ssjs/require-platform-load-order.js';
@@ -64,6 +58,9 @@ import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
 import ampscriptProcessor from './ampscript-processor.js';
 import ssjsProcessor from './ssjs-processor.js';
 import combinedProcessor from './processor.js';
+
+// ── Data imports ──────────────────────────────────────────────────────────────
+import { SSJS_GLOBALS_MAP } from 'ssjs-data';
 
 // ── Plugin definition ─────────────────────────────────────────────────────────
 
@@ -98,15 +95,10 @@ const plugin = {
         // SSJS rules (ssjs- prefix)
         'ssjs-require-platform-load': ssjsRequirePlatformLoad,
         'ssjs-no-unsupported-syntax': ssjsNoUnsupportedSyntax,
-        'ssjs-no-unknown-platform-function': ssjsNoUnknownPlatformFunction,
-        'ssjs-no-unknown-core-method': ssjsNoUnknownCoreMethod,
+        'ssjs-no-unknown-function': ssjsNoUnknownFunction,
+        'ssjs-no-deprecated-function': ssjsNoDeprecatedFunction,
+        'ssjs-no-property-call': ssjsNoPropertyCall,
         'ssjs-platform-function-arity': ssjsPlatformFunctionArity,
-        'ssjs-no-unknown-http-method': ssjsNoUnknownHttpMethod,
-        'ssjs-no-unknown-wsproxy-method': ssjsNoUnknownWsproxyMethod,
-        'ssjs-no-unknown-platform-variable': ssjsNoUnknownPlatformVariable,
-        'ssjs-no-unknown-platform-response': ssjsNoUnknownPlatformResponse,
-        'ssjs-no-unknown-platform-request': ssjsNoUnknownPlatformRequest,
-        'ssjs-no-unknown-platform-client-browser': ssjsNoUnknownPlatformClientBrowser,
         'ssjs-cache-loop-length': ssjsCacheLoopLength,
         'ssjs-require-hasownproperty': ssjsRequireHasownproperty,
         'ssjs-require-platform-load-order': ssjsRequirePlatformLoadOrder,
@@ -177,15 +169,10 @@ const ampStrictRules = {
 const ssjsRecommendedRules = {
     'sfmc/ssjs-require-platform-load': 'error',
     'sfmc/ssjs-no-unsupported-syntax': 'error',
-    'sfmc/ssjs-no-unknown-platform-function': 'error',
-    'sfmc/ssjs-no-unknown-core-method': 'warn',
+    'sfmc/ssjs-no-unknown-function': 'error',
+    'sfmc/ssjs-no-deprecated-function': 'error',
+    'sfmc/ssjs-no-property-call': 'error',
     'sfmc/ssjs-platform-function-arity': 'error',
-    'sfmc/ssjs-no-unknown-http-method': 'error',
-    'sfmc/ssjs-no-unknown-wsproxy-method': 'warn',
-    'sfmc/ssjs-no-unknown-platform-variable': 'error',
-    'sfmc/ssjs-no-unknown-platform-response': 'error',
-    'sfmc/ssjs-no-unknown-platform-request': 'error',
-    'sfmc/ssjs-no-unknown-platform-client-browser': 'error',
     'sfmc/ssjs-cache-loop-length': 'warn',
     'sfmc/ssjs-require-hasownproperty': 'warn',
     'sfmc/ssjs-require-platform-load-order': 'error',
@@ -203,15 +190,10 @@ const ssjsRecommendedRules = {
 const ssjsStrictRules = {
     'sfmc/ssjs-require-platform-load': 'error',
     'sfmc/ssjs-no-unsupported-syntax': 'error',
-    'sfmc/ssjs-no-unknown-platform-function': 'error',
-    'sfmc/ssjs-no-unknown-core-method': 'error',
+    'sfmc/ssjs-no-unknown-function': 'error',
+    'sfmc/ssjs-no-deprecated-function': 'error',
+    'sfmc/ssjs-no-property-call': 'error',
     'sfmc/ssjs-platform-function-arity': 'error',
-    'sfmc/ssjs-no-unknown-http-method': 'error',
-    'sfmc/ssjs-no-unknown-wsproxy-method': 'error',
-    'sfmc/ssjs-no-unknown-platform-variable': 'error',
-    'sfmc/ssjs-no-unknown-platform-response': 'error',
-    'sfmc/ssjs-no-unknown-platform-request': 'error',
-    'sfmc/ssjs-no-unknown-platform-client-browser': 'error',
     'sfmc/ssjs-cache-loop-length': 'error',
     'sfmc/ssjs-require-hasownproperty': 'error',
     'sfmc/ssjs-require-platform-load-order': 'error',

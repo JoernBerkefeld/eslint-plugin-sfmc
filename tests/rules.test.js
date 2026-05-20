@@ -27,14 +27,10 @@ import ampRequireRowcountCheck from '../src/rules/amp/require-rowcount-check.js'
 
 import ssjsRequirePlatformLoad from '../src/rules/ssjs/require-platform-load.js';
 import ssjsNoUnsupportedSyntax from '../src/rules/ssjs/no-unsupported-syntax.js';
-import ssjsNoUnknownPlatformFunction from '../src/rules/ssjs/no-unknown-platform-function.js';
-import ssjsNoUnknownCoreMethod from '../src/rules/ssjs/no-unknown-core-method.js';
+import ssjsNoUnknownFunction from '../src/rules/ssjs/no-unknown-function.js';
+import ssjsNoDeprecatedFunction from '../src/rules/ssjs/no-deprecated-function.js';
+import ssjsNoPropertyCall from '../src/rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from '../src/rules/ssjs/platform-function-arity.js';
-import ssjsNoUnknownHttpMethod from '../src/rules/ssjs/no-unknown-http-method.js';
-import ssjsNoUnknownWsproxyMethod from '../src/rules/ssjs/no-unknown-wsproxy-method.js';
-import ssjsNoUnknownPlatformVariable from '../src/rules/ssjs/no-unknown-platform-variable.js';
-import ssjsNoUnknownPlatformResponse from '../src/rules/ssjs/no-unknown-platform-response.js';
-import ssjsNoUnknownPlatformRequest from '../src/rules/ssjs/no-unknown-platform-request.js';
 import ssjsCacheLoopLength from '../src/rules/ssjs/cache-loop-length.js';
 import ssjsRequireHasownproperty from '../src/rules/ssjs/require-hasownproperty.js';
 import ssjsRequirePlatformLoadOrder from '../src/rules/ssjs/require-platform-load-order.js';
@@ -693,60 +689,77 @@ ssjsModuleTester.run('ssjs-no-unsupported-syntax (module)', ssjsNoUnsupportedSyn
     ],
 });
 
-// ─── 3. ssjs-no-unknown-platform-function ─────────────────────────────────────
+// ─── 3. ssjs-no-unknown-function ──────────────────────────────────────────────
 
-ssjsTester.run('ssjs-no-unknown-platform-function', ssjsNoUnknownPlatformFunction, {
+ssjsTester.run('ssjs-no-unknown-function', ssjsNoUnknownFunction, {
     valid: [
+        // Platform.Function — known method
         { code: 'Platform.Function.Lookup("DE", "Field", "Key", "Val");' },
-        { code: 'Platform.Function.InsertData("DE", "Col", "Val");' },
-        { code: 'Platform.Function.Now();' },
-        { code: 'var rows = Platform.Function.LookupRows("DE", "K", "V");' },
+        { code: 'Platform.Function.LookupRows("DE", "K", "V");' },
+        // Platform.Variable — known methods
+        { code: 'Platform.Variable.GetValue("myVar");' },
+        { code: 'Platform.Variable.SetValue("myVar", "x");' },
+        // Platform.Request — known method
+        { code: 'Platform.Request.GetQueryStringParameter("id");' },
+        // Platform.Response — known method
+        { code: 'Platform.Response.Write("<p>Hello</p>");' },
+        // HTTP — known methods
+        { code: 'HTTP.Get("https://example.com");' },
+        { code: 'HTTP.Post("https://example.com", "application/json", "{}");' },
+        // Core Library — valid instance method
+        { code: 'var de = DataExtension.Init("MyDE"); de.Retrieve();' },
+        { code: 'var sub = Subscriber.Init("s"); sub.Add();' },
+        // Core Library — untracked variable (no false positive)
+        { code: 'var x = somethingElse(); x.Anything();' },
+        // WSProxy — valid method
+        {
+            code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
+        },
+        { code: 'var api = new Script.Util.WSProxy(); api.setClientId(12345);' },
+        // WSProxy — untracked variable (no false positive)
+        { code: 'someObj.unknownMethod();' },
     ],
     invalid: [
+        // Platform.Function — unknown method
+        {
+            code: 'Platform.Function.FetchRows("DE");',
+            errors: [{ messageId: 'unknownPlatformMethod' }],
+        },
         {
             code: 'Platform.Function.DoSomethingFake();',
-            errors: [{ messageId: 'unknownFunction' }],
+            errors: [{ messageId: 'unknownPlatformMethod' }],
+        },
+        // Platform.Variable — unknown method
+        {
+            code: 'Platform.Variable.Delete("myVar");',
+            errors: [{ messageId: 'unknownPlatformMethod' }],
+        },
+        // HTTP — unknown method
+        {
+            code: 'HTTP.Put("https://example.com");',
+            errors: [{ messageId: 'unknownHttpMethod' }],
         },
         {
-            code: 'Platform.Function.FetchRows();',
-            errors: [{ messageId: 'unknownFunction' }],
+            code: 'HTTP.Patch("https://example.com");',
+            errors: [{ messageId: 'unknownHttpMethod' }],
         },
-        {
-            code: 'Platform.Function.Query("SELECT 1");',
-            errors: [{ messageId: 'unknownFunction' }],
-        },
-    ],
-});
-
-// ─── 4. ssjs-no-unknown-core-method ───────────────────────────────────────────
-
-ssjsTester.run('ssjs-no-unknown-core-method', ssjsNoUnknownCoreMethod, {
-    valid: [
-        {
-            code: 'var de = DataExtension.Init("MyDE"); de.Retrieve();',
-        },
-        {
-            code: 'var sub = Subscriber.Init("s"); sub.Add();',
-        },
-        {
-            code: 'var ts = TriggeredSend.Init("ts"); ts.Send();',
-        },
-        {
-            code: 'var x = somethingElse(); x.Anything();',
-        },
-    ],
-    invalid: [
+        // Core Library — unknown instance method
         {
             code: 'var de = DataExtension.Init("MyDE"); de.Execute();',
-            errors: [{ messageId: 'unknownMethod' }],
+            errors: [{ messageId: 'unknownCoreMethod' }],
         },
         {
             code: 'var sub = Subscriber.Init("s"); sub.Send();',
-            errors: [{ messageId: 'unknownMethod' }],
+            errors: [{ messageId: 'unknownCoreMethod' }],
+        },
+        // WSProxy — unknown method
+        {
+            code: 'var api = new Script.Util.WSProxy(); api.query();',
+            errors: [{ messageId: 'unknownWsproxyMethod' }],
         },
         {
-            code: 'var e = Email.Init("e"); e.Foo();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var proxy = new Script.Util.WSProxy(); proxy.fetch();',
+            errors: [{ messageId: 'unknownWsproxyMethod' }],
         },
     ],
 });
@@ -791,149 +804,107 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
     ],
 });
 
-// ─── 6. ssjs-no-unknown-http-method ───────────────────────────────────────────
+// ─── 6. ssjs-no-deprecated-function ───────────────────────────────────────────
 
-ssjsTester.run('ssjs-no-unknown-http-method', ssjsNoUnknownHttpMethod, {
+ssjsTester.run('ssjs-no-deprecated-function', ssjsNoDeprecatedFunction, {
     valid: [
-        { code: 'HTTP.Get("https://example.com");' },
-        { code: 'HTTP.Post("https://example.com", "application/json", "{}");' },
+        // Non-deprecated functions
+        { code: 'Platform.Function.ContentBlockByKey("MyBlock");' },
+        { code: 'Platform.Function.ContentBlockById(12345);' },
+        { code: 'var de = DataExtension.Init("MyDE"); de.Retrieve();' },
+        // Unrelated bare call — not deprecated
+        { code: 'Write("hello");' },
     ],
     invalid: [
+        // Bare global alias
         {
-            code: 'HTTP.Put("https://example.com");',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var html = ContentAreaByName("Public Content/MyBlock");',
+            errors: [{ messageId: 'deprecatedGlobal' }],
         },
         {
-            code: 'HTTP.Delete("https://example.com");',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var html = ContentArea(12345);',
+            errors: [{ messageId: 'deprecatedGlobal' }],
+        },
+        // Platform.Function deprecated
+        {
+            code: 'Platform.Function.ContentAreaByName("Public Content/MyBlock");',
+            errors: [{ messageId: 'deprecatedPlatformFunction' }],
         },
         {
-            code: 'HTTP.Patch("https://example.com");',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'Platform.Function.ContentArea(12345);',
+            errors: [{ messageId: 'deprecatedPlatformFunction' }],
+        },
+        // ContentAreaObj static method
+        {
+            code: 'var results = ContentAreaObj.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "myCA" });',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
         },
         {
-            code: 'HTTP.GetRequest();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'ContentAreaObj.Add({ CustomerKey: "test" });',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
+        },
+        // ContentAreaObj instance method
+        {
+            code: 'var area = ContentAreaObj.Init("myCA"); area.Update({ Name: "New" });',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
         },
         {
-            code: 'HTTP.PostRequest();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var area = ContentAreaObj.Init("myCA"); area.Remove();',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
         },
     ],
 });
 
-// ─── 7. ssjs-no-unknown-wsproxy-method ────────────────────────────────────────
+// ─── 7. ssjs-no-property-call ─────────────────────────────────────────────────
 
-ssjsTester.run('ssjs-no-unknown-wsproxy-method', ssjsNoUnknownWsproxyMethod, {
+ssjsTester.run('ssjs-no-property-call', ssjsNoPropertyCall, {
     valid: [
-        {
-            code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
-        },
-        {
-            code: "var api = new Script.Util.WSProxy(); api.createItem('DataExtension', {});",
-        },
-        {
-            code: 'var api = new Script.Util.WSProxy(); api.setClientId(12345);',
-        },
-        {
-            code: 'someObj.unknownMethod();',
-        },
-    ],
-    invalid: [
-        {
-            code: 'var api = new Script.Util.WSProxy(); api.query();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'var api = new Script.Util.WSProxy(); api.fetch();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'var proxy = new Script.Util.WSProxy(); proxy.send();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-    ],
-});
-
-// ─── 8. ssjs-no-unknown-platform-variable ─────────────────────────────────────
-
-ssjsTester.run('ssjs-no-unknown-platform-variable', ssjsNoUnknownPlatformVariable, {
-    valid: [
-        { code: 'Platform.Variable.GetValue("myVar");' },
-        { code: 'Platform.Variable.SetValue("myVar", "val");' },
-        { code: 'var x = 1;' },
-    ],
-    invalid: [
-        {
-            code: 'Platform.Variable.Delete("myVar");',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'Platform.Variable.Lookup();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'Platform.Variable.Clear();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-    ],
-});
-
-// ─── 9. ssjs-no-unknown-platform-response ─────────────────────────────────────
-
-ssjsTester.run('ssjs-no-unknown-platform-response', ssjsNoUnknownPlatformResponse, {
-    valid: [
-        { code: 'Platform.Response.SetResponseHeader("X-Custom", "val");' },
-        { code: 'Platform.Response.Redirect("https://example.com", true);' },
-        { code: 'Platform.Response.Write("<h1>Hello</h1>");' },
-    ],
-    invalid: [
-        {
-            code: 'Platform.Response.Send("data");',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'Platform.Response.Flush();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-        {
-            code: 'Platform.Response.End();',
-            errors: [{ messageId: 'unknownMethod' }],
-        },
-    ],
-});
-
-// ─── 10. ssjs-no-unknown-platform-request ─────────────────────────────────────
-
-ssjsTester.run('ssjs-no-unknown-platform-request', ssjsNoUnknownPlatformRequest, {
-    valid: [
+        // Properties accessed correctly (no parentheses)
+        { code: 'var m = Platform.Request.Method;' },
+        { code: 'var ip = Platform.Request.ClientIP;' },
+        { code: 'var ct = Platform.Response.ContentType;' },
+        // Real methods called correctly (with parentheses)
         { code: 'Platform.Request.GetQueryStringParameter("id");' },
-        { code: 'Platform.Request.GetFormField("email");' },
-        { code: 'Platform.Request.GetPostData();' },
-        { code: 'Platform.Request.GetCookieValue("session");' },
-        { code: 'Platform.Request.GetUserLanguages();' },
-        { code: 'Platform.Request.GetRequestHeader("Authorization");' },
-        // properties — still in PLATFORM_REQUEST_METHODS so rule accepts them as CallExpression
-        { code: 'Platform.Request.HasSSL();' },
-        { code: 'Platform.Request.Method();' },
-        { code: 'Platform.Request.RequestURL();' },
+        { code: 'Platform.Response.Write("<p>Hi</p>");' },
     ],
     invalid: [
+        // Platform.Request property read with parens — fix: remove ()
         {
-            code: 'Platform.Request.GetFormData("email");',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var m = Platform.Request.Method();',
+            errors: [{ messageId: 'propertyReadWithCall' }],
+            output: 'var m = Platform.Request.Method;',
         },
         {
-            code: 'Platform.Request.GetHeader();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'var ip = Platform.Request.ClientIP();',
+            errors: [{ messageId: 'propertyReadWithCall' }],
+            output: 'var ip = Platform.Request.ClientIP;',
         },
         {
-            code: 'Platform.Request.GetCookie();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'if (Platform.Request.HasSSL()) {}',
+            errors: [{ messageId: 'propertyReadWithCall' }],
+            output: 'if (Platform.Request.HasSSL) {}',
+        },
+        // Platform.Request property called with args — read-only, no fix
+        {
+            code: 'Platform.Request.Method("POST");',
+            errors: [{ messageId: 'readOnlyPropertySet' }],
+        },
+        // Platform.Response property read with parens — fix: remove ()
+        {
+            code: 'var ct = Platform.Response.ContentType();',
+            errors: [{ messageId: 'propertyReadWithCall' }],
+            output: 'var ct = Platform.Response.ContentType;',
+        },
+        // Platform.Response property set via function call — fix: convert to assignment
+        {
+            code: 'Platform.Response.ContentType("application/json");',
+            errors: [{ messageId: 'writablePropertySet' }],
+            output: 'Platform.Response.ContentType = "application/json";',
         },
         {
-            code: 'Platform.Request.Body();',
-            errors: [{ messageId: 'unknownMethod' }],
+            code: 'Platform.Response.CharacterSet("UTF-8");',
+            errors: [{ messageId: 'writablePropertySet' }],
+            output: 'Platform.Response.CharacterSet = "UTF-8";',
         },
     ],
 });

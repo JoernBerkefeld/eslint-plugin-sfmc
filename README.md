@@ -65,19 +65,14 @@ export default [
 
 | Rule                                                                                                    | Default | Description                                                          |
 | ------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------- |
-| [`sfmc/ssjs-require-platform-load`](docs/rules/ssjs/require-platform-load.md)                           | `error` | Require `Platform.Load("core")` before Core usage                    |
+| [`sfmc/ssjs-require-platform-load`](docs/rules/ssjs/require-platform-load.md)                           | `error` | Require `Platform.Load("core")` before Core or requiresCoreLoad globals |
 | [`sfmc/ssjs-no-unsupported-syntax`](docs/rules/ssjs/no-unsupported-syntax.md)                           | `error` | Flag ES6+ syntax not supported by SFMC                               |
-| [`sfmc/ssjs-no-unknown-platform-function`](docs/rules/ssjs/no-unknown-platform-function.md)             | `error` | Disallow unknown `Platform.Function.*` methods                       |
+| [`sfmc/ssjs-no-unknown-function`](docs/rules/ssjs/no-unknown-function.md)                               | `error` | Disallow unknown methods on Platform.*, HTTP, Core Library, and WSProxy |
+| [`sfmc/ssjs-no-deprecated-function`](docs/rules/ssjs/no-deprecated-function.md)                         | `error` | Flag use of deprecated SFMC SSJS APIs (e.g. ContentArea, ContentAreaObj) |
+| [`sfmc/ssjs-no-property-call`](docs/rules/ssjs/no-property-call.md)                                     | `error` | Disallow calling Platform.Request/Response properties as functions   |
 | [`sfmc/ssjs-platform-function-arity`](docs/rules/ssjs/platform-function-arity.md)                       | `error` | Enforce correct arity for `Platform.Function.*`                      |
-| [`sfmc/ssjs-no-unknown-http-method`](docs/rules/ssjs/no-unknown-http-method.md)                         | `error` | Disallow unknown `HTTP.*` methods                                    |
-| [`sfmc/ssjs-no-unknown-platform-variable`](docs/rules/ssjs/no-unknown-platform-variable.md)             | `error` | Disallow unknown `Platform.Variable.*` methods                       |
-| [`sfmc/ssjs-no-unknown-platform-response`](docs/rules/ssjs/no-unknown-platform-response.md)             | `error` | Disallow unknown `Platform.Response.*` methods                       |
-| [`sfmc/ssjs-no-unknown-platform-request`](docs/rules/ssjs/no-unknown-platform-request.md)               | `error` | Disallow unknown `Platform.Request.*` methods                        |
 | [`sfmc/ssjs-require-platform-load-order`](docs/rules/ssjs/require-platform-load-order.md)               | `error` | Require `Platform.Load()` before Core usage in order                 |
 | [`sfmc/ssjs-no-hardcoded-credentials`](docs/rules/ssjs/no-hardcoded-credentials.md)                     | `error` | Flag hardcoded keys in encryption calls                              |
-| [`sfmc/ssjs-no-unknown-platform-client-browser`](docs/rules/ssjs/no-unknown-platform-client-browser.md) | `error` | Disallow unknown `Platform.ClientBrowser.*` methods                  |
-| [`sfmc/ssjs-no-unknown-core-method`](docs/rules/ssjs/no-unknown-core-method.md)                         | `warn`  | Disallow unknown methods on Core library objects                     |
-| [`sfmc/ssjs-no-unknown-wsproxy-method`](docs/rules/ssjs/no-unknown-wsproxy-method.md)                   | `warn`  | Disallow unknown WSProxy methods                                     |
 | [`sfmc/ssjs-cache-loop-length`](docs/rules/ssjs/cache-loop-length.md)                                   | `warn`  | Require caching `.length` in for-loops                               |
 | [`sfmc/ssjs-require-hasownproperty`](docs/rules/ssjs/require-hasownproperty.md)                         | `warn`  | Require `hasOwnProperty` guard in for-in loops                       |
 | [`sfmc/ssjs-prefer-platform-load-version`](docs/rules/ssjs/prefer-platform-load-version.md)             | `warn`  | Enforce a minimum `Platform.Load` version string                     |

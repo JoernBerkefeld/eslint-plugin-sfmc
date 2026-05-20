@@ -10,9 +10,15 @@
  * reported violation so ESLint does not duplicate the insertion.
  */
 
-import { coreObjectNames } from 'ssjs-data';
+import { coreObjectNames, SSJS_GLOBALS } from 'ssjs-data';
 
 const TOP_LEVEL_CORE_NAMES = new Set([...coreObjectNames].map((n) => n.split('.')[0]));
+
+// Globals that resolve at runtime only after Platform.Load("core", ...) has been called.
+// E.g. Now(), Write(), GUID(), Base64Encode(), Attribute.GetValue(), DateTime.Parse(), …
+const REQUIRES_CORE_LOAD_GLOBALS = new Set(
+    SSJS_GLOBALS.filter((g) => g.requiresCoreLoad).map((g) => g.name.toLowerCase()),
+);
 
 const PLATFORM_LOAD_STATEMENT = 'Platform.Load("core", "1.1.5");\n';
 
@@ -96,10 +102,20 @@ function isPlatformLoadCall(node) {
 
 function getCoreObjectUsage(node) {
     const callee = node.callee;
+
+    // Bare call: Now(), Write(), GUID(), Base64Encode(), Redirect(), …
+    if (callee.type === 'Identifier') {
+        if (REQUIRES_CORE_LOAD_GLOBALS.has(callee.name.toLowerCase())) {
+            return callee.name;
+        }
+        return null;
+    }
+
     if (callee.type !== 'MemberExpression') {
         return null;
     }
 
+    // Nested Core Library call: DataExtension.Rows.Init(…)
     if (
         callee.object.type === 'MemberExpression' &&
         callee.object.object.type === 'Identifier' &&
@@ -110,14 +126,17 @@ function getCoreObjectUsage(node) {
         return `${callee.object.object.name}.${callee.object.property.name}`;
     }
 
-    if (
-        callee.object.type === 'Identifier' &&
-        TOP_LEVEL_CORE_NAMES.has(callee.object.name) &&
-        callee.property.type === 'Identifier'
-    ) {
-        const method = callee.property.name;
-        if (method === 'Init') {
-            return callee.object.name;
+    if (callee.object.type === 'Identifier' && callee.property.type === 'Identifier') {
+        const objectName = callee.object.name;
+
+        // Core Library static Init: DataExtension.Init(…), Subscriber.Init(…), …
+        if (TOP_LEVEL_CORE_NAMES.has(objectName) && callee.property.name === 'Init') {
+            return objectName;
+        }
+
+        // requiresCoreLoad globals used as object: Attribute.GetValue(…), DateTime.Parse(…), …
+        if (REQUIRES_CORE_LOAD_GLOBALS.has(objectName.toLowerCase())) {
+            return `${objectName}.${callee.property.name}`;
         }
     }
 
