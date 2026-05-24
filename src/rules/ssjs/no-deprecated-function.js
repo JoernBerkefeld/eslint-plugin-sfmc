@@ -163,8 +163,8 @@ export default {
 /**
  * Returns true if `node` is a `ContentAreaObj.Init(…)` call.
  *
- * @param {import('eslint').Rule.Node} node
- * @returns {boolean}
+ * @param {import('eslint').Rule.Node} node - AST node to inspect
+ * @returns {boolean} true when the node is a ContentAreaObj.Init call
  */
 function isContentAreaObjInit(node) {
     if (!node || node.type !== 'CallExpression') {

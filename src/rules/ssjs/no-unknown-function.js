@@ -182,8 +182,8 @@ export default {
  * If `node` is a Core Library Init call (e.g. `DataExtension.Init("key")`),
  * return the Core Library type name; otherwise return null.
  *
- * @param {import('eslint').Rule.Node} node
- * @returns {string | null}
+ * @param {import('eslint').Rule.Node} node - AST node to inspect
+ * @returns {string | null} Core Library type name, or null when not a Core Library Init call
  */
 function getCoreInitType(node) {
     if (!node || node.type !== 'CallExpression') {
@@ -215,8 +215,8 @@ function getCoreInitType(node) {
 /**
  * Returns true if `node` is `new Script.Util.WSProxy()`.
  *
- * @param {import('eslint').Rule.Node} node
- * @returns {boolean}
+ * @param {import('eslint').Rule.Node} node - AST node to inspect
+ * @returns {boolean} true when the node is a WSProxy constructor call
  */
 function isWSProxyConstructor(node) {
     if (!node || node.type !== 'NewExpression') {
