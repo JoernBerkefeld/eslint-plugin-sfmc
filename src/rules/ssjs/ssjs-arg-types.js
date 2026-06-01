@@ -62,7 +62,7 @@ export default {
 
     create(context) {
         const coreVars = new Map(); // varName → className (Core Library instances)
-        const wsproxyVars = new Set(); // varNames assigned new WSProxy()
+        const wsproxyVars = new Set(); // varNames assigned new Script.Util.WSProxy()
 
         function checkArgs(entry, args, callName) {
             if (!entry || !entry.params || entry.params.length === 0) {
