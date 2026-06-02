@@ -295,7 +295,7 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
             errors: [
                 {
                     messageId: 'tooFewArgs',
-                    data: { name: 'V', min: '1', actual: '0' },
+                    data: { name: 'v', min: '1', actual: '0' },
                 },
             ],
         },
@@ -304,7 +304,7 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
             errors: [
                 {
                     messageId: 'tooManyArgs',
-                    data: { name: 'V', max: '1', actual: '2' },
+                    data: { name: 'v', max: '1', actual: '2' },
                 },
             ],
         },
