@@ -1,4 +1,4 @@
-# ssjs-prefer-parsejson-safe-arg
+# `sfmc/ssjs-prefer-parsejson-safe-arg`
 
 Require concatenating an empty string to `Platform.Function.ParseJSON()` arguments.
 

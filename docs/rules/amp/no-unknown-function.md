@@ -5,12 +5,14 @@
 | | |
 |---|---|
 | **Type** | `problem` |
-| **Default severity** | `error` in `recommended` and `strict` |
+| **Default severity** | `error` in `recommended`, `strict`, and all `-next` configs |
 | **Fixable** | — |
 
 ## Why This Rule Exists
 
 AMPscript does not support user-defined functions. Every function call must match a name in Salesforce's published catalog. Calling an unknown name causes a runtime error (or is silently ignored depending on the execution context), making the code unreliable. This rule catches typos and invented names before deployment.
+
+When targeting **Marketing Cloud Next**, only a subset of AMPscript functions are supported. Use the `target: 'next'` option to flag functions that cannot run in MCN.
 
 ## Settings
 
@@ -18,9 +20,15 @@ AMPscript does not support user-defined functions. Every function call must matc
 |---------|--------|---------|
 | severity | `"error"` \| `"warn"` \| `"off"` | `"error"` |
 
-This rule has no configuration options.
+### Options
 
-### Examples
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `target` | `'engagement'` \| `'next'` | — | Target platform. Set to `'next'` to additionally flag AMPscript functions not available in Marketing Cloud Next (API v67.0+). |
+
+## Examples
+
+### Standard usage (Marketing Cloud Engagement)
 
 **Not allowed:**
 
@@ -37,6 +45,37 @@ This rule has no configuration options.
 %%[
   var @result
   set @result = Lookup("MyDE", "Value", "Key", @key)
+]%%
+```
+
+### MCN target
+
+Configure the rule with `target: 'next'` to flag functions unsupported in Marketing Cloud Next:
+
+```js
+// eslint.config.js
+rules: {
+  'sfmc/amp-no-unknown-function': ['error', { target: 'next' }]
+}
+```
+
+Or use the built-in `recommended-next` / `strict-next` / `embedded-next` configs which apply this automatically.
+
+**Not allowed (with `target: 'next'`):**
+
+```ampscript
+%%[
+  /* InsertDE is not supported in Marketing Cloud Next */
+  InsertDE("MyDE", "Col", "Value")
+]%%
+```
+
+**Allowed (with `target: 'next'`):**
+
+```ampscript
+%%[
+  /* UpsertDE is supported in Marketing Cloud Next */
+  UpsertDE("MyDE", 1, "Key", @key, "Col", "Value")
 ]%%
 ```
 

@@ -1,4 +1,4 @@
-# ssjs-no-property-call
+# `sfmc/ssjs-no-property-call`
 
 Flags `Platform.Request` and `Platform.Response` members that are **properties**, not functions.
 Calling them with parentheses `()` is a runtime error — they must be accessed without parentheses.

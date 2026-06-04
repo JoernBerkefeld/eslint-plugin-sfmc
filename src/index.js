@@ -121,6 +121,34 @@ const plugin = {
     configs: {},
 };
 
+// ── MCN SSJS rule set (all SSJS rules off except ssjs-no-unknown-function) ────
+
+/**
+ * SSJS rules for MCN targets.
+ * All quality rules are disabled — only the presence of SSJS is flagged,
+ * because SSJS as a whole must be deleted when targeting Marketing Cloud Next.
+ */
+const ssjsMcnRules = {
+    'sfmc/ssjs-no-unknown-function': ['error', { target: 'next' }],
+    'sfmc/ssjs-require-platform-load': 'off',
+    'sfmc/ssjs-no-unsupported-syntax': 'off',
+    'sfmc/ssjs-no-deprecated-function': 'off',
+    'sfmc/ssjs-no-property-call': 'off',
+    'sfmc/ssjs-platform-function-arity': 'off',
+    'sfmc/ssjs-cache-loop-length': 'off',
+    'sfmc/ssjs-require-hasownproperty': 'off',
+    'sfmc/ssjs-require-platform-load-order': 'off',
+    'sfmc/ssjs-no-hardcoded-credentials': 'off',
+    'sfmc/ssjs-prefer-platform-load-version': 'off',
+    'sfmc/ssjs-no-unavailable-method': 'off',
+    'sfmc/ssjs-prefer-parsejson-safe-arg': 'off',
+    'sfmc/ssjs-no-switch-default': 'off',
+    'sfmc/ssjs-no-treatascontent-injection': 'off',
+    'sfmc/ssjs-arg-types': 'off',
+    'sfmc/ssjs-core-method-arity': 'off',
+    'no-cond-assign': 'off',
+};
+
 // ── AMPscript rule sets ───────────────────────────────────────────────────────
 
 const ampRecommendedRules = {
@@ -338,6 +366,153 @@ Object.assign(plugin.configs, {
                 globals: SSJS_GLOBALS_MAP,
             },
             rules: { ...ssjsStrictRules },
+        },
+    ],
+
+    // ── Marketing Cloud Next configs ──────────────────────────────────────────
+
+    /**
+     * AMPscript-only MCN config. Flags functions not supported in MCN.
+     * No SSJS portion (AMPscript-only config).
+     */
+    'ampscript-next': {
+        name: 'sfmc/ampscript-next',
+        plugins: { sfmc: plugin },
+        languageOptions: { parser: ampscriptParser },
+        files: ['**/*.ampscript', '**/*.amp'],
+        rules: {
+            ...ampRecommendedRules,
+            'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+        },
+    },
+
+    /**
+     * SSJS-only MCN config. Flags all SSJS API calls; disables all other SSJS rules.
+     */
+    'ssjs-next': {
+        name: 'sfmc/ssjs-next',
+        plugins: { sfmc: plugin },
+        files: ['**/*.ssjs'],
+        languageOptions: {
+            ecmaVersion: 5,
+            sourceType: 'script',
+            globals: SSJS_GLOBALS_MAP,
+        },
+        rules: { ...ssjsMcnRules },
+    },
+
+    /**
+     * Recommended MCN config: both AMPscript and SSJS for standalone files.
+     * AMPscript portion flags MCN-unsupported functions; SSJS portion flags all SSJS as unsupported.
+     */
+    'recommended-next': [
+        {
+            name: 'sfmc/recommended-next-ampscript',
+            plugins: { sfmc: plugin },
+            languageOptions: { parser: ampscriptParser },
+            files: ['**/*.ampscript', '**/*.amp'],
+            rules: {
+                ...ampRecommendedRules,
+                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+            },
+        },
+        {
+            name: 'sfmc/recommended-next-ssjs',
+            plugins: { sfmc: plugin },
+            files: ['**/*.ssjs'],
+            languageOptions: {
+                ecmaVersion: 5,
+                sourceType: 'script',
+                globals: SSJS_GLOBALS_MAP,
+            },
+            rules: { ...ssjsMcnRules },
+        },
+    ],
+
+    /**
+     * MCN config for AMPscript and SSJS embedded in HTML files.
+     */
+    'embedded-next': [
+        {
+            name: 'sfmc/embedded-next-processor',
+            plugins: { sfmc: plugin },
+            files: ['**/*.html'],
+            processor: 'sfmc/sfmc',
+        },
+        {
+            name: 'sfmc/embedded-next-ampscript-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { parser: ampscriptParser },
+            files: ['**/*.html/*.amp'],
+            rules: {
+                ...ampRecommendedRules,
+                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+            },
+        },
+        {
+            name: 'sfmc/embedded-next-ssjs-rules',
+            plugins: { sfmc: plugin },
+            files: ['**/*.html/*.js'],
+            languageOptions: {
+                ecmaVersion: 5,
+                sourceType: 'script',
+                globals: SSJS_GLOBALS_MAP,
+            },
+            rules: { ...ssjsMcnRules },
+        },
+    ],
+
+    /**
+     * Strict MCN config: all rules at error severity for standalone + embedded.
+     */
+    'strict-next': [
+        {
+            name: 'sfmc/strict-next-ampscript',
+            plugins: { sfmc: plugin },
+            languageOptions: { parser: ampscriptParser },
+            files: ['**/*.ampscript', '**/*.amp'],
+            rules: {
+                ...ampStrictRules,
+                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+            },
+        },
+        {
+            name: 'sfmc/strict-next-ssjs',
+            plugins: { sfmc: plugin },
+            files: ['**/*.ssjs'],
+            languageOptions: {
+                ecmaVersion: 5,
+                sourceType: 'script',
+                globals: SSJS_GLOBALS_MAP,
+            },
+            rules: { ...ssjsMcnRules },
+        },
+        {
+            name: 'sfmc/strict-next-embedded-processor',
+            plugins: { sfmc: plugin },
+            files: ['**/*.html'],
+            processor: 'sfmc/sfmc',
+        },
+        {
+            name: 'sfmc/strict-next-embedded-ampscript-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { parser: ampscriptParser },
+            files: ['**/*.html/*.amp'],
+            rules: {
+                ...ampStrictRules,
+                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+            },
+        },
+        {
+            name: 'sfmc/strict-next-embedded-ssjs-rules',
+            plugins: { sfmc: plugin },
+            files: ['**/*.html/*.js'],
+            languageOptions: {
+                ecmaVersion: 5,
+                sourceType: 'script',
+                globals: SSJS_GLOBALS_MAP,
+            },
+            rules: { ...ssjsMcnRules },
         },
     ],
 });

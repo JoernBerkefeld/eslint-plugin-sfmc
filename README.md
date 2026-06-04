@@ -27,6 +27,8 @@ export default [
 
 ## Configs
 
+### Marketing Cloud Engagement (default)
+
 | Config                     | Files                        | What it does                                              |
 | -------------------------- | ---------------------------- | --------------------------------------------------------- |
 | `sfmc.configs.ampscript`   | `**/*.ampscript`, `**/*.amp` | AMPscript rules only (recommended severity)               |
@@ -36,6 +38,30 @@ export default [
 | `sfmc.configs.strict`      | All of the above + HTML      | All rules at `error` severity for standalone and embedded |
 
 `recommended`, `embedded`, and `strict` are arrays — spread them with `...`.
+
+### Marketing Cloud Next
+
+Use the `-next` config variants when targeting **Marketing Cloud Next (MCN)**. MCN supports only a subset of AMPscript functions and does **not** support SSJS at all.
+
+| Config                           | Files                        | What it does                                                                              |
+| -------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `sfmc.configs['ampscript-next']` | `**/*.ampscript`, `**/*.amp` | AMPscript rules + flags functions unsupported in MCN (single config object)               |
+| `sfmc.configs['ssjs-next']`      | `**/*.ssjs`                  | Flags all SSJS API calls as MCN-unsupported; all other SSJS quality rules disabled        |
+| `sfmc.configs['recommended-next']` | Both of the above          | AMPscript MCN-aware + SSJS flagged for standalone files                                   |
+| `sfmc.configs['embedded-next']`  | `**/*.html`                  | AMPscript MCN-aware + SSJS flagged for HTML-embedded code                                 |
+| `sfmc.configs['strict-next']`    | All of the above + HTML      | All AMPscript rules at `error` severity + MCN flag; SSJS fully flagged                   |
+
+`recommended-next`, `embedded-next`, and `strict-next` are arrays — spread them with `...`.
+
+```js
+// eslint.config.js — targeting Marketing Cloud Next
+import sfmc from 'eslint-plugin-sfmc';
+
+export default [
+  ...sfmc.configs['recommended-next'],
+  ...sfmc.configs['embedded-next'],
+];
+```
 
 ## AMPscript Rules (`amp-*`)
 

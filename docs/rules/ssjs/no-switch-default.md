@@ -1,4 +1,4 @@
-# ssjs-no-switch-default
+# `sfmc/ssjs-no-switch-default`
 
 Disallow `default` case in `switch` statements.
 

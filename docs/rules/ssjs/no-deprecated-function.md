@@ -1,4 +1,4 @@
-# ssjs-no-deprecated-function
+# `sfmc/ssjs-no-deprecated-function`
 
 Flags calls to deprecated SFMC SSJS APIs. Currently focuses on the **Content Areas** feature,
 which has been retired and no longer allows creating or updating content.

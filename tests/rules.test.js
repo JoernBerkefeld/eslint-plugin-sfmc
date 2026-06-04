@@ -74,6 +74,35 @@ ampTester.run('amp-no-unknown-function', ampNoUnknownFunction, {
     ],
 });
 
+// ── 1b. amp-no-unknown-function — target:'next' ───────────────────────────────
+
+ampTester.run('amp-no-unknown-function (target:next)', ampNoUnknownFunction, {
+    valid: [
+        // MCN-supported functions pass with target:'next'
+        { code: '%%[set @x = Lookup("DE", "F", "K", @v)]%%', options: [{ target: 'next' }] },
+        { code: '%%= Concat("hello", " ", "world") =%%', options: [{ target: 'next' }] },
+        { code: '%%[set @d = Now()]%%', options: [{ target: 'next' }] },
+        // target:'engagement' behaves like default — no MCN flag
+        { code: '%%[InsertDE("MyDE", "Col", "Val")]%%', options: [{ target: 'engagement' }] },
+        // No target option — MCN-unsupported functions are still valid
+        { code: '%%[InsertDE("MyDE", "Col", "Val")]%%' },
+    ],
+    invalid: [
+        // MCN-unsupported known function flagged with notSupportedInMcn
+        {
+            code: '%%[InsertDE("MyDE", "Col", "Val")]%%',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'notSupportedInMcn', data: { name: 'InsertDE' } }],
+        },
+        // Unknown function is still flagged with unknownFunction (regardless of target)
+        {
+            code: '%%[set @x = FooBar(@v)]%%',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'unknownFunction', data: { name: 'FooBar' } }],
+        },
+    ],
+});
+
 // ── 2. amp-no-var-redeclaration ───────────────────────────────────────────────
 
 ampTester.run('amp-no-var-redeclaration', ampNoVariableRedeclaration, {
@@ -760,6 +789,48 @@ ssjsTester.run('ssjs-no-unknown-function', ssjsNoUnknownFunction, {
         {
             code: 'var proxy = new Script.Util.WSProxy(); proxy.fetch();',
             errors: [{ messageId: 'unknownWsproxyMethod' }],
+        },
+    ],
+});
+
+// ─── 3b. ssjs-no-unknown-function — target:'next' ─────────────────────────────
+
+ssjsTester.run('ssjs-no-unknown-function (target:next)', ssjsNoUnknownFunction, {
+    valid: [
+        // Bare JS calls (not SFMC API calls) are not flagged even with target:'next'
+        { code: 'someObj.unknownMethod();', options: [{ target: 'next' }] },
+        { code: 'var x = somethingElse(); x.Anything();', options: [{ target: 'next' }] },
+        // With target:'engagement' (or no target), valid SFMC calls pass
+        {
+            code: 'Platform.Function.Lookup("DE", "F", "K", "V");',
+            options: [{ target: 'engagement' }],
+        },
+        { code: 'HTTP.Get("https://example.com");' },
+    ],
+    invalid: [
+        // Platform.Function call flagged with ssjsNotSupportedInMcn
+        {
+            code: 'Platform.Function.Lookup("DE", "F", "K", "V");',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
+        },
+        // HTTP call flagged with ssjsNotSupportedInMcn
+        {
+            code: 'HTTP.Get("https://example.com");',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
+        },
+        // Core Library instance call flagged
+        {
+            code: 'var de = DataExtension.Init("MyDE"); de.Rows.Retrieve();',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
+        },
+        // WSProxy instance call flagged
+        {
+            code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
         },
     ],
 });

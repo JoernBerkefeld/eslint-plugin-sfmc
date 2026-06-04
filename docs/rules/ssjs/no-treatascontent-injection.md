@@ -1,4 +1,4 @@
-# ssjs-no-treatascontent-injection
+# `sfmc/ssjs-no-treatascontent-injection`
 
 Disallow string concatenation inside `TreatAsContent()` calls.
 
