@@ -111,12 +111,13 @@ describe('testFixture/rules — diagnostic snapshot', () => {
 
     it('every fixture file produces at least one diagnostic', () => {
         const files = collectFiles(fixtureDir);
+        // Use path.resolve() for cross-platform comparison — path.join with
+        // manually swapped separators breaks on Linux where backslashes are
+        // literal filename characters, not path separators.
         const withDiagnostics = new Set(
-            Object.keys(actual).map((k) =>
-                path.join(pluginRoot, k.replaceAll('/', '\\')).toLowerCase(),
-            ),
+            Object.keys(actual).map((k) => path.resolve(pluginRoot, k).toLowerCase()),
         );
-        const missing = files.filter((f) => !withDiagnostics.has(f.toLowerCase()));
+        const missing = files.filter((f) => !withDiagnostics.has(path.resolve(f).toLowerCase()));
         assert.deepStrictEqual(
             missing.map((f) => path.relative(pluginRoot, f).replaceAll('\\', '/')),
             [],
