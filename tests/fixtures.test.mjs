@@ -19,6 +19,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sfmc from '../src/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.join(__dirname, '..');
@@ -78,10 +79,11 @@ describe('testFixture/rules — diagnostic snapshot', () => {
 
     before(async () => {
         const eslint = new ESLint({
-            // Explicitly point at the fixture config so CI does not rely on
-            // config auto-discovery, which behaves differently across platforms.
-            overrideConfigFile: path.join(fixtureDir, 'eslint.config.mjs'),
-            // Silence warnings for files matched by the config but normally warned about
+            // Use the plugin's own strict config directly — avoids any reliance on
+            // file-based config auto-discovery, which behaves differently across OSes.
+            overrideConfigFile: true,
+            overrideConfig: sfmc.configs.strict,
+            cwd: pluginRoot,
             warnIgnored: false,
         });
 
