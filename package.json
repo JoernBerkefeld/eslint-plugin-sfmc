@@ -40,7 +40,9 @@
         "eslint": ">=9.0.0"
     },
     "scripts": {
-        "test": "node --test tests/rules.test.js",
+        "test": "node --test tests/rules.test.js && node --test tests/fixtures.test.mjs",
+        "test:fixtures": "node --test tests/fixtures.test.mjs",
+        "test:fixtures:update": "node --test tests/fixtures.test.mjs -- --update-snapshots",
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "prepare": "husky || true",

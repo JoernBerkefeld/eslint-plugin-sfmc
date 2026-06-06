@@ -1,0 +1,499 @@
+{
+  "testFixture/rules/amp/function-arity.amp": [
+    {
+      "ruleId": "sfmc/amp-function-arity",
+      "severity": 2,
+      "line": 16,
+      "messageId": "tooManyArgs"
+    },
+    {
+      "ruleId": "sfmc/amp-function-arity",
+      "severity": 2,
+      "line": 20,
+      "messageId": "tooFewArgs"
+    }
+  ],
+  "testFixture/rules/amp/naming-convention.amp": [
+    {
+      "ruleId": "sfmc/amp-naming-convention",
+      "severity": 2,
+      "line": 16,
+      "messageId": "badName"
+    },
+    {
+      "ruleId": "sfmc/amp-naming-convention",
+      "severity": 2,
+      "line": 20,
+      "messageId": "badName"
+    }
+  ],
+  "testFixture/rules/amp/no-deprecated-function.amp": [
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 16,
+      "messageId": "emailExcluded"
+    },
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 20,
+      "messageId": "emailExcluded"
+    }
+  ],
+  "testFixture/rules/amp/no-email-excluded-function.amp": [
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 17,
+      "messageId": "emailExcluded"
+    },
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 21,
+      "messageId": "emailExcluded"
+    }
+  ],
+  "testFixture/rules/amp/no-empty-block.amp": [
+    {
+      "ruleId": "sfmc/amp-no-empty-block",
+      "severity": 2,
+      "line": 14,
+      "messageId": "emptyBlock"
+    },
+    {
+      "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
+      "severity": 2,
+      "line": 14,
+      "messageId": "nestedDelimiter"
+    }
+  ],
+  "testFixture/rules/amp/no-empty-then.amp": [
+    {
+      "ruleId": "sfmc/amp-no-empty-then",
+      "severity": 2,
+      "line": 23,
+      "messageId": "emptyThen"
+    }
+  ],
+  "testFixture/rules/amp/no-html-comment.amp": [
+    {
+      "ruleId": "sfmc/amp-no-html-comment",
+      "severity": 2,
+      "line": 12,
+      "messageId": "htmlComment"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/no-inline-statement.amp": [
+    {
+      "ruleId": "sfmc/amp-no-inline-statement",
+      "severity": 2,
+      "line": 16,
+      "messageId": "inlineStatement"
+    },
+    {
+      "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
+      "severity": 2,
+      "line": 16,
+      "messageId": "nestedDelimiter"
+    }
+  ],
+  "testFixture/rules/amp/no-js-line-comment.amp": [
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 4,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 4,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 4,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 4,
+      "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/no-loop-counter-assign.amp": [
+    {
+      "ruleId": "sfmc/amp-no-loop-counter-assign",
+      "severity": 2,
+      "line": 22,
+      "messageId": "counterAssign"
+    },
+    {
+      "ruleId": "sfmc/amp-require-variable-declaration",
+      "severity": 1,
+      "line": 22,
+      "messageId": "undeclared"
+    }
+  ],
+  "testFixture/rules/amp/no-nested-ampscript-delimiter.html": [
+    {
+      "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
+      "severity": 2,
+      "line": 18,
+      "messageId": "nestedDelimiterInScript"
+    }
+  ],
+  "testFixture/rules/amp/no-nested-script-tag.html": [
+    {
+      "ruleId": "sfmc/amp-no-nested-script-tag",
+      "severity": 2,
+      "line": 19,
+      "messageId": "nestedScriptTag"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 19,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 19,
+      "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/no-smart-quotes.amp": [
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 17,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 17,
+      "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/no-unknown-function.amp": [
+    {
+      "ruleId": "sfmc/amp-no-unknown-function",
+      "severity": 2,
+      "line": 12,
+      "messageId": "unknownFunction"
+    }
+  ],
+  "testFixture/rules/amp/no-unknown-function.html": [
+    {
+      "ruleId": "sfmc/amp-no-unknown-function",
+      "severity": 2,
+      "line": 19,
+      "messageId": "unknownFunction"
+    }
+  ],
+  "testFixture/rules/amp/no-var-redeclaration.amp": [
+    {
+      "ruleId": "sfmc/amp-no-var-redeclaration",
+      "severity": 2,
+      "line": 14,
+      "messageId": "redeclared"
+    }
+  ],
+  "testFixture/rules/amp/prefer-attribute-value.amp": [
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 13,
+      "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/require-rowcount-check.amp": [
+    {
+      "ruleId": "sfmc/amp-require-rowcount-check",
+      "severity": 2,
+      "line": 20,
+      "messageId": "missingRowCount"
+    }
+  ],
+  "testFixture/rules/amp/require-variable-declaration.amp": [
+    {
+      "ruleId": "sfmc/amp-require-variable-declaration",
+      "severity": 1,
+      "line": 12,
+      "messageId": "undeclared"
+    }
+  ],
+  "testFixture/rules/amp/set-requires-target.amp": [
+    {
+      "ruleId": "sfmc/amp-set-requires-target",
+      "severity": 2,
+      "line": 12,
+      "messageId": "missingTarget"
+    }
+  ],
+  "testFixture/rules/ssjs/arg-types.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 17,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 20,
+      "messageId": "typeMismatch"
+    }
+  ],
+  "testFixture/rules/ssjs/cache-loop-length.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-cache-loop-length",
+      "severity": 2,
+      "line": 17,
+      "messageId": "cacheLength"
+    }
+  ],
+  "testFixture/rules/ssjs/core-method-arity.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 16,
+      "messageId": "tooFewArgs"
+    }
+  ],
+  "testFixture/rules/ssjs/no-deprecated-function.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 11,
+      "messageId": "deprecatedGlobal"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 14,
+      "messageId": "deprecatedGlobal"
+    }
+  ],
+  "testFixture/rules/ssjs/no-hardcoded-credentials.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-unknown-function",
+      "severity": 2,
+      "line": 14,
+      "messageId": "unknownPlatformMethod"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-hardcoded-credentials",
+      "severity": 2,
+      "line": 15,
+      "messageId": "hardcodedCredential"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-unknown-function",
+      "severity": 2,
+      "line": 19,
+      "messageId": "unknownPlatformMethod"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-hardcoded-credentials",
+      "severity": 2,
+      "line": 20,
+      "messageId": "hardcodedCredential"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-hardcoded-credentials",
+      "severity": 2,
+      "line": 20,
+      "messageId": "hardcodedCredential"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-hardcoded-credentials",
+      "severity": 2,
+      "line": 20,
+      "messageId": "hardcodedCredential"
+    }
+  ],
+  "testFixture/rules/ssjs/no-property-call.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-property-call",
+      "severity": 2,
+      "line": 16,
+      "messageId": "propertyReadWithCall"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-property-call",
+      "severity": 2,
+      "line": 19,
+      "messageId": "writablePropertySet"
+    }
+  ],
+  "testFixture/rules/ssjs/no-switch-default.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-switch-default",
+      "severity": 2,
+      "line": 28,
+      "messageId": "noDefault"
+    }
+  ],
+  "testFixture/rules/ssjs/no-treatascontent-injection.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-treatascontent-injection",
+      "severity": 2,
+      "line": 18,
+      "messageId": "injection"
+    }
+  ],
+  "testFixture/rules/ssjs/no-unavailable-method.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-unavailable-method",
+      "severity": 1,
+      "line": 17,
+      "messageId": "unavailable"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-unavailable-method",
+      "severity": 1,
+      "line": 20,
+      "messageId": "unavailable"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-unavailable-method",
+      "severity": 1,
+      "line": 23,
+      "messageId": "unavailable"
+    }
+  ],
+  "testFixture/rules/ssjs/no-unknown-function.html": [
+    {
+      "ruleId": "sfmc/ssjs-no-unknown-function",
+      "severity": 2,
+      "line": 18,
+      "messageId": "unknownPlatformMethod"
+    }
+  ],
+  "testFixture/rules/ssjs/no-unknown-function.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-unknown-function",
+      "severity": 2,
+      "line": 14,
+      "messageId": "unknownPlatformMethod"
+    }
+  ],
+  "testFixture/rules/ssjs/no-unsupported-syntax.ssjs": [
+    {
+      "ruleId": null,
+      "severity": 2,
+      "line": 27
+    }
+  ],
+  "testFixture/rules/ssjs/platform-function-arity.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-platform-function-arity",
+      "severity": 2,
+      "line": 15,
+      "messageId": "tooFewArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-platform-function-arity",
+      "severity": 2,
+      "line": 18,
+      "messageId": "tooManyArgs"
+    }
+  ],
+  "testFixture/rules/ssjs/prefer-parsejson-safe-arg.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-prefer-parsejson-safe-arg",
+      "severity": 2,
+      "line": 15,
+      "messageId": "unsafeArg"
+    }
+  ],
+  "testFixture/rules/ssjs/prefer-platform-load-version.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-prefer-platform-load-version",
+      "severity": 2,
+      "line": 8,
+      "messageId": "outdatedVersion"
+    }
+  ],
+  "testFixture/rules/ssjs/require-hasownproperty.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-require-hasownproperty",
+      "severity": 2,
+      "line": 18,
+      "messageId": "missingGuard"
+    }
+  ],
+  "testFixture/rules/ssjs/require-platform-load-order.html": [
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load-order",
+      "severity": 2,
+      "line": 17,
+      "messageId": "loadAfterUse"
+    }
+  ],
+  "testFixture/rules/ssjs/require-platform-load-order.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load-order",
+      "severity": 2,
+      "line": 7,
+      "messageId": "loadAfterUse"
+    }
+  ],
+  "testFixture/rules/ssjs/require-platform-load.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 11,
+      "messageId": "missingLoad"
+    }
+  ]
+}

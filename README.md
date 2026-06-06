@@ -25,6 +25,37 @@ export default [
 ];
 ```
 
+## VS Code Setup
+
+To see `eslint(sfmc/...)` diagnostics in VS Code for `.amp`, `.ssjs`, and `.html` files you need the [VS Code ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) to validate the custom SFMC language IDs.
+
+**Option A — Install `vscode-sfmc-language`** (recommended)
+
+The [SFMC Language Service extension](https://marketplace.visualstudio.com/items?itemName=joernberkefeld.sfmc-language) contributes the SFMC language IDs **and** automatically configures `eslint.validate` for you. No manual settings required.
+
+**Option B — Manual configuration**
+
+Add the following to your `.vscode/settings.json`:
+
+```json
+{
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "html",
+        "vue",
+        "markdown",
+        "ampscript",
+        "ssjs",
+        "sfmc"
+    ]
+}
+```
+
+> **Why `eslint.validate` and not `eslint.probe`?** `eslint.probe` silently skips files for language IDs that the ESLint extension does not natively recognise. `eslint.validate` forces the extension to process those files regardless of language ID.
+
 ## Configs
 
 ### Marketing Cloud Engagement (default)

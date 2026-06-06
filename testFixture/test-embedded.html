@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>MCE mode · embedded test fixture</title></head>
+<body>
+
+<!-- ── Embedded AMPscript ──────────────────────────────────────────────────── -->
+%%[
+/* ✅ Valid AMPscript in MCE mode */
+VAR @name
+SET @name = UpperCase("hello world")
+
+/* ✅ InsertDE is valid in MCE → no error */
+SET @name = InsertDE("MyDE", "Email", "test@example.com")
+
+/* ❌ Unknown function → [amp-no-unknown-function] error */
+SET @name = DoesNotExistFunction("arg")
+]%%
+
+<p>Hello %%=v(@name)=%%</p>
+
+<!-- ── Embedded SSJS ───────────────────────────────────────────────────────── -->
+<script runat="server">
+    Platform.Load("Core", "1.1.1");
+
+    /* ✅ Valid SSJS in MCE mode */
+    var de = Platform.Function.CreateObject("DataExtension");
+
+    /* ❌ Unknown platform function → [ssjs-no-unknown-function] error */
+    var bad = Platform.Function.DoesNotExistMethod("arg");
+</script>
+
+</body>
+</html>

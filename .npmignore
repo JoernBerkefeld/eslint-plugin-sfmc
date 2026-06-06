@@ -1,5 +1,6 @@
 node_modules
 tests
+testFixture
 coverage
 .github
 *.test.js

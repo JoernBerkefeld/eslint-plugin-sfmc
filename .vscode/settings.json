@@ -1,0 +1,25 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json": [
+            "azure-pipelines*.yml",
+            "ci-templates/azure-pipelines.yml"
+        ]
+    },
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "html",
+        "vue",
+        "markdown",
+        "ampscript",
+        "ssjs",
+        "sfmc"
+    ],
+    "eslint.workingDirectories": [
+        { "directory": "./testFixture/rules", "changeProcessCwd": true },
+        { "directory": "./testFixture/next", "changeProcessCwd": true },
+        { "directory": "./testFixture", "changeProcessCwd": true }
+    ]
+}

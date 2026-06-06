@@ -1,0 +1,37 @@
+%%[
+/* ── MCE mode · AMPscript test fixture ─────────────────────────────────────────
+   Expected diagnostics are noted on the lines that should trigger them.
+   Open this file in VS Code — the ESLint extension shows live squiggles.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ✅ Valid — known function, correct arity */
+VAR @name
+SET @name = UpperCase("hello world")
+
+/* ✅ InsertDE is a valid MCE function → no error in MCE mode */
+VAR @rows
+SET @rows = InsertData("MyDE", "Field1", "Value1")
+
+/* ✅ LookupRows is valid in MCE (but NOT supported in MCN — see next/ folder) */
+VAR @results
+SET @results = LookupRows("MyDE", "Email", "test@example.com")
+
+/* ❌ Unknown function → [amp-no-unknown-function] error */
+VAR @bad
+SET @bad = DoesNotExistFunction("arg")
+
+/* ❌ Wrong number of arguments for UpperCase (expects 1) → [amp-function-arity] error */
+VAR @tooManyArgs
+SET @tooManyArgs = UpperCase("hello", "extra")
+
+/* ❌ Smart/curly quotes → [amp-no-smart-quotes] error */
+VAR @smartQuote
+SET @smartQuote = UpperCase("hello")
+
+/* ❌ SET without a target variable → [amp-set-requires-target] error */
+SET "orphan" = "value"
+
+/* ❌ Empty block → [amp-no-empty-block] warning */
+IF 1 == 1 THEN
+ENDIF
+]%%
