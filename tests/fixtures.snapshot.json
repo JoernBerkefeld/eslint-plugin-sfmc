@@ -143,27 +143,57 @@
   ],
   "testFixture/rules/amp/no-js-line-comment.amp": [
     {
+      "ruleId": "sfmc/amp-no-js-line-comment",
+      "severity": 2,
+      "line": 16,
+      "messageId": "jsLineComment"
+    },
+    {
       "ruleId": "sfmc/amp-prefer-attribute-value",
       "severity": 1,
-      "line": 4,
+      "line": 16,
       "messageId": "preferAttributeValue"
     },
     {
       "ruleId": "sfmc/amp-prefer-attribute-value",
       "severity": 1,
-      "line": 4,
+      "line": 16,
       "messageId": "preferAttributeValue"
     },
     {
       "ruleId": "sfmc/amp-prefer-attribute-value",
       "severity": 1,
-      "line": 4,
+      "line": 16,
       "messageId": "preferAttributeValue"
     },
     {
       "ruleId": "sfmc/amp-prefer-attribute-value",
       "severity": 1,
-      "line": 4,
+      "line": 16,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 16,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 16,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 16,
+      "messageId": "preferAttributeValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-attribute-value",
+      "severity": 1,
+      "line": 16,
       "messageId": "preferAttributeValue"
     }
   ],

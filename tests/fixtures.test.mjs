@@ -78,8 +78,9 @@ describe('testFixture/rules — diagnostic snapshot', () => {
 
     before(async () => {
         const eslint = new ESLint({
-            // Auto-discovers testFixture/rules/eslint.config.mjs
-            cwd: fixtureDir,
+            // Explicitly point at the fixture config so CI does not rely on
+            // config auto-discovery, which behaves differently across platforms.
+            overrideConfigFile: path.join(fixtureDir, 'eslint.config.mjs'),
             // Silence warnings for files matched by the config but normally warned about
             warnIgnored: false,
         });

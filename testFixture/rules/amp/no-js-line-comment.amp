@@ -1,6 +1,6 @@
 %%[
 /* ── Rule: sfmc/amp-no-js-line-comment ─────────────────────────────────────────
-   Flags JavaScript-style single-line comments (/* ) inside AMPscript regions. */
+   Flags JavaScript-style single-line comments (/ /) inside AMPscript regions.
    Use AMPscript block comments /* ... * / instead.
    ─────────────────────────────────────────────────────────────────────────── */
 
@@ -13,6 +13,6 @@ VAR @url
 SET @url = "https://example.com/path"
 
 /* ❌ FAIL — JavaScript single-line comment is not valid AMPscript */
-/* this is a JS comment inside AMPscript — invalid */
+// this is a JS comment inside AMPscript — invalid
 SET @name = UpperCase(@name)
 ]%%
