@@ -1,6 +1,6 @@
 /* ── Rule: sfmc/ssjs-require-hasownproperty ─────────────────────────────────────
-   Requires a hasOwnProperty guard in for-in loops to avoid iterating over
-   inherited SSJS properties (like _type) that SFMC objects often expose.
+   Requires a hasOwnProperty guard in for-in loops.
+   Auto-fix: wraps loop body in `if (obj.hasOwnProperty(key)) { ... }`.
    ─────────────────────────────────────────────────────────────────────────── */
 
 Platform.Load("Core", "1.1.5");
@@ -14,7 +14,7 @@ for (var key in obj) {
     }
 }
 
-/* ❌ FAIL — no hasOwnProperty check; may iterate over inherited properties */
+/* ❌ FAIL (auto-fixable) — no hasOwnProperty check */
 for (var key2 in obj) {
     var val2 = obj[key2];
 }

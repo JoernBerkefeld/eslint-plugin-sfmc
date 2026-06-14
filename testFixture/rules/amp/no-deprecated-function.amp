@@ -11,11 +11,15 @@ SET @upper = UpperCase("hello world")
 VAR @val
 SET @val = Lookup("MyDE", "Field", "Email", "test@example.com")
 
-/* ❌ FAIL — InsertDE is deprecated; use InsertData instead */
-VAR @legacyInsert
-SET @legacyInsert = InsertData("MyDE", "Email", "test@example.com")
+/* ✅ ACCEPTED — ContentBlockById is the current Content Builder function */
+VAR @block
+SET @block = ContentBlockById(12345)
 
-/* ❌ FAIL — DeleteDE is deprecated; use DeleteData instead */
-VAR @legacyDelete
-SET @legacyDelete = DeleteData("MyDE", 1, "Email", "test@example.com")
+/* ❌ FAIL — ContentArea is deprecated; use ContentBlockById instead */
+VAR @legacyArea
+SET @legacyArea = ContentArea(12345)
+
+/* ❌ FAIL — ContentAreaByName is deprecated; use ContentBlockByName instead */
+VAR @legacyAreaByName
+SET @legacyAreaByName = ContentAreaByName("Public Content/MyBlock")
 ]%%

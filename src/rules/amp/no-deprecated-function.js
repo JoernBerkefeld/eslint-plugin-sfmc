@@ -4,9 +4,9 @@
  * Flags usage of deprecated AMPscript functions and suggests their
  * modern replacements.
  *
- * For 1:1 replacements (e.g. InsertDE -> InsertData) an auto-fix is provided.
- * For ambiguous replacements (e.g. ContentArea -> ContentBlockByKey OR
- * ContentBlockByName) two manual suggestions are offered instead.
+ * Deprecation metadata is read inline from the FUNCTIONS catalog via the
+ * `deprecatedReplacement` and `deprecatedReason` fields. A 1:1 auto-fix is
+ * provided for each deprecated function.
  */
 
 import { deprecatedFunctionLookup } from 'ampscript-data';
@@ -39,40 +39,22 @@ export default {
                     return;
                 }
 
-                const report = {
+                const replacement = entry.deprecatedReplacement;
+
+                context.report({
                     node,
                     messageId: 'deprecated',
                     data: {
                         name: functionName,
-                        replacement: entry.replacement,
-                        reason: entry.reason,
+                        replacement,
+                        reason: entry.deprecatedReason,
                     },
-                };
-
-                // Replacement strings that contain " or " have multiple options —
-                // offer them as manual suggestions rather than a single auto-fix.
-                const isMulti = entry.replacement.includes(' or ');
-
-                if (isMulti) {
-                    const options = entry.replacement.split(' or ').map((s) => s.trim());
-                    report.suggest = options.map((opt) => ({
-                        messageId: 'replaceWith',
-                        data: { name: functionName, replacement: opt },
-                        fix: (fixer) =>
-                            fixer.replaceTextRange(
-                                [node.range[0], node.range[0] + functionName.length],
-                                opt,
-                            ),
-                    }));
-                } else {
-                    report.fix = (fixer) =>
+                    fix: (fixer) =>
                         fixer.replaceTextRange(
                             [node.range[0], node.range[0] + functionName.length],
-                            entry.replacement,
-                        );
-                }
-
-                context.report(report);
+                            replacement,
+                        ),
+                });
             },
         };
     },

@@ -11,6 +11,24 @@
       "severity": 2,
       "line": 20,
       "messageId": "tooFewArgs"
+    },
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 23,
+      "messageId": "emailExcluded"
+    },
+    {
+      "ruleId": "sfmc/amp-function-arity",
+      "severity": 2,
+      "line": 26,
+      "messageId": "incompleteGroup"
+    },
+    {
+      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "severity": 2,
+      "line": 26,
+      "messageId": "emailExcluded"
     }
   ],
   "testFixture/rules/amp/naming-convention.amp": [
@@ -29,16 +47,16 @@
   ],
   "testFixture/rules/amp/no-deprecated-function.amp": [
     {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
-      "severity": 2,
-      "line": 16,
-      "messageId": "emailExcluded"
-    },
-    {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
+      "ruleId": "sfmc/amp-no-deprecated-function",
       "severity": 2,
       "line": 20,
-      "messageId": "emailExcluded"
+      "messageId": "deprecated"
+    },
+    {
+      "ruleId": "sfmc/amp-no-deprecated-function",
+      "severity": 2,
+      "line": 24,
+      "messageId": "deprecated"
     }
   ],
   "testFixture/rules/amp/no-email-excluded-function.amp": [
@@ -299,6 +317,12 @@
       "severity": 1,
       "line": 12,
       "messageId": "undeclared"
+    },
+    {
+      "ruleId": "sfmc/amp-require-variable-declaration",
+      "severity": 1,
+      "line": 15,
+      "messageId": "undeclared"
     }
   ],
   "testFixture/rules/amp/set-requires-target.amp": [
@@ -403,6 +427,12 @@
       "severity": 2,
       "line": 19,
       "messageId": "writablePropertySet"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-property-call",
+      "severity": 2,
+      "line": 22,
+      "messageId": "writablePropertySet"
     }
   ],
   "testFixture/rules/ssjs/no-switch-default.ssjs": [
@@ -461,7 +491,7 @@
     {
       "ruleId": null,
       "severity": 2,
-      "line": 27
+      "line": 20
     }
   ],
   "testFixture/rules/ssjs/platform-function-arity.ssjs": [

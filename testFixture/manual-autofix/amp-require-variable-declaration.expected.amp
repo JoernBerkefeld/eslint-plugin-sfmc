@@ -1,0 +1,6 @@
+%%[
+var @firstName
+set @firstName = "Jane"
+var @lastName
+set @lastName = "Doe"
+]%%

@@ -6,7 +6,7 @@ Calling them with parentheses `()` is a runtime error — they must be accessed 
 The rule is fixable:
 
 - **No-arg calls** (`Property()`) → removes the `()` on both `Request` and `Response` properties.
-- **Single-arg calls on `Platform.Response.*`** (`ContentType("text/html")`) → rewrites to an assignment (`= value`), because those two properties are read/write.
+- **Single-arg calls on `Platform.Response.*`** (`ContentType("text/html")`) → rewrites to an assignment (`= value`), including when the call appears in a comma (`SequenceExpression`) expression.
 - **Any-arg calls on `Platform.Request.*`** → reported as an error with no auto-fix, because `Request` properties are read-only.
 
 ## Properties affected
@@ -62,6 +62,12 @@ Auto-fix converts to an assignment statement:
 ```js
 Platform.Response.ContentType = "application/json";
 Platform.Response.CharacterSet = "UTF-8";
+```
+
+Auto-fix also applies inside comma expressions:
+
+```js
+Platform.Response.CharacterSet = "UTF-8", Platform.Response.Write("ok");
 ```
 
 ### ❌ Incorrect — attempting to set a read-only `Platform.Request` property (no fix)

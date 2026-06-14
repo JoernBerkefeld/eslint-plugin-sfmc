@@ -32,7 +32,7 @@
         "sfmc"
     ],
     "dependencies": {
-        "ampscript-data": "^1.0.0",
+        "ampscript-data": "^2.0.0",
         "ampscript-parser": "^0.1.3",
         "ssjs-data": "^0.4.0"
     },
@@ -40,7 +40,8 @@
         "eslint": ">=9.0.0"
     },
     "scripts": {
-        "test": "node --test tests/rules.test.js && node --test tests/fixtures.test.mjs",
+        "test": "node --test tests/rules.test.js && node --test tests/fixtures.test.mjs && node --test tests/autofix-manual.test.mjs",
+        "test:autofix-manual": "node --test tests/autofix-manual.test.mjs",
         "test:fixtures": "node --test tests/fixtures.test.mjs",
         "test:fixtures:update": "node --test tests/fixtures.test.mjs -- --update-snapshots",
         "lint": "eslint .",

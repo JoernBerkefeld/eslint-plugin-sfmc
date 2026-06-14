@@ -6,7 +6,7 @@
 |---|---|
 | **Type** | `suggestion` |
 | **Default severity** | `warn` in `recommended`; `error` in `strict` |
-| **Fixable** | **Suggestion** (manual, via VS Code lightbulb) |
+| **Fixable** | **Auto-fix** (`eslint --fix`) |
 
 ## Why This Rule Exists
 
@@ -44,12 +44,13 @@ for (var i = 0, _len = items.length; i < _len; i++) {
 
 ## Fix
 
-This rule provides a **suggestion** (not applied automatically). To apply it:
+This rule provides an **auto-fix**. Applied by:
 
-- Click the **lightbulb** / press `Ctrl+.` on the flagged code in VS Code (requires the [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint))
-- `eslint --fix` does **not** apply suggestions (`--fix-type suggestion` filters fixable rules by rule category, it does **not** apply `hasSuggestions` suggestions)
+- `eslint --fix` on the command line
+- **Fix this issue** / **Fix all auto-fixable problems** in VS Code (requires the [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint))
+- On save via `editor.codeActionsOnSave: { "source.fixAll.eslint": "explicit" }`
 
-What the suggestion does: appends `, _len = arr.length` to the last declarator in the `for` loop initialiser and replaces `arr.length` in the test condition with `_len`. The suggestion is only offered when the loop `init` is a `var` declaration (the typical case).
+What the auto-fix does: appends `, _len = arr.length` to the last declarator in the `for` loop initialiser and replaces `arr.length` in the test condition with `_len`. The fix is only applied when the loop `init` is a `var` declaration (the typical case). Loops with other init forms (for example `for (i = 0; i < arr.length; i++)`) are still reported but not auto-fixed.
 
 ## When to Disable
 

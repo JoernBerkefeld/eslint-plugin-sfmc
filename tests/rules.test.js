@@ -299,10 +299,12 @@ ampTester.run('amp-require-variable-declaration', ampRequireVariableDeclaration,
     invalid: [
         {
             code: '%%[set @x = 1]%%',
+            output: '%%[var @x\nset @x = 1]%%',
             errors: [{ messageId: 'undeclared', data: { name: '@x' } }],
         },
         {
             code: '%%[var @a\nset @b = 2]%%',
+            output: '%%[var @a\nvar @b\nset @b = 2]%%',
             errors: [{ messageId: 'undeclared', data: { name: '@b' } }],
         },
     ],
@@ -317,6 +319,14 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
         { code: '%%= Add(1, 2) =%%' },
         { code: '%%[set @x = Lookup("DE", "Ret", "Key", @val)]%%' },
         { code: '%%= Concat("a", "b", "c") =%%' },
+        // single repeating group (Concat: groupSize 1) — any count >= 2 is complete
+        { code: '%%= Concat("a", "b") =%%' },
+        // single repeating group (ReplaceList: 1 fixed + N searchStrings, groupSize 1)
+        { code: '%%= ReplaceList("text", "a", "b", "c") =%%' },
+        // two repeating groups (UpdateData): columnValuePairs=1 -> 1 search pair + 1 update pair
+        { code: '%%[UpdateData("DE", 1, "Key", @k, "Col", @v)]%%' },
+        // two repeating groups: columnValuePairs=2 -> 2 search pairs + 1 update pair
+        { code: '%%[UpdateData("DE", 2, "K1", @a, "K2", @b, "Col", @v)]%%' },
     ],
     invalid: [
         {
@@ -352,6 +362,17 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
                 {
                     messageId: 'tooManyArgs',
                     data: { name: 'Add', max: '2', actual: '3' },
+                },
+            ],
+        },
+        {
+            // UpdateData: columnValuePairs=1 (1 search pair), then 3 update args —
+            // the second repeating group (size 2) is incomplete (odd count).
+            code: '%%[UpdateData("DE", 1, "Key", @k, "Col", @v, "Orphan")]%%',
+            errors: [
+                {
+                    messageId: 'incompleteGroup',
+                    data: { name: 'UpdateData', size: '2' },
                 },
             ],
         },
@@ -414,60 +435,39 @@ ampTester.run('amp-no-deprecated-function', ampNoDeprecatedFunction, {
     valid: [
         { code: '%%[set @x = Lookup("DE", "F", "K", @v)]%%' },
         { code: '%%[InsertData("DE", "Col", @val)]%%' },
+        // InsertDE is a valid email-context function, not deprecated
+        { code: '%%[InsertDE("DE", "Col", @val)]%%' },
+        // Modern Content Builder replacements are not deprecated
+        { code: '%%[ContentBlockById(123)]%%' },
+        { code: '%%[ContentBlockByName("Public/MyBlock")]%%' },
     ],
     invalid: [
         {
             // 1:1 replacement — auto-fix renames the function in-place
-            code: '%%[set @x = LookupValue("DE", "F", "K", @v)]%%',
-            output: '%%[set @x = Lookup("DE", "F", "K", @v)]%%',
-            errors: [
-                {
-                    messageId: 'deprecated',
-                    data: {
-                        name: 'LookupValue',
-                        replacement: 'Lookup',
-                        reason: 'LookupValue was the original name; Lookup is the current standard.',
-                    },
-                },
-            ],
-        },
-        {
-            code: '%%[InsertDE("DE", "Col", @val)]%%',
-            output: '%%[InsertData("DE", "Col", @val)]%%',
-            errors: [
-                {
-                    messageId: 'deprecated',
-                    data: {
-                        name: 'InsertDE',
-                        replacement: 'InsertData',
-                        reason: 'InsertDE is a legacy alias for InsertData.',
-                    },
-                },
-            ],
-        },
-        {
-            // Ambiguous replacement — two manual suggestions instead of auto-fix
             code: '%%[ContentArea(123)]%%',
+            output: '%%[ContentBlockById(123)]%%',
             errors: [
                 {
                     messageId: 'deprecated',
                     data: {
                         name: 'ContentArea',
-                        replacement: 'ContentBlockByKey or ContentBlockByName',
-                        reason: 'ContentArea references classic content areas which are being phased out in favor of Content Builder.',
+                        replacement: 'ContentBlockById',
+                        reason: 'ContentArea references classic content areas, which are no longer supported. Use Content Builder content blocks instead.',
                     },
-                    suggestions: [
-                        {
-                            messageId: 'replaceWith',
-                            data: { name: 'ContentArea', replacement: 'ContentBlockByKey' },
-                            output: '%%[ContentBlockByKey(123)]%%',
-                        },
-                        {
-                            messageId: 'replaceWith',
-                            data: { name: 'ContentArea', replacement: 'ContentBlockByName' },
-                            output: '%%[ContentBlockByName(123)]%%',
-                        },
-                    ],
+                },
+            ],
+        },
+        {
+            code: '%%[ContentAreaByName("Public/MyBlock")]%%',
+            output: '%%[ContentBlockByName("Public/MyBlock")]%%',
+            errors: [
+                {
+                    messageId: 'deprecated',
+                    data: {
+                        name: 'ContentAreaByName',
+                        replacement: 'ContentBlockByName',
+                        reason: 'ContentAreaByName references classic content areas, which are no longer supported. Use Content Builder content blocks instead.',
+                    },
                 },
             ],
         },
@@ -683,19 +683,9 @@ ssjsTester.run('ssjs-no-unsupported-syntax', ssjsNoUnsupportedSyntax, {
             errors: [{ messageId: 'unsupported' }],
         },
         {
-            // ?? -> || suggestion (not auto-fixed due to differing semantics)
             code: 'var x = a ?? b;',
-            errors: [
-                {
-                    messageId: 'unsupported',
-                    suggestions: [
-                        {
-                            messageId: 'suggestLogicalOr',
-                            output: 'var x = a || b;',
-                        },
-                    ],
-                },
-            ],
+            output: 'var x = a || b;',
+            errors: [{ messageId: 'unsupported' }],
         },
     ],
 });
@@ -977,6 +967,11 @@ ssjsTester.run('ssjs-no-property-call', ssjsNoPropertyCall, {
             errors: [{ messageId: 'writablePropertySet' }],
             output: 'Platform.Response.CharacterSet = "UTF-8";',
         },
+        {
+            code: 'Platform.Response.ContentType("application/json"), foo();',
+            errors: [{ messageId: 'writablePropertySet' }],
+            output: 'Platform.Response.ContentType = "application/json", foo();',
+        },
     ],
 });
 
@@ -1000,33 +995,18 @@ ssjsTester.run('ssjs-cache-loop-length', ssjsCacheLoopLength, {
     invalid: [
         {
             code: 'for (var i = 0; i < arr.length; i++) {}',
-            errors: [
-                {
-                    messageId: 'cacheLength',
-                    suggestions: [
-                        {
-                            messageId: 'suggestCacheLength',
-                            data: { obj: 'arr' },
-                            output: 'for (var i = 0, _len = arr.length; i < _len; i++) {}',
-                        },
-                    ],
-                },
-            ],
+            output: 'for (var i = 0, _len = arr.length; i < _len; i++) {}',
+            errors: [{ messageId: 'cacheLength' }],
         },
         {
             code: 'for (var i = 0; i < rows.length; i++) {}',
-            errors: [
-                {
-                    messageId: 'cacheLength',
-                    suggestions: [
-                        {
-                            messageId: 'suggestCacheLength',
-                            data: { obj: 'rows' },
-                            output: 'for (var i = 0, _len = rows.length; i < _len; i++) {}',
-                        },
-                    ],
-                },
-            ],
+            output: 'for (var i = 0, _len = rows.length; i < _len; i++) {}',
+            errors: [{ messageId: 'cacheLength' }],
+        },
+        {
+            // No auto-fix when init is not a VariableDeclaration — still reported
+            code: 'for (i = 0; i < arr.length; i++) {}',
+            errors: [{ messageId: 'cacheLength' }],
         },
     ],
 });
@@ -1047,51 +1027,19 @@ ssjsTester.run('ssjs-require-hasownproperty', ssjsRequireHasownproperty, {
     ],
     invalid: [
         {
-            // BlockStatement body — wrap inner content with guard
             code: 'for (var k in obj) { doSomething(k); }',
-            errors: [
-                {
-                    messageId: 'missingGuard',
-                    suggestions: [
-                        {
-                            messageId: 'suggestAddGuard',
-                            data: { obj: 'obj', key: 'k' },
-                            output: 'for (var k in obj) { if (obj.hasOwnProperty(k)) { doSomething(k); } }',
-                        },
-                    ],
-                },
-            ],
+            output: 'for (var k in obj) { if (obj.hasOwnProperty(k)) { doSomething(k); } }',
+            errors: [{ messageId: 'missingGuard' }],
         },
         {
             code: "for (var k in obj) { if (k !== '_type') { use(k); } }",
-            errors: [
-                {
-                    messageId: 'missingGuard',
-                    suggestions: [
-                        {
-                            messageId: 'suggestAddGuard',
-                            data: { obj: 'obj', key: 'k' },
-                            output: "for (var k in obj) { if (obj.hasOwnProperty(k)) { if (k !== '_type') { use(k); } } }",
-                        },
-                    ],
-                },
-            ],
+            output: "for (var k in obj) { if (obj.hasOwnProperty(k)) { if (k !== '_type') { use(k); } } }",
+            errors: [{ messageId: 'missingGuard' }],
         },
         {
-            // Single-statement body — replaced with a block containing the guard
             code: 'for (var k in obj) doSomething(k);',
-            errors: [
-                {
-                    messageId: 'missingGuard',
-                    suggestions: [
-                        {
-                            messageId: 'suggestAddGuard',
-                            data: { obj: 'obj', key: 'k' },
-                            output: 'for (var k in obj) { if (obj.hasOwnProperty(k)) { doSomething(k); } }',
-                        },
-                    ],
-                },
-            ],
+            output: 'for (var k in obj) { if (obj.hasOwnProperty(k)) { doSomething(k); } }',
+            errors: [{ messageId: 'missingGuard' }],
         },
     ],
 });
@@ -1474,17 +1422,8 @@ ssjsTester.run('ssjs-no-unsupported-syntax (DirectObjectReturn)', ssjsNoUnsuppor
     invalid: [
         {
             code: 'function foo() { return { a: 1 }; }',
-            errors: [
-                {
-                    messageId: 'unsupported',
-                    suggestions: [
-                        {
-                            messageId: 'suggestVarReturn',
-                            output: 'function foo() { var _result = { a: 1 };\n                 return _result; }',
-                        },
-                    ],
-                },
-            ],
+            output: 'function foo() { var _result = { a: 1 };\n                 return _result; }',
+            errors: [{ messageId: 'unsupported' }],
         },
     ],
 });

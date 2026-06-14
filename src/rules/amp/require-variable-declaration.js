@@ -11,6 +11,7 @@
 export default {
     meta: {
         type: 'suggestion',
+        fixable: 'code',
         docs: {
             description: 'Require variables to be declared with `var` before use',
             recommended: false,
@@ -24,6 +25,7 @@ export default {
 
     create(context) {
         const declared = new Set();
+        const fixedVars = new Set();
 
         return {
             VarDeclaration(node) {
@@ -40,11 +42,20 @@ export default {
                 if (name.startsWith('@@')) {
                     return;
                 }
-                if (!declared.has(name.toLowerCase())) {
+                const lower = name.toLowerCase();
+                if (!declared.has(lower)) {
+                    const isFirstFix = !fixedVars.has(lower);
+                    if (isFirstFix) {
+                        fixedVars.add(lower);
+                    }
+
                     context.report({
                         node: node.target,
                         messageId: 'undeclared',
                         data: { name },
+                        fix: isFirstFix
+                            ? (fixer) => fixer.insertTextBefore(node, `var ${name}\n`)
+                            : undefined,
                     });
                 }
             },

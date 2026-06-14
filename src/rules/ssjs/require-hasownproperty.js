@@ -4,22 +4,20 @@
  * In for-in loops, require a hasOwnProperty guard to avoid iterating
  * over inherited properties (like _type) that SSJS objects may have.
  *
- * Suggestion: wraps the existing loop body in an
+ * Auto-fix: wraps the existing loop body in an
  * `if (obj.hasOwnProperty(key)) { ... }` guard.
  */
 
 export default {
     meta: {
         type: 'suggestion',
-        hasSuggestions: true,
+        fixable: 'code',
         docs: {
             description: 'Require hasOwnProperty guard in for-in loops',
         },
         messages: {
             missingGuard:
                 'Add a hasOwnProperty check inside for-in loops to avoid iterating over inherited properties.',
-            suggestAddGuard:
-                'Wrap the loop body in an `if ({{obj}}.hasOwnProperty({{key}})) { ... }` guard',
         },
         schema: [],
     },
@@ -41,35 +39,58 @@ export default {
                     const keyName = getKeyName(node.left);
                     const objText = context.sourceCode.getText(node.right);
 
+                    if (!keyName) {
+                        context.report({
+                            node,
+                            messageId: 'missingGuard',
+                        });
+                        return;
+                    }
+
                     context.report({
                         node,
                         messageId: 'missingGuard',
-                        suggest: keyName
-                            ? [
-                                  {
-                                      messageId: 'suggestAddGuard',
-                                      data: { obj: objText, key: keyName },
-                                      fix(fixer) {
-                                          if (body.type === 'BlockStatement') {
-                                              // Wrap the inner content of the existing block.
-                                              const inner = context.sourceCode
-                                                  .getText(body)
-                                                  .slice(1, -1);
-                                              return fixer.replaceText(
-                                                  body,
-                                                  `{ if (${objText}.hasOwnProperty(${keyName})) {${inner}} }`,
-                                              );
-                                          }
-                                          // Single-statement body — create a new block with guard.
-                                          const stmtText = context.sourceCode.getText(body);
-                                          return fixer.replaceText(
-                                              body,
-                                              `{ if (${objText}.hasOwnProperty(${keyName})) { ${stmtText} } }`,
-                                          );
-                                      },
-                                  },
-                              ]
-                            : [],
+                        fix(fixer) {
+                            const sourceCode = context.sourceCode;
+                            const innerStmts = body.type === 'BlockStatement' ? body.body : [body];
+
+                            // Single-line loops keep compact output to avoid reformatting
+                            // code the author intentionally wrote on one line.
+                            const isSingleLine = node.loc.start.line === node.loc.end.line;
+                            if (isSingleLine) {
+                                const compactBody = innerStmts
+                                    .map((stmt) => sourceCode.getText(stmt))
+                                    .join(' ');
+                                return fixer.replaceText(
+                                    body,
+                                    `{ if (${objText}.hasOwnProperty(${keyName})) { ${compactBody} } }`,
+                                );
+                            }
+
+                            // Multi-line loops: emit a properly-indented guard block.
+                            const loopLine = sourceCode.lines[node.loc.start.line - 1] ?? '';
+                            const baseIndent = (loopLine.match(/^[\t ]*/) ?? [''])[0];
+                            const firstStmt = innerStmts[0];
+                            const firstStmtLine = firstStmt
+                                ? (sourceCode.lines[firstStmt.loc.start.line - 1] ?? '')
+                                : '';
+                            const firstStmtIndent = (firstStmtLine.match(/^[\t ]*/) ?? [''])[0];
+                            const unit =
+                                firstStmtIndent.length > baseIndent.length
+                                    ? firstStmtIndent.slice(baseIndent.length)
+                                    : '    ';
+                            const guardIndent = baseIndent + unit;
+                            const stmtIndent = guardIndent + unit;
+
+                            const guardedBody = innerStmts
+                                .map((stmt) => `${stmtIndent}${sourceCode.getText(stmt)}`)
+                                .join('\n');
+
+                            return fixer.replaceText(
+                                body,
+                                `{\n${guardIndent}if (${objText}.hasOwnProperty(${keyName})) {\n${guardedBody}\n${guardIndent}}\n${baseIndent}}`,
+                            );
+                        },
                     });
                 }
             },

@@ -18,4 +18,10 @@ SET @c = UpperCase("hello", "extra")
 /* ❌ FAIL — DateAdd called with too few arguments (requires 3) */
 VAR @d
 SET @d = DateAdd(NOW())
+
+/* ✅ ACCEPTED — UpdateData with complete repeating groups (1 search pair, 1 update pair) */
+UpdateData("DE", 1, "Key", @k, "Col", @v)
+
+/* ❌ FAIL — UpdateData with an incomplete update group (odd trailing args) */
+UpdateData("DE", 1, "Key", @k, "Col", @v, "Orphan")
 ]%%

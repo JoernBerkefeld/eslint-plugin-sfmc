@@ -6,7 +6,7 @@
 |---|---|
 | **Type** | `problem` |
 | **Default severity** | `error` in `recommended` and `strict` |
-| **Fixable** | **Auto-fix** for `let`/`const`; **Suggestion** for `??` |
+| **Fixable** | **Auto-fix** for `let`/`const`, `??`, and direct object `return` |
 
 ## Why This Rule Exists
 
@@ -49,22 +49,19 @@ var value = (obj && obj.prop !== null && obj.prop !== undefined) ? obj.prop : "d
 
 ## Fix
 
-**Auto-fix** for `let` and `const` declarations. Applied by:
+This rule provides **auto-fix** for selected features. Applied by:
 
 - `eslint --fix` on the command line
 - **Fix this issue** / **Fix all auto-fixable problems** in VS Code (requires the [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint))
 - On save via `editor.codeActionsOnSave: { "source.fixAll.eslint": "explicit" }`
 
-What the auto-fix does: replaces the `let` or `const` keyword with `var`, leaving the rest of the declaration unchanged.
+What the auto-fix does:
 
----
+- **`let` / `const` declarations** — replaces the keyword with `var`, leaving the rest of the declaration unchanged.
+- **Nullish coalescing (`??`)** — replaces `??` with `||`. Note that `||` has different semantics — it also treats `0`, `""`, and `false` as falsy, unlike `??` which only replaces `null` and `undefined`.
+- **Direct object literal `return`** — rewrites `return { … }` to assign the object to a temporary `var _result` and then `return _result`.
 
-**Suggestion** for nullish coalescing (`??`). Applied by:
-
-- Click the **lightbulb** / press `Ctrl+.` on the flagged code in VS Code (requires the ESLint extension)
-- `eslint --fix` does **not** apply suggestions (`--fix-type suggestion` filters fixable rules by rule category, it does **not** apply `hasSuggestions` suggestions)
-
-What the suggestion does: replaces `??` with `||`. Note that `||` has different semantics — it also treats `0`, `""`, and `false` as falsy, unlike `??` which only replaces `null` and `undefined`.
+Other unsupported features (arrow functions, template literals, classes, etc.) have no auto-fix.
 
 ## Configuration Example
 

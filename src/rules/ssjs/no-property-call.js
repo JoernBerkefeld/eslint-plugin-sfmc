@@ -19,15 +19,30 @@
 
 import { PLATFORM_RESPONSE_METHODS, PLATFORM_REQUEST_METHODS } from 'ssjs-data';
 
-// Platform.Response properties — readable AND writable
 const RESPONSE_PROPERTIES = new Set(
     PLATFORM_RESPONSE_METHODS.filter((m) => m.isProperty).map((m) => m.name.toLowerCase()),
 );
 
-// Platform.Request properties — read-only
 const REQUEST_PROPERTIES = new Set(
     PLATFORM_REQUEST_METHODS.filter((m) => m.isProperty).map((m) => m.name.toLowerCase()),
 );
+
+/**
+ * Returns true when replacing a call with an assignment expression is syntactically safe.
+ *
+ * @param {import('eslint').Rule.Node} node - CallExpression node
+ * @returns {boolean} Whether assignment replacement is valid in this parent context
+ */
+function canReplaceCallWithAssignment(node) {
+    const parent = node.parent;
+    if (parent.type === 'ExpressionStatement' && parent.expression === node) {
+        return true;
+    }
+    if (parent.type === 'SequenceExpression' && parent.expressions.includes(node)) {
+        return true;
+    }
+    return false;
+}
 
 export default {
     meta: {
@@ -56,7 +71,6 @@ export default {
             CallExpression(node) {
                 const callee = node.callee;
 
-                // Must be Platform.<NS>.<property>()
                 if (
                     callee.type !== 'MemberExpression' ||
                     callee.object.type !== 'MemberExpression' ||
@@ -75,7 +89,6 @@ export default {
 
                 if (ns === 'response' && RESPONSE_PROPERTIES.has(propName)) {
                     if (node.arguments.length === 0) {
-                        // Reading with parens — remove ()
                         context.report({
                             node,
                             messageId: 'propertyReadWithCall',
@@ -85,14 +98,12 @@ export default {
                             },
                         });
                     } else if (node.arguments.length === 1) {
-                        // Setting via function call — convert to assignment
                         context.report({
                             node,
                             messageId: 'writablePropertySet',
                             data: { ns: displayNs, name: displayName },
                             fix(fixer) {
-                                // Only safe when the call is a standalone expression statement
-                                if (node.parent.type !== 'ExpressionStatement') {
+                                if (!canReplaceCallWithAssignment(node)) {
                                     return null;
                                 }
                                 const argText = sourceCode.getText(node.arguments[0]);
@@ -103,7 +114,6 @@ export default {
                             },
                         });
                     } else {
-                        // >1 args — unusual, flag without a fix
                         context.report({
                             node,
                             messageId: 'writablePropertySet',
@@ -112,7 +122,6 @@ export default {
                     }
                 } else if (ns === 'request' && REQUEST_PROPERTIES.has(propName)) {
                     if (node.arguments.length === 0) {
-                        // Reading with parens — remove ()
                         context.report({
                             node,
                             messageId: 'propertyReadWithCall',
@@ -122,7 +131,6 @@ export default {
                             },
                         });
                     } else {
-                        // Attempting to set a read-only property — no fix
                         context.report({
                             node,
                             messageId: 'readOnlyPropertySet',
