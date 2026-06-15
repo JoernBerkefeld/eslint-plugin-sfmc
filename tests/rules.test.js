@@ -17,6 +17,7 @@ import ampNoLoopCounterAssign from '../src/rules/amp/no-loop-counter-assign.js';
 import ampNoInlineStatement from '../src/rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from '../src/rules/amp/require-variable-declaration.js';
 import ampFunctionArity from '../src/rules/amp/function-arity.js';
+import ampArgTypes from '../src/rules/amp/arg-types.js';
 import ampNoEmailExcludedFunction from '../src/rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from '../src/rules/amp/no-deprecated-function.js';
 import ampNamingConvention from '../src/rules/amp/naming-convention.js';
@@ -373,6 +374,68 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
                 {
                     messageId: 'incompleteGroup',
                     data: { name: 'UpdateData', size: '2' },
+                },
+            ],
+        },
+    ],
+});
+
+// ── 10b. amp-arg-types ────────────────────────────────────────────────────────
+
+ampTester.run('amp-arg-types', ampArgTypes, {
+    valid: [
+        // valid enum literal (exact case)
+        { code: "%%= DatePart('2026-01-15', 'Y') =%%" },
+        // valid enum literal (different case — matching is case-insensitive)
+        { code: "%%= DatePart('2026-01-15', 'year') =%%" },
+        { code: "%%= DatePart('2026-01-15', 'MONTHNAME') =%%" },
+        // variable argument — not statically checkable, skipped
+        { code: '%%= DatePart(@d, @part) =%%' },
+        // function with no enum params — never flagged
+        { code: '%%= Add(1, 2) =%%' },
+    ],
+    invalid: [
+        {
+            code: "%%= DatePart('2026-01-15', 'decade') =%%",
+            errors: [
+                {
+                    messageId: 'invalidEnumValue',
+                    data: {
+                        name: 'DatePart',
+                        param: 'datePart',
+                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        actual: 'decade',
+                    },
+                },
+            ],
+        },
+        {
+            // numeric literal in an enum slot is also invalid
+            code: "%%= DatePart('2026-01-15', 5) =%%",
+            errors: [
+                {
+                    messageId: 'invalidEnumValue',
+                    data: {
+                        name: 'DatePart',
+                        param: 'datePart',
+                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        actual: '5',
+                    },
+                },
+            ],
+        },
+        {
+            // boolean literal in an enum slot is also invalid
+            code: "%%= DatePart('2026-01-15', true) =%%",
+            errors: [
+                {
+                    messageId: 'invalidEnumValue',
+                    data: {
+                        name: 'DatePart',
+                        param: 'datePart',
+                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        actual: 'true',
+                    },
                 },
             ],
         },

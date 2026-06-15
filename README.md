@@ -100,6 +100,7 @@ export default [
 | ------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------ |
 | [`sfmc/amp-no-unknown-function`](docs/rules/amp/no-unknown-function.md)                     | `error` | Disallow calls to unknown AMPscript functions                |
 | [`sfmc/amp-function-arity`](docs/rules/amp/function-arity.md)                               | `error` | Enforce correct argument counts                              |
+| [`sfmc/amp-arg-types`](docs/rules/amp/arg-types.md)                                         | `error` | Check that literal arguments match expected parameter types and allowed values |
 | [`sfmc/amp-set-requires-target`](docs/rules/amp/set-requires-target.md)                     | `error` | Require `set` to have a target variable                      |
 | [`sfmc/amp-no-smart-quotes`](docs/rules/amp/no-smart-quotes.md)                             | `error` | Disallow smart/curly quotes in strings                       |
 | [`sfmc/amp-no-var-redeclaration`](docs/rules/amp/no-var-redeclaration.md)                   | `warn`  | Disallow re-declaring a variable with `var`                  |

@@ -23,6 +23,7 @@ import ampNoLoopCounterAssign from './rules/amp/no-loop-counter-assign.js';
 import ampNoInlineStatement from './rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from './rules/amp/require-variable-declaration.js';
 import ampFunctionArity from './rules/amp/function-arity.js';
+import ampArgTypes from './rules/amp/arg-types.js';
 import ampNoEmailExcludedFunction from './rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from './rules/amp/no-deprecated-function.js';
 import ampNamingConvention from './rules/amp/naming-convention.js';
@@ -82,6 +83,7 @@ const plugin = {
         'amp-no-inline-statement': ampNoInlineStatement,
         'amp-require-variable-declaration': ampRequireVariableDeclaration,
         'amp-function-arity': ampFunctionArity,
+        'amp-arg-types': ampArgTypes,
         'amp-no-email-excluded-function': ampNoEmailExcludedFunction,
         'amp-no-deprecated-function': ampNoDeprecatedFunction,
         'amp-naming-convention': ampNamingConvention,
@@ -160,6 +162,7 @@ const ampRecommendedRules = {
     'sfmc/amp-no-loop-counter-assign': 'warn',
     'sfmc/amp-no-inline-statement': 'warn',
     'sfmc/amp-function-arity': 'error',
+    'sfmc/amp-arg-types': 'error',
     'sfmc/amp-no-deprecated-function': 'warn',
     'sfmc/amp-naming-convention': 'warn',
     'sfmc/amp-no-empty-then': 'warn',
@@ -181,6 +184,7 @@ const ampStrictRules = {
     'sfmc/amp-no-inline-statement': 'error',
     'sfmc/amp-require-variable-declaration': 'warn',
     'sfmc/amp-function-arity': 'error',
+    'sfmc/amp-arg-types': 'error',
     'sfmc/amp-no-email-excluded-function': ['error', { context: 'email' }],
     'sfmc/amp-no-deprecated-function': 'error',
     'sfmc/amp-naming-convention': ['error', { format: 'camelCase' }],
