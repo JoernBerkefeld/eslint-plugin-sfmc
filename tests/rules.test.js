@@ -438,20 +438,20 @@ ampTester.run('amp-no-deprecated-function', ampNoDeprecatedFunction, {
         // InsertDE is a valid email-context function, not deprecated
         { code: '%%[InsertDE("DE", "Col", @val)]%%' },
         // Modern Content Builder replacements are not deprecated
-        { code: '%%[ContentBlockById(123)]%%' },
+        { code: '%%[ContentBlockByID(123)]%%' },
         { code: '%%[ContentBlockByName("Public/MyBlock")]%%' },
     ],
     invalid: [
         {
             // 1:1 replacement — auto-fix renames the function in-place
             code: '%%[ContentArea(123)]%%',
-            output: '%%[ContentBlockById(123)]%%',
+            output: '%%[ContentBlockByID(123)]%%',
             errors: [
                 {
                     messageId: 'deprecated',
                     data: {
                         name: 'ContentArea',
-                        replacement: 'ContentBlockById',
+                        replacement: 'ContentBlockByID',
                         reason: 'ContentArea references classic content areas, which are no longer supported. Use Content Builder content blocks instead.',
                     },
                 },
@@ -871,7 +871,7 @@ ssjsTester.run('ssjs-no-deprecated-function', ssjsNoDeprecatedFunction, {
     valid: [
         // Non-deprecated functions
         { code: 'Platform.Function.ContentBlockByKey("MyBlock");' },
-        { code: 'Platform.Function.ContentBlockById(12345);' },
+        { code: 'Platform.Function.ContentBlockByID(12345);' },
         { code: 'var de = DataExtension.Init("MyDE"); de.Retrieve();' },
         // Unrelated bare call — not deprecated
         { code: 'Write("hello");' },
