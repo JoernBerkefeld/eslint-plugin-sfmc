@@ -1452,6 +1452,11 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                             data: { owner: 'Array.prototype', method: 'some' },
                             output:
                                 'var a = [1,2,3]; a.some(function(x){ return x > 2; });\n\n' +
+                                '/**\n' +
+                                ' * Polyfill for Array.prototype.some (SFMC SSJS).\n' +
+                                ' * @param {Function} predicate - test called with (element, index, array)\n' +
+                                ' * @returns {boolean} true when the predicate passes for any element\n' +
+                                ' */\n' +
                                 'Array.prototype.some = function (predicate) {\n' +
                                 "    if (typeof predicate !== 'function') { return false; }\n" +
                                 '    for (var i = 0; i < this.length; i++) {\n' +
@@ -1475,6 +1480,11 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                             data: { owner: 'Array', method: 'isArray' },
                             output:
                                 'Array.isArray([]);\n\n' +
+                                '/**\n' +
+                                ' * Polyfill for Array.isArray (SFMC SSJS).\n' +
+                                ' * @param {*} value - the value to test\n' +
+                                ' * @returns {boolean} true when the value is an Array\n' +
+                                ' */\n' +
                                 'Array.isArray = function (value) {\n' +
                                 "    return Object.prototype.toString.call(value) === '[object Array]';\n" +
                                 '};',
