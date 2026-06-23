@@ -1267,6 +1267,19 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
             code: 'Array.isArray([]);',
             options: [{ ignore: ['isArray'] }],
         },
+
+        // KNOWN_UNSUPPORTED — ignore option suppresses
+        {
+            code: 'JSON.parse("{}");',
+            options: [{ ignore: ['parse'] }],
+        },
+        {
+            code: 'var s = "hi"; s.trimStart();',
+            options: [{ ignore: ['trimStart'] }],
+        },
+
+        // KNOWN_UNSUPPORTED method name on an SFMC receiver — never flagged
+        { code: 'DataExtension.flat();' },
     ],
     invalid: [
         // ── Prototype methods (unavailable) ──────────────────────────────────
@@ -1467,6 +1480,69 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                                 '};',
                         },
                     ],
+                },
+            ],
+        },
+
+        // ── KNOWN_UNSUPPORTED static members (no polyfill, suggestion only) ───
+        {
+            code: 'JSON.parse("{}");',
+            errors: [
+                {
+                    messageId: 'unavailableNoPolyfill',
+                    data: {
+                        owner: 'JSON',
+                        method: 'parse',
+                        suggestion:
+                            'JSON is undefined in SFMC SSJS. Use Platform.Function.ParseJSON(string) instead of JSON.parse.',
+                    },
+                    suggestions: 0,
+                },
+            ],
+        },
+        {
+            code: 'Object.keys(obj);',
+            errors: [
+                {
+                    messageId: 'unavailableNoPolyfill',
+                    data: {
+                        owner: 'Object',
+                        method: 'keys',
+                        suggestion:
+                            'Object.keys is unavailable in SFMC. Use a for...in loop with hasOwnProperty.',
+                    },
+                    suggestions: 0,
+                },
+            ],
+        },
+
+        // ── KNOWN_UNSUPPORTED prototype members (no polyfill, suggestion only) ─
+        {
+            code: 'var s = "hi"; s.trimStart();',
+            errors: [
+                {
+                    messageId: 'unavailableNoPolyfill',
+                    data: {
+                        owner: 'String',
+                        method: 'trimStart',
+                        suggestion: String.raw`String.prototype.trimStart is unavailable in SFMC. Use a /^\s+/ replace.`,
+                    },
+                    suggestions: 0,
+                },
+            ],
+        },
+        {
+            code: 'var a = [1,[2]]; a.flat();',
+            errors: [
+                {
+                    messageId: 'unavailableNoPolyfill',
+                    data: {
+                        owner: 'Array',
+                        method: 'flat',
+                        suggestion:
+                            'Array.prototype.flat is unavailable in SFMC. Concatenate nested arrays manually in a loop.',
+                    },
+                    suggestions: 0,
                 },
             ],
         },

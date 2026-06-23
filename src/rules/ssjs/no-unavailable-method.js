@@ -1,9 +1,15 @@
 /**
  * Rule: no-unavailable-method
  *
- * Flags calls to Array methods that are either missing or broken in SFMC's
- * legacy ECMAScript engine (Jint/ECMAScript 3) and suggests inserting a
- * polyfill at the end of the file.
+ * Flags calls to ECMAScript built-in methods that are either missing or broken
+ * in SFMC's legacy engine (Jint/ECMAScript 3).
+ *
+ * Two catalogs from ssjs-data feed this rule:
+ *
+ * 1. POLYFILLABLE_METHODS — a shipped ES3-safe polyfill exists. The report
+ *    carries a suggestion that inserts the polyfill at the end of the file.
+ * 2. KNOWN_UNSUPPORTED — no polyfill is feasible. The report has no fix; the
+ *    message carries the ssjs-data `suggestion` (e.g. use Platform.Function.X).
  *
  * - category 'unavailable': method does not exist; calling it throws a runtime error.
  * - category 'broken': method exists natively but returns incorrect results.
@@ -13,7 +19,12 @@
  * should verify placement before the first call (or load via Content Block).
  */
 
-import { polyfillByPrototypeName, polyfillByStaticName } from 'ssjs-data';
+import {
+    polyfillByPrototypeName,
+    polyfillByStaticName,
+    knownUnsupportedByPrototypeName,
+    knownUnsupportedByStaticName,
+} from 'ssjs-data';
 
 // SFMC-specific top-level objects whose methods must never be flagged even
 // when their method names collide with Array.prototype (e.g. Platform.find).
@@ -38,7 +49,7 @@ export default {
         hasSuggestions: true,
         docs: {
             description:
-                'Flag Array methods unavailable or broken in SFMC SSJS and suggest polyfills',
+                'Flag ECMAScript built-in methods unavailable or broken in SFMC SSJS and suggest polyfills',
         },
         messages: {
             unavailable:
@@ -48,6 +59,10 @@ export default {
                 "'{{owner}}.{{method}}' exists in SFMC SSJS but produces incorrect results. " +
                 'Add a polyfill to get the correct behavior.',
             addPolyfill: "Insert '{{owner}}.{{method}}' polyfill at end of file",
+            unavailableNoPolyfill:
+                "'{{owner}}.{{method}}' is not available in SFMC SSJS (ECMAScript 3). {{suggestion}}",
+            brokenNoPolyfill:
+                "'{{owner}}.{{method}}' exists in SFMC SSJS but produces incorrect results. {{suggestion}}",
         },
         schema: [
             {
@@ -136,7 +151,9 @@ export default {
                 const methodName = prop.name;
                 const receiver = callee.object;
 
-                // ── Static Array methods: Array.isArray(), Array.of() ──────────
+                const lowerMethod = methodName.toLowerCase();
+
+                // ── Static methods with a polyfill: Array.isArray(), Array.of() ─
                 if (
                     receiver.type === 'Identifier' &&
                     receiver.name === 'Array' &&
@@ -150,55 +167,104 @@ export default {
                     return;
                 }
 
-                // ── Prototype methods ─────────────────────────────────────────
-                if (!polyfillByPrototypeName.has(methodName)) {
-                    return;
-                }
-                if (ignored.has(methodName)) {
-                    return;
-                }
-
-                const entry = polyfillByPrototypeName.get(methodName);
-
-                // Skip known SFMC top-level objects to avoid false positives.
-                if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
-                    return;
-                }
-
-                // For methods that also exist on String.prototype in ES3
-                // (indexOf, lastIndexOf), only flag when the receiver is
-                // a literal array or the call is chained from an array method
-                // we already know about — otherwise we'd falsely flag string usage.
-                if (entry.ambiguousWithString) {
-                    const isDefinitelyArray =
-                        receiver.type === 'ArrayExpression' ||
-                        // arr.filter(...).indexOf(...) — left side is a CallExpression
-                        // whose callee refers to another Array method
-                        (receiver.type === 'CallExpression' &&
-                            receiver.callee.type === 'MemberExpression' &&
-                            polyfillByPrototypeName.has(receiver.callee.property.name));
-                    if (!isDefinitelyArray) {
+                // ── Static methods with NO polyfill: JSON.parse, Object.keys, … ─
+                // The owner prefix is explicit, so match owner.member precisely.
+                if (
+                    receiver.type === 'Identifier' &&
+                    knownUnsupportedByStaticName.has(lowerMethod)
+                ) {
+                    const entry = knownUnsupportedByStaticName.get(lowerMethod);
+                    const ownerBase = entry.owner.replace(/\.prototype$/, '');
+                    if (receiver.name === ownerBase && !ignored.has(methodName)) {
+                        pendingReports.push({ node: prop, entry, noPolyfill: true });
                         return;
                     }
                 }
 
-                pendingReports.push({ node: prop, entry });
+                // ── Prototype methods with a polyfill ──────────────────────────
+                if (polyfillByPrototypeName.has(methodName)) {
+                    if (ignored.has(methodName)) {
+                        return;
+                    }
+
+                    const entry = polyfillByPrototypeName.get(methodName);
+
+                    // Skip known SFMC top-level objects to avoid false positives.
+                    if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
+                        return;
+                    }
+
+                    // For methods that also exist on String.prototype in ES3
+                    // (indexOf, lastIndexOf), only flag when the receiver is
+                    // a literal array or the call is chained from an array method
+                    // we already know about — otherwise we'd falsely flag string usage.
+                    if (entry.ambiguousWithString) {
+                        const isDefinitelyArray =
+                            receiver.type === 'ArrayExpression' ||
+                            // arr.filter(...).indexOf(...) — left side is a CallExpression
+                            // whose callee refers to another Array method
+                            (receiver.type === 'CallExpression' &&
+                                receiver.callee.type === 'MemberExpression' &&
+                                polyfillByPrototypeName.has(receiver.callee.property.name));
+                        if (!isDefinitelyArray) {
+                            return;
+                        }
+                    }
+
+                    pendingReports.push({ node: prop, entry });
+                    return;
+                }
+
+                // ── Prototype methods with NO polyfill: .trimStart(), .flat(), … ─
+                if (knownUnsupportedByPrototypeName.has(lowerMethod)) {
+                    if (ignored.has(methodName)) {
+                        return;
+                    }
+                    // Skip known SFMC top-level objects to avoid false positives.
+                    if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
+                        return;
+                    }
+                    const entry = knownUnsupportedByPrototypeName.get(lowerMethod);
+                    pendingReports.push({ node: prop, entry, noPolyfill: true });
+                }
             },
 
             'Program:exit'() {
-                for (const { node, entry } of pendingReports) {
-                    if (isAlreadyPolyfilled(entry.method)) {
+                for (const { node, entry, noPolyfill } of pendingReports) {
+                    // KNOWN_UNSUPPORTED entries use `member`; polyfillable use `method`.
+                    const methodName = entry.method ?? entry.member;
+                    const ownerDisplay = entry.owner.replace(/\.prototype$/, '');
+
+                    if (noPolyfill) {
+                        // No polyfill is feasible — report with the ssjs-data suggestion
+                        // and no auto-insert fix.
+                        context.report({
+                            node,
+                            messageId:
+                                entry.category === 'broken'
+                                    ? 'brokenNoPolyfill'
+                                    : 'unavailableNoPolyfill',
+                            data: {
+                                owner: ownerDisplay,
+                                method: methodName,
+                                suggestion: entry.suggestion,
+                            },
+                        });
+                        continue;
+                    }
+
+                    if (isAlreadyPolyfilled(methodName)) {
                         continue;
                     }
 
                     context.report({
                         node,
                         messageId: entry.category,
-                        data: { owner: entry.owner, method: entry.method },
+                        data: { owner: entry.owner, method: methodName },
                         suggest: [
                             {
                                 messageId: 'addPolyfill',
-                                data: { owner: entry.owner, method: entry.method },
+                                data: { owner: entry.owner, method: methodName },
                                 fix: buildSuggestFix(entry),
                             },
                         ],
