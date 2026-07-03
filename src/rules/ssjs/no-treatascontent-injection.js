@@ -35,9 +35,9 @@ export default {
                     return;
                 }
 
-                const arg = node.arguments[0];
-                if (containsConcatenation(arg)) {
-                    context.report({ node: arg, messageId: 'injection' });
+                const argument = node.arguments[0];
+                if (containsConcatenation(argument)) {
+                    context.report({ node: argument, messageId: 'injection' });
                 }
             },
         };
@@ -53,7 +53,7 @@ function isTreatAsContentCall(node) {
     }
 
     // Platform.Function.TreatAsContent(...)
-    if (
+    return (
         callee.type === 'MemberExpression' &&
         callee.property.type === 'Identifier' &&
         callee.property.name === 'TreatAsContent' &&
@@ -62,19 +62,12 @@ function isTreatAsContentCall(node) {
         callee.object.property.name === 'Function' &&
         callee.object.object.type === 'Identifier' &&
         callee.object.object.name === 'Platform'
-    ) {
-        return true;
-    }
-
-    return false;
+    );
 }
 
 function containsConcatenation(node) {
     if (node.type === 'BinaryExpression' && node.operator === '+') {
         return true;
     }
-    if (node.type === 'TemplateLiteral' && node.expressions.length > 0) {
-        return true;
-    }
-    return false;
+    return node.type === 'TemplateLiteral' && node.expressions.length > 0;
 }

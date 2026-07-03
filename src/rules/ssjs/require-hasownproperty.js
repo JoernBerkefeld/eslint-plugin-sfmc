@@ -27,17 +27,17 @@ export default {
             ForInStatement(node) {
                 const body = node.body;
 
-                const stmts = body.type === 'BlockStatement' ? body.body : [body];
+                const statements = body.type === 'BlockStatement' ? body.body : [body];
 
-                if (stmts.length === 0) {
+                if (statements.length === 0) {
                     return;
                 }
 
-                const hasGuard = stmts.some((stmt) => containsHasOwnProperty(stmt));
+                const hasGuard = statements.some((statement) => containsHasOwnProperty(statement));
 
                 if (!hasGuard) {
                     const keyName = getKeyName(node.left);
-                    const objText = context.sourceCode.getText(node.right);
+                    const objectText = context.sourceCode.getText(node.right);
 
                     if (!keyName) {
                         context.report({
@@ -52,43 +52,49 @@ export default {
                         messageId: 'missingGuard',
                         fix(fixer) {
                             const sourceCode = context.sourceCode;
-                            const innerStmts = body.type === 'BlockStatement' ? body.body : [body];
+                            const innerStatements =
+                                body.type === 'BlockStatement' ? body.body : [body];
 
                             // Single-line loops keep compact output to avoid reformatting
                             // code the author intentionally wrote on one line.
                             const isSingleLine = node.loc.start.line === node.loc.end.line;
                             if (isSingleLine) {
-                                const compactBody = innerStmts
-                                    .map((stmt) => sourceCode.getText(stmt))
+                                const compactBody = innerStatements
+                                    .map((statement) => sourceCode.getText(statement))
                                     .join(' ');
                                 return fixer.replaceText(
                                     body,
-                                    `{ if (${objText}.hasOwnProperty(${keyName})) { ${compactBody} } }`,
+                                    `{ if (${objectText}.hasOwnProperty(${keyName})) { ${compactBody} } }`,
                                 );
                             }
 
                             // Multi-line loops: emit a properly-indented guard block.
                             const loopLine = sourceCode.lines[node.loc.start.line - 1] ?? '';
                             const baseIndent = (loopLine.match(/^[\t ]*/) ?? [''])[0];
-                            const firstStmt = innerStmts[0];
-                            const firstStmtLine = firstStmt
-                                ? (sourceCode.lines[firstStmt.loc.start.line - 1] ?? '')
+                            const firstStatement = innerStatements[0];
+                            const firstStatementLine = firstStatement
+                                ? (sourceCode.lines[firstStatement.loc.start.line - 1] ?? '')
                                 : '';
-                            const firstStmtIndent = (firstStmtLine.match(/^[\t ]*/) ?? [''])[0];
+                            const firstStatementIndent = (firstStatementLine.match(/^[\t ]*/) ?? [
+                                '',
+                            ])[0];
                             const unit =
-                                firstStmtIndent.length > baseIndent.length
-                                    ? firstStmtIndent.slice(baseIndent.length)
-                                    : '    ';
+                                firstStatementIndent.length > baseIndent.length
+                                    ? firstStatementIndent.slice(baseIndent.length)
+                                    : ' '.repeat(4);
                             const guardIndent = baseIndent + unit;
-                            const stmtIndent = guardIndent + unit;
+                            const statementIndent = guardIndent + unit;
 
-                            const guardedBody = innerStmts
-                                .map((stmt) => `${stmtIndent}${sourceCode.getText(stmt)}`)
+                            const guardedBody = innerStatements
+                                .map(
+                                    (statement) =>
+                                        `${statementIndent}${sourceCode.getText(statement)}`,
+                                )
                                 .join('\n');
 
                             return fixer.replaceText(
                                 body,
-                                `{\n${guardIndent}if (${objText}.hasOwnProperty(${keyName})) {\n${guardedBody}\n${guardIndent}}\n${baseIndent}}`,
+                                `{\n${guardIndent}if (${objectText}.hasOwnProperty(${keyName})) {\n${guardedBody}\n${guardIndent}}\n${baseIndent}}`,
                             );
                         },
                     });
@@ -99,53 +105,59 @@ export default {
 };
 
 function containsHasOwnProperty(node) {
-    if (!node) {
+    let current = node;
+
+    // Unwrap pass-through single-child nodes iteratively to avoid tail recursion.
+    while (current && current.type === 'ExpressionStatement') {
+        current = current.expression;
+    }
+
+    if (!current) {
         return false;
     }
 
-    if (node.type === 'IfStatement' && node.test && hasOwnPropertyTest(node.test)) {
+    if (current.type === 'IfStatement' && current.test && hasOwnPropertyTest(current.test)) {
         return true;
     }
 
-    if (node.type === 'IfStatement') {
+    if (current.type === 'IfStatement') {
         return (
-            hasOwnPropertyTest(node.test) ||
-            containsHasOwnProperty(node.consequent) ||
-            containsHasOwnProperty(node.alternate)
+            hasOwnPropertyTest(current.test) ||
+            containsHasOwnProperty(current.consequent) ||
+            containsHasOwnProperty(current.alternate)
         );
     }
 
-    if (node.type === 'BlockStatement') {
-        return node.body.some((child) => containsHasOwnProperty(child));
-    }
-
-    if (node.type === 'ExpressionStatement') {
-        return containsHasOwnProperty(node.expression);
+    if (current.type === 'BlockStatement') {
+        return current.body.some((child) => containsHasOwnProperty(child));
     }
 
     return false;
 }
 
 function hasOwnPropertyTest(node) {
-    if (!node) {
+    let current = node;
+
+    // Unwrap negations / unary wrappers iteratively to avoid tail recursion.
+    while (current && current.type === 'UnaryExpression') {
+        current = current.argument;
+    }
+
+    if (!current) {
         return false;
     }
 
     if (
-        node.type === 'CallExpression' &&
-        node.callee.type === 'MemberExpression' &&
-        node.callee.property.type === 'Identifier' &&
-        node.callee.property.name === 'hasOwnProperty'
+        current.type === 'CallExpression' &&
+        current.callee.type === 'MemberExpression' &&
+        current.callee.property.type === 'Identifier' &&
+        current.callee.property.name === 'hasOwnProperty'
     ) {
         return true;
     }
 
-    if (node.type === 'LogicalExpression') {
-        return hasOwnPropertyTest(node.left) || hasOwnPropertyTest(node.right);
-    }
-
-    if (node.type === 'UnaryExpression') {
-        return hasOwnPropertyTest(node.argument);
+    if (current.type === 'LogicalExpression') {
+        return hasOwnPropertyTest(current.left) || hasOwnPropertyTest(current.right);
     }
 
     return false;

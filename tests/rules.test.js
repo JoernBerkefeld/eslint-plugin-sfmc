@@ -9,7 +9,7 @@ import ampNoHtmlComment from '../src/rules/amp/no-html-comment.js';
 import ampNoJsLineComment from '../src/rules/amp/no-js-line-comment.js';
 import ampNoNestedScriptTag from '../src/rules/amp/no-nested-script-tag.js';
 import ampNoNestedAmpscriptDelimiter from '../src/rules/amp/no-nested-ampscript-delimiter.js';
-import ampNoVariableRedeclaration from '../src/rules/amp/no-var-redeclaration.js';
+import ampNoVariableRedeclaration from '../src/rules/amp/no-variable-redeclaration.js';
 import ampSetRequiresTarget from '../src/rules/amp/set-requires-target.js';
 import ampNoEmptyBlock from '../src/rules/amp/no-empty-block.js';
 import ampNoSmartQuotes from '../src/rules/amp/no-smart-quotes.js';
@@ -18,7 +18,7 @@ import ampNoLoopCounterAssign from '../src/rules/amp/no-loop-counter-assign.js';
 import ampNoInlineStatement from '../src/rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from '../src/rules/amp/require-variable-declaration.js';
 import ampFunctionArity from '../src/rules/amp/function-arity.js';
-import ampArgTypes from '../src/rules/amp/arg-types.js';
+import ampArgumentTypes from '../src/rules/amp/argument-types.js';
 import ampNoEmailExcludedFunction from '../src/rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from '../src/rules/amp/no-deprecated-function.js';
 import ampNamingConvention from '../src/rules/amp/naming-convention.js';
@@ -39,10 +39,10 @@ import ssjsRequirePlatformLoadOrder from '../src/rules/ssjs/require-platform-loa
 import ssjsNoHardcodedCredentials from '../src/rules/ssjs/no-hardcoded-credentials.js';
 import ssjsPreferPlatformLoadVersion from '../src/rules/ssjs/prefer-platform-load-version.js';
 import ssjsNoUnavailableMethod from '../src/rules/ssjs/no-unavailable-method.js';
-import ssjsPreferParsejsonSafeArg from '../src/rules/ssjs/prefer-parsejson-safe-arg.js';
+import ssjsPreferParsejsonSafeArgument from '../src/rules/ssjs/prefer-parsejson-safe-argument.js';
 import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
-import ssjsArgTypes from '../src/rules/ssjs/ssjs-arg-types.js';
+import ssjsArgumentTypes from '../src/rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
 
 // ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
@@ -201,23 +201,23 @@ ampTester.run('amp-no-smart-quotes', ampNoSmartQuotes, {
     invalid: [
         {
             // right single curly ' inside a "-delimited string — replace with straight '
-            code: '%%[set @x = "he\u2019s here"]%%',
+            code: '%%[set @x = "he\u{2019}s here"]%%',
             output: '%%[set @x = "he\'s here"]%%',
             errors: [
                 {
                     messageId: 'smartQuote',
-                    data: { kind: 'right single curly quote \u2019' },
+                    data: { kind: 'right single curly quote \u{2019}' },
                 },
             ],
         },
         {
             // double curly quotes inside a "-delimited string — switch outer to '
-            code: '%%[set @x = "\u201Chello\u201D"]%%',
+            code: '%%[set @x = "\u{201C}hello\u{201D}"]%%',
             output: '%%[set @x = \'"hello"\']%%',
             errors: [
                 {
                     messageId: 'smartQuote',
-                    data: { kind: 'left double curly quote \u201C' },
+                    data: { kind: 'left double curly quote \u{201C}' },
                 },
             ],
         },
@@ -406,7 +406,7 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
 
 // ── 10b. amp-arg-types ────────────────────────────────────────────────────────
 
-ampTester.run('amp-arg-types', ampArgTypes, {
+ampTester.run('amp-arg-types', ampArgumentTypes, {
     valid: [
         // valid enum literal (exact case)
         { code: "%%= DatePart('2026-01-15', 'Y') =%%" },
@@ -1658,7 +1658,7 @@ ssjsTester.run('ssjs-no-unavailable-method (String polyfills)', ssjsNoUnavailabl
 
 // ─── 19. ssjs-prefer-parsejson-safe-arg ──────────────────────────────────────
 
-ssjsTester.run('ssjs-prefer-parsejson-safe-arg', ssjsPreferParsejsonSafeArg, {
+ssjsTester.run('ssjs-prefer-parsejson-safe-arg', ssjsPreferParsejsonSafeArgument, {
     valid: [
         { code: "Platform.Function.ParseJSON(someVar + '');" },
         { code: "Platform.Function.ParseJSON('' + someVar);" },
@@ -1929,7 +1929,7 @@ console.log('All combined processor tests passed.');
 
 // ─── 22. ssjs-arg-types ───────────────────────────────────────────────────────
 
-ssjsTester.run('ssjs-arg-types', ssjsArgTypes, {
+ssjsTester.run('ssjs-arg-types', ssjsArgumentTypes, {
     valid: [
         { code: 'Platform.Function.Lookup("DE", "field", "key", "val");' },
         {

@@ -35,12 +35,7 @@ function extractRowCountVariables(node, into) {
         }
     }
 
-    if (node.type === 'BinaryExpression') {
-        extractRowCountVariables(node.left, into);
-        extractRowCountVariables(node.right, into);
-    }
-
-    if (node.type === 'LogicalExpression') {
+    if (node.type === 'BinaryExpression' || node.type === 'LogicalExpression') {
         extractRowCountVariables(node.left, into);
         extractRowCountVariables(node.right, into);
     }
@@ -86,19 +81,21 @@ export default {
             },
 
             AmpForStatement(node) {
-                if (
+                if (!(
                     node.endExpr &&
                     isRowCountCall(node.endExpr) &&
                     node.endExpr.arguments &&
                     node.endExpr.arguments.length > 0
-                ) {
-                    const argument = node.endExpr.arguments[0];
-                    if (argument.type === 'Variable') {
-                        forLoops.push({
-                            varName: argument.value.toLowerCase(),
-                            node,
-                        });
-                    }
+                )) {
+                    return;
+                }
+
+                const argument = node.endExpr.arguments[0];
+                if (argument.type === 'Variable') {
+                    forLoops.push({
+                        varName: argument.value.toLowerCase(),
+                        node,
+                    });
                 }
             },
 

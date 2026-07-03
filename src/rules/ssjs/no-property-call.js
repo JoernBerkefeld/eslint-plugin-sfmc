@@ -38,10 +38,7 @@ function canReplaceCallWithAssignment(node) {
     if (parent.type === 'ExpressionStatement' && parent.expression === node) {
         return true;
     }
-    if (parent.type === 'SequenceExpression' && parent.expressions.includes(node)) {
-        return true;
-    }
-    return false;
+    return Boolean(parent.type === 'SequenceExpression' && parent.expressions.includes(node));
 }
 
 export default {
@@ -83,11 +80,11 @@ export default {
                 }
 
                 const ns = callee.object.property.name.toLowerCase();
-                const propName = callee.property.name.toLowerCase();
+                const propertyName = callee.property.name.toLowerCase();
                 const displayNs = callee.object.property.name;
                 const displayName = callee.property.name;
 
-                if (ns === 'response' && RESPONSE_PROPERTIES.has(propName)) {
+                if (ns === 'response' && RESPONSE_PROPERTIES.has(propertyName)) {
                     if (node.arguments.length === 0) {
                         context.report({
                             node,
@@ -106,10 +103,10 @@ export default {
                                 if (!canReplaceCallWithAssignment(node)) {
                                     return null;
                                 }
-                                const argText = sourceCode.getText(node.arguments[0]);
+                                const argumentText = sourceCode.getText(node.arguments[0]);
                                 return fixer.replaceText(
                                     node,
-                                    `${sourceCode.getText(callee)} = ${argText}`,
+                                    `${sourceCode.getText(callee)} = ${argumentText}`,
                                 );
                             },
                         });
@@ -120,7 +117,7 @@ export default {
                             data: { ns: displayNs, name: displayName },
                         });
                     }
-                } else if (ns === 'request' && REQUEST_PROPERTIES.has(propName)) {
+                } else if (ns === 'request' && REQUEST_PROPERTIES.has(propertyName)) {
                     if (node.arguments.length === 0) {
                         context.report({
                             node,

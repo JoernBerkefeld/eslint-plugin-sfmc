@@ -92,7 +92,7 @@ function annotateNode(node, lineStarts, textLength, fallback) {
     }
 
     // Rename colliding ESTree types so ESLint's JS scope analysis ignores them.
-    if (node.type && NODE_RENAME[node.type]) {
+    if (node.type && Object.hasOwn(NODE_RENAME, node.type)) {
         node.type = NODE_RENAME[node.type];
     }
 

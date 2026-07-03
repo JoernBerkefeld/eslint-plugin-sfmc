@@ -34,23 +34,23 @@ export default {
                     return;
                 }
 
-                let lengthExpr = null;
+                let lengthExpression = null;
                 if (containsMemberLength(test.right)) {
-                    lengthExpr = test.right;
+                    lengthExpression = test.right;
                 } else if (containsMemberLength(test.left)) {
-                    lengthExpr = test.left;
+                    lengthExpression = test.left;
                 }
 
-                if (!lengthExpr) {
+                if (!lengthExpression) {
                     return;
                 }
 
-                const fix = buildCacheFix(node, lengthExpr, context);
+                const fix = buildCacheFix(node, lengthExpression, context);
 
                 context.report({
                     node: test,
                     messageId: 'cacheLength',
-                    ...(fix ? { fix } : {}),
+                    ...(fix && { fix }),
                 });
             },
         };
@@ -61,17 +61,14 @@ function containsMemberLength(node) {
     if (!node) {
         return false;
     }
-    if (
+    return (
         node.type === 'MemberExpression' &&
         node.property.type === 'Identifier' &&
         node.property.name === 'length'
-    ) {
-        return true;
-    }
-    return false;
+    );
 }
 
-function buildCacheFix(forNode, lengthExpr, context) {
+function buildCacheFix(forNode, lengthExpression, context) {
     const init = forNode.init;
     // Only fix when init is a VariableDeclaration so we can safely
     // append a new declarator without restructuring the loop header.
@@ -79,14 +76,14 @@ function buildCacheFix(forNode, lengthExpr, context) {
         return null;
     }
 
-    const objText = context.sourceCode.getText(lengthExpr.object);
-    const lenVar = '_len';
+    const objectText = context.sourceCode.getText(lengthExpression.object);
+    const lengthVariable = '_len';
 
     return function fix(fixer) {
-        const lastDecl = init.declarations.at(-1);
+        const lastDeclaration = init.declarations.at(-1);
         return [
-            fixer.insertTextAfter(lastDecl, `, ${lenVar} = ${objText}.length`),
-            fixer.replaceText(lengthExpr, lenVar),
+            fixer.insertTextAfter(lastDeclaration, `, ${lengthVariable} = ${objectText}.length`),
+            fixer.replaceText(lengthExpression, lengthVariable),
         ];
     };
 }

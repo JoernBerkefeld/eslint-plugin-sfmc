@@ -1,27 +1,27 @@
-const SMART_QUOTE_RE = /[\u2018\u2019\u201C\u201D\u201A\u201E\u2039\u203A]/;
+const SMART_QUOTE_RE = /[\u{2018}\u{2019}\u{201C}\u{201D}\u{201A}\u{201E}\u{2039}\u{203A}]/u;
 
 const SMART_QUOTES = {
-    '\u2018': 'left single curly quote \u2018',
-    '\u2019': 'right single curly quote \u2019',
-    '\u201C': 'left double curly quote \u201C',
-    '\u201D': 'right double curly quote \u201D',
-    '\u201A': 'single low-9 quote \u201A',
-    '\u201E': 'double low-9 quote \u201E',
-    '\u2039': 'single left angle quote \u2039',
-    '\u203A': 'single right angle quote \u203A',
+    '\u{2018}': 'left single curly quote \u{2018}',
+    '\u{2019}': 'right single curly quote \u{2019}',
+    '\u{201C}': 'left double curly quote \u{201C}',
+    '\u{201D}': 'right double curly quote \u{201D}',
+    '\u{201A}': 'single low-9 quote \u{201A}',
+    '\u{201E}': 'double low-9 quote \u{201E}',
+    '\u{2039}': 'single left angle quote \u{2039}',
+    '\u{203A}': 'single right angle quote \u{203A}',
 };
 
 // Maps each smart-quote char to its nearest ASCII equivalent.
 // Single-flavour smart quotes -> ' ; double-flavour -> "
 const SMART_TO_ASCII = {
-    '\u2018': "'",
-    '\u2019': "'",
-    '\u201A': "'",
-    '\u2039': "'",
-    '\u203A': "'",
-    '\u201C': '"',
-    '\u201D': '"',
-    '\u201E': '"',
+    '\u{2018}': "'",
+    '\u{2019}': "'",
+    '\u{201A}': "'",
+    '\u{2039}': "'",
+    '\u{203A}': "'",
+    '\u{201C}': '"',
+    '\u{201D}': '"',
+    '\u{201E}': '"',
 };
 
 export default {
@@ -52,7 +52,7 @@ export default {
                                 data: { kind },
                                 fix(fixer) {
                                     const fixed = node.value.replaceAll(
-                                        /[\u2018\u2019\u201C\u201D\u201A\u201E\u2039\u203A]/g,
+                                        /[\u{2018}\u{2019}\u{201C}\u{201D}\u{201A}\u{201E}\u{2039}\u{203A}]/gu,
                                         (c) => SMART_TO_ASCII[c],
                                     );
                                     const q = node.quote;

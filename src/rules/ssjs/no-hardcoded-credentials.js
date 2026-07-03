@@ -29,9 +29,7 @@ export default {
             CallExpression(node) {
                 const callee = node.callee;
 
-                let functionName = null;
-
-                if (
+                const functionName =
                     callee.type === 'MemberExpression' &&
                     callee.object.type === 'MemberExpression' &&
                     callee.object.object.type === 'Identifier' &&
@@ -39,9 +37,8 @@ export default {
                     callee.object.property.type === 'Identifier' &&
                     callee.object.property.name === 'Function' &&
                     callee.property.type === 'Identifier'
-                ) {
-                    functionName = callee.property.name;
-                }
+                        ? callee.property.name
+                        : null;
 
                 if (!functionName || !ENCRYPT_FUNCTIONS.has(functionName.toLowerCase())) {
                     return;

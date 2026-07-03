@@ -12,11 +12,11 @@
 
 import { coreObjectNames, SSJS_GLOBALS } from 'ssjs-data';
 
-const TOP_LEVEL_CORE_NAMES = new Set([...coreObjectNames].map((n) => n.split('.')[0]));
+const TOP_LEVEL_CORE_NAMES = new Set([...coreObjectNames].map((n) => n.split('.', 1)[0]));
 
 // Globals that resolve at runtime only after Platform.Load("core", ...) has been called.
 // E.g. Now(), Write(), GUID(), Base64Encode(), Attribute.GetValue(), DateTime.Parse(), …
-const REQUIRES_CORE_LOAD_GLOBALS = new Set(
+const CORE_LOAD_DEPENDENT_GLOBALS = new Set(
     SSJS_GLOBALS.filter((g) => g.requiresCoreLoad).map((g) => g.name.toLowerCase()),
 );
 
@@ -55,7 +55,7 @@ export default {
 
             'Program:exit'() {
                 if (!hasPlatformLoad) {
-                    for (const [i, { node, name }] of pendingReports.entries()) {
+                    for (const [index, { node, name }] of pendingReports.entries()) {
                         context.report({
                             node,
                             messageId: 'missingLoad',
@@ -63,7 +63,7 @@ export default {
                             // Only attach the fix to the first violation to prevent
                             // ESLint from inserting the statement multiple times.
                             fix:
-                                i === 0
+                                index === 0
                                     ? (fixer) =>
                                           fixer.insertTextBeforeRange(
                                               [0, 0],
@@ -105,7 +105,7 @@ function getCoreObjectUsage(node) {
 
     // Bare call: Now(), Write(), GUID(), Base64Encode(), Redirect(), …
     if (callee.type === 'Identifier') {
-        if (REQUIRES_CORE_LOAD_GLOBALS.has(callee.name.toLowerCase())) {
+        if (CORE_LOAD_DEPENDENT_GLOBALS.has(callee.name.toLowerCase())) {
             return callee.name;
         }
         return null;
@@ -135,7 +135,7 @@ function getCoreObjectUsage(node) {
         }
 
         // requiresCoreLoad globals used as object: Attribute.GetValue(…), DateTime.Parse(…), …
-        if (REQUIRES_CORE_LOAD_GLOBALS.has(objectName.toLowerCase())) {
+        if (CORE_LOAD_DEPENDENT_GLOBALS.has(objectName.toLowerCase())) {
             return `${objectName}.${callee.property.name}`;
         }
     }

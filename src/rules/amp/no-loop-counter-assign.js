@@ -23,21 +23,21 @@ export default {
         const counterStack = [];
 
         function checkBody(body) {
-            for (const stmt of body) {
-                if (stmt.type === 'SetStatement' && stmt.target) {
+            for (const statement of body) {
+                if (statement.type === 'SetStatement' && statement.target) {
                     const current = counterStack.at(-1);
-                    if (current && stmt.target.value.toLowerCase() === current.toLowerCase()) {
+                    if (current && statement.target.value.toLowerCase() === current.toLowerCase()) {
                         context.report({
-                            node: stmt.target,
+                            node: statement.target,
                             messageId: 'counterAssign',
-                            data: { name: stmt.target.value },
+                            data: { name: statement.target.value },
                         });
                     }
                 }
-                if (stmt.type === 'VarDeclaration') {
+                if (statement.type === 'VarDeclaration') {
                     const current = counterStack.at(-1);
                     if (current) {
-                        for (const v of stmt.variables) {
+                        for (const v of statement.variables) {
                             if (v.value.toLowerCase() === current.toLowerCase()) {
                                 context.report({
                                     node: v,

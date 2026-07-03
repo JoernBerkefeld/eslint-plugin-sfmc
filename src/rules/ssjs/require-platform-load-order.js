@@ -8,7 +8,7 @@
 
 import { coreObjectNames } from 'ssjs-data';
 
-const TOP_LEVEL_CORE_NAMES = new Set([...coreObjectNames].map((n) => n.split('.')[0]));
+const TOP_LEVEL_CORE_NAMES = new Set([...coreObjectNames].map((n) => n.split('.', 1)[0]));
 
 export default {
     meta: {

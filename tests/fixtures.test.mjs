@@ -23,7 +23,7 @@ import sfmc from '../src/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.join(__dirname, '..');
-const fixtureDir = path.join(pluginRoot, 'testFixture', 'rules');
+const fixtureDirectory = path.join(pluginRoot, 'testFixture', 'rules');
 const snapshotPath = path.join(__dirname, 'fixtures.snapshot.json');
 
 const UPDATE_SNAPSHOTS =
@@ -33,20 +33,20 @@ const LINTABLE_EXTENSIONS = new Set(['.amp', '.ssjs', '.html']);
 /**
  * Recursively collect all lintable files under a directory.
  *
- * @param {string} dir - Directory to search recursively.
+ * @param {string} directory - Directory to search recursively.
  * @returns {string[]} Absolute file paths.
  */
-function collectFiles(dir) {
+function collectFiles(directory) {
     const results = [];
-    for (const entry of readdirSync(dir)) {
-        const full = path.join(dir, entry);
+    for (const entry of readdirSync(directory)) {
+        const full = path.join(directory, entry);
         if (statSync(full).isDirectory()) {
             results.push(...collectFiles(full));
         } else if (LINTABLE_EXTENSIONS.has(path.extname(entry).toLowerCase())) {
             results.push(full);
         }
     }
-    return results.toSorted();
+    return results.toSorted((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -57,18 +57,18 @@ function collectFiles(dir) {
  * ruleId is null for fatal parse errors; messageId is omitted in that case
  * because ESLint does not set it on parser failures.
  *
- * @param {import('eslint').Linter.LintMessage} msg - Raw ESLint lint message to normalise.
+ * @param {import('eslint').Linter.LintMessage} message - Raw ESLint lint message to normalise.
  * @returns {{ ruleId: string|null, severity: number, line: number, messageId?: string }} Normalised entry for snapshot comparison.
  */
-function normalise(msg) {
+function normalise(message) {
     /** @type {{ ruleId: string|null, severity: number, line: number, messageId?: string }} */
     const entry = {
-        ruleId: msg.ruleId ?? null,
-        severity: msg.severity,
-        line: msg.line,
+        ruleId: message.ruleId ?? null,
+        severity: message.severity,
+        line: message.line,
     };
-    if (msg.messageId !== undefined) {
-        entry.messageId = msg.messageId;
+    if (message.messageId !== undefined) {
+        entry.messageId = message.messageId;
     }
     return entry;
 }
@@ -87,7 +87,7 @@ describe('testFixture/rules — diagnostic snapshot', () => {
             warnIgnored: false,
         });
 
-        const files = collectFiles(fixtureDir);
+        const files = collectFiles(fixtureDirectory);
         const results = await eslint.lintFiles(files);
 
         actual = {};
@@ -110,7 +110,7 @@ describe('testFixture/rules — diagnostic snapshot', () => {
     });
 
     it('every fixture file produces at least one diagnostic', () => {
-        const files = collectFiles(fixtureDir);
+        const files = collectFiles(fixtureDirectory);
         // Use path.resolve() for cross-platform comparison — path.join with
         // manually swapped separators breaks on Linux where backslashes are
         // literal filename characters, not path separators.

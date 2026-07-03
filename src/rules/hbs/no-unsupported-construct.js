@@ -12,7 +12,7 @@ import { simpleHelperName } from './_shared.js';
  */
 
 /** AST node types that may carry an unsupported construct. */
-const NODE_TYPES = [...unsupportedByNodeType.keys()];
+const NODE_TYPES = unsupportedByNodeType.keys().toArray();
 
 // The handlebars-data messages contain literal `{{> ...}}`, `{{log}}`, etc. as
 // examples. ESLint treats `{{...}}` in a message template as an interpolation
@@ -20,7 +20,11 @@ const NODE_TYPES = [...unsupportedByNodeType.keys()];
 // placeholder instead of being baked into the template.
 /** messageId per construct id → passthrough template, declared statically. */
 const MESSAGES = Object.fromEntries(
-    [...unsupportedByNodeType.values()].flat().map((entry) => [entry.id, '{{text}}']),
+    unsupportedByNodeType
+        .values()
+        .toArray()
+        .flat()
+        .map((entry) => [entry.id, '{{text}}']),
 );
 
 export default {

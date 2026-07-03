@@ -28,13 +28,13 @@ export default {
     },
 
     create(context) {
-        const coreVars = new Map(); // varName → className
+        const coreVariables = new Map(); // varName → className
 
-        function checkArity(entry, args, callName, reportNode) {
+        function checkArity(entry, arguments_, callName, reportNode) {
             if (!entry) {
                 return;
             }
-            const actual = args.length;
+            const actual = arguments_.length;
             if (actual < entry.minArgs) {
                 context.report({
                     node: reportNode,
@@ -52,13 +52,17 @@ export default {
 
         return {
             VariableDeclaration(node) {
-                for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                for (const declaration of node.declarations) {
+                    if (
+                        !declaration.init ||
+                        !declaration.id ||
+                        declaration.id.type !== 'Identifier'
+                    ) {
                         continue;
                     }
-                    const coreType = getCoreInitType(decl.init);
+                    const coreType = getCoreInitType(declaration.init);
                     if (coreType) {
-                        coreVars.set(decl.id.name, coreType);
+                        coreVariables.set(declaration.id.name, coreType);
                     }
                 }
             },
@@ -69,7 +73,7 @@ export default {
                 }
                 const coreType = getCoreInitType(node.right);
                 if (coreType) {
-                    coreVars.set(node.left.name, coreType);
+                    coreVariables.set(node.left.name, coreType);
                 }
             },
 
@@ -84,10 +88,10 @@ export default {
                 const methodName = callee.property.name;
 
                 if (callee.object.type === 'Identifier') {
-                    const objName = callee.object.name;
+                    const objectName = callee.object.name;
 
                     // Core Library instance method: de.Add(...)
-                    const coreType = coreVars.get(objName);
+                    const coreType = coreVariables.get(objectName);
                     if (coreType) {
                         const classLookup = coreMethodArityLookup.get(coreType.toLowerCase());
                         if (classLookup) {
@@ -103,14 +107,14 @@ export default {
                     }
 
                     // Static single-name: DataExtension.Init(...), BounceEvent.Retrieve(...)
-                    if (coreObjectNames.has(objName)) {
-                        const classLookup = coreMethodArityLookup.get(objName.toLowerCase());
+                    if (coreObjectNames.has(objectName)) {
+                        const classLookup = coreMethodArityLookup.get(objectName.toLowerCase());
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
                             checkArity(
                                 entry,
                                 node.arguments,
-                                `${objName}.${methodName}`,
+                                `${objectName}.${methodName}`,
                                 callee.property,
                             );
                         }
@@ -169,8 +173,8 @@ function getMemberPath(node) {
         return node.name;
     }
     if (node.type === 'MemberExpression' && node.property.type === 'Identifier') {
-        const obj = getMemberPath(node.object);
-        return obj ? `${obj}.${node.property.name}` : null;
+        const object = getMemberPath(node.object);
+        return object ? `${object}.${node.property.name}` : null;
     }
     return null;
 }

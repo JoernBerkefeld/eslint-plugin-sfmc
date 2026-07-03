@@ -34,19 +34,19 @@ export default {
                     return;
                 }
 
-                const arg = node.arguments[0];
+                const argument = node.arguments[0];
 
-                if (isAlreadySafe(arg)) {
+                if (isAlreadySafe(argument)) {
                     return;
                 }
 
                 context.report({
-                    node: arg,
+                    node: argument,
                     messageId: 'unsafeArg',
-                    data: { argText: context.sourceCode.getText(arg) },
+                    data: { argText: context.sourceCode.getText(argument) },
                     fix(fixer) {
-                        const argText = context.sourceCode.getText(arg);
-                        return fixer.replaceText(arg, `${argText} + ''`);
+                        const argumentText = context.sourceCode.getText(argument);
+                        return fixer.replaceText(argument, `${argumentText} + ''`);
                     },
                 });
             },
@@ -63,7 +63,7 @@ function isParseJSONCall(node) {
     }
 
     // Platform.Function.ParseJSON(...)
-    if (
+    return (
         callee.type === 'MemberExpression' &&
         callee.property.type === 'Identifier' &&
         callee.property.name === 'ParseJSON' &&
@@ -72,29 +72,21 @@ function isParseJSONCall(node) {
         callee.object.property.name === 'Function' &&
         callee.object.object.type === 'Identifier' &&
         callee.object.object.name === 'Platform'
-    ) {
-        return true;
-    }
-
-    return false;
+    );
 }
 
-function isAlreadySafe(arg) {
+function isAlreadySafe(argument) {
     // arg + ''  or  '' + arg
     if (
-        arg.type === 'BinaryExpression' &&
-        arg.operator === '+' &&
-        (isEmptyString(arg.left) || isEmptyString(arg.right))
+        argument.type === 'BinaryExpression' &&
+        argument.operator === '+' &&
+        (isEmptyString(argument.left) || isEmptyString(argument.right))
     ) {
         return true;
     }
 
     // String literal passed directly — already a string
-    if (arg.type === 'Literal' && typeof arg.value === 'string') {
-        return true;
-    }
-
-    return false;
+    return argument.type === 'Literal' && typeof argument.value === 'string';
 }
 
 function isEmptyString(node) {

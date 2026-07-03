@@ -21,8 +21,8 @@ const AUTO_FIX = {
 
 function nullishCoalescingFix(context, node) {
     return (fixer) => {
-        const src = context.sourceCode.getText();
-        const between = src.slice(node.left.range[1], node.right.range[0]);
+        const source = context.sourceCode.getText();
+        const between = source.slice(node.left.range[1], node.right.range[0]);
         const offset = between.indexOf('??');
         if (offset === -1) {
             return null;
@@ -34,9 +34,9 @@ function nullishCoalescingFix(context, node) {
 
 function directObjectReturnFix(context, node) {
     return (fixer) => {
-        const objText = context.sourceCode.getText(node.argument);
+        const objectText = context.sourceCode.getText(node.argument);
         const indent = ' '.repeat(node.loc.start.column);
-        return fixer.replaceText(node, `var _result = ${objText};\n${indent}return _result;`);
+        return fixer.replaceText(node, `var _result = ${objectText};\n${indent}return _result;`);
     };
 }
 
@@ -92,7 +92,7 @@ export default {
                         },
                     };
 
-                    if (entry.feature in AUTO_FIX) {
+                    if (Object.hasOwn(AUTO_FIX, entry.feature)) {
                         report.fix = AUTO_FIX[entry.feature](node);
                     } else if (entry.feature === 'NullishCoalescing') {
                         report.fix = nullishCoalescingFix(context, node);

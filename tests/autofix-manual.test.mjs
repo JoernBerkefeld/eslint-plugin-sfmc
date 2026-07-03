@@ -12,11 +12,11 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.join(__dirname, '..');
-const manualDir = path.join(pluginRoot, 'testFixture', 'manual-autofix');
-const configPath = path.join(manualDir, 'eslint.config.mjs');
+const manualDirectory = path.join(pluginRoot, 'testFixture', 'manual-autofix');
+const configPath = path.join(manualDirectory, 'eslint.config.mjs');
 
 /** @type {{beforeName: string, expectedName: string, base: string}[]} */
-const pairs = readdirSync(manualDir)
+const pairs = readdirSync(manualDirectory)
     .filter((name) => name.endsWith('.before.amp') || name.endsWith('.before.ssjs'))
     .map((beforeName) => {
         const expectedName = beforeName.replace('.before.', '.expected.');
@@ -26,15 +26,18 @@ const pairs = readdirSync(manualDir)
 describe('manual-autofix — eslint --fix integration', () => {
     for (const { beforeName, expectedName, base } of pairs) {
         it(`${base} — fix output matches expected`, async () => {
-            const beforePath = path.join(manualDir, beforeName);
-            const expectedPath = path.join(manualDir, expectedName);
-            const scratchPath = path.join(manualDir, `_scratch_${base}${path.extname(beforeName)}`);
+            const beforePath = path.join(manualDirectory, beforeName);
+            const expectedPath = path.join(manualDirectory, expectedName);
+            const scratchPath = path.join(
+                manualDirectory,
+                `_scratch_${base}${path.extname(beforeName)}`,
+            );
 
             writeFileSync(scratchPath, readFileSync(beforePath, 'utf8'));
 
             const eslint = new ESLint({
                 overrideConfigFile: configPath,
-                cwd: manualDir,
+                cwd: manualDirectory,
                 fix: true,
             });
 

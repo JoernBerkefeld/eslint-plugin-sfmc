@@ -62,20 +62,20 @@ export default {
 
         return {
             VariableDeclaration(node) {
-                for (const decl of node.declarations) {
+                for (const declaration of node.declarations) {
                     if (
-                        decl.init &&
-                        decl.id &&
-                        decl.id.type === 'Identifier' &&
-                        isContentAreaObjInit(decl.init)
+                        declaration.init &&
+                        declaration.id &&
+                        declaration.id.type === 'Identifier' &&
+                        isContentAreaObjectInit(declaration.init)
                     ) {
-                        contentAreaVariables.add(decl.id.name);
+                        contentAreaVariables.add(declaration.id.name);
                     }
                 }
             },
 
             AssignmentExpression(node) {
-                if (node.left.type === 'Identifier' && isContentAreaObjInit(node.right)) {
+                if (node.left.type === 'Identifier' && isContentAreaObjectInit(node.right)) {
                     contentAreaVariables.add(node.left.name);
                 }
             },
@@ -166,7 +166,7 @@ export default {
  * @param {import('eslint').Rule.Node} node - AST node to inspect
  * @returns {boolean} true when the node is a ContentAreaObj.Init call
  */
-function isContentAreaObjInit(node) {
+function isContentAreaObjectInit(node) {
     if (!node || node.type !== 'CallExpression') {
         return false;
     }

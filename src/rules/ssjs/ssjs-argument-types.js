@@ -61,34 +61,34 @@ export default {
     },
 
     create(context) {
-        const coreVars = new Map(); // varName → className (Core Library instances)
-        const wsproxyVars = new Set(); // varNames assigned new Script.Util.WSProxy()
+        const coreVariables = new Map(); // varName → className (Core Library instances)
+        const wsproxyVariables = new Set(); // varNames assigned new Script.Util.WSProxy()
 
-        function checkArgs(entry, args, callName) {
+        function checkArguments(entry, arguments_, callName) {
             if (!entry || !entry.params || entry.params.length === 0) {
                 return;
             }
-            for (const [i, arg] of args.entries()) {
-                const param = entry.params[i];
-                if (!param) {
+            for (const [index, argument] of arguments_.entries()) {
+                const parameter = entry.params[index];
+                if (!parameter) {
                     break;
                 } // beyond declared params — arity rule handles this
-                if (!param.type || param.type === 'any') {
+                if (!parameter.type || parameter.type === 'any') {
                     continue;
                 }
-                const actual = inferArgType(arg);
+                const actual = inferArgumentType(argument);
                 if (actual === null) {
                     continue;
                 } // unknown type (variable/call) — skip
-                if (!isTypeCompatible(actual, param.type)) {
+                if (!isTypeCompatible(actual, parameter.type)) {
                     context.report({
-                        node: arg,
+                        node: argument,
                         messageId: 'typeMismatch',
                         data: {
-                            pos: String(i + 1),
-                            param: param.name,
+                            pos: String(index + 1),
+                            param: parameter.name,
                             call: callName,
-                            expected: param.type,
+                            expected: parameter.type,
                             actual,
                         },
                     });
@@ -98,17 +98,21 @@ export default {
 
         return {
             VariableDeclaration(node) {
-                for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                for (const declaration of node.declarations) {
+                    if (
+                        !declaration.init ||
+                        !declaration.id ||
+                        declaration.id.type !== 'Identifier'
+                    ) {
                         continue;
                     }
-                    if (isWSProxyConstructor(decl.init)) {
-                        wsproxyVars.add(decl.id.name);
+                    if (isWSProxyConstructor(declaration.init)) {
+                        wsproxyVariables.add(declaration.id.name);
                         continue;
                     }
-                    const coreType = getCoreInitType(decl.init);
+                    const coreType = getCoreInitType(declaration.init);
                     if (coreType) {
-                        coreVars.set(decl.id.name, coreType);
+                        coreVariables.set(declaration.id.name, coreType);
                     }
                 }
             },
@@ -118,12 +122,12 @@ export default {
                     return;
                 }
                 if (isWSProxyConstructor(node.right)) {
-                    wsproxyVars.add(node.left.name);
+                    wsproxyVariables.add(node.left.name);
                     return;
                 }
                 const coreType = getCoreInitType(node.right);
                 if (coreType) {
-                    coreVars.set(node.left.name, coreType);
+                    coreVariables.set(node.left.name, coreType);
                 }
             },
 
@@ -134,7 +138,7 @@ export default {
                 if (callee.type === 'Identifier') {
                     const entry = ssjsGlobalsLookup.get(callee.name.toLowerCase());
                     if (entry) {
-                        checkArgs(entry, node.arguments, callee.name);
+                        checkArguments(entry, node.arguments, callee.name);
                     }
                     return;
                 }
@@ -159,7 +163,7 @@ export default {
                     if (lookup) {
                         const entry = lookup.get(methodName.toLowerCase());
                         if (entry) {
-                            checkArgs(
+                            checkArguments(
                                 entry,
                                 node.arguments,
                                 `Platform.${callee.object.property.name}.${methodName}`,
@@ -170,48 +174,52 @@ export default {
                 }
 
                 if (callee.object.type === 'Identifier') {
-                    const objName = callee.object.name;
-                    const objLower = objName.toLowerCase();
+                    const objectName = callee.object.name;
+                    const objectLower = objectName.toLowerCase();
 
                     // Static top-level: HTTP.Post(...), HTTPHeader.SetValue(...), Attribute.GetValue(...)
-                    const topLookup = TOPLEVEL_LOOKUPS.get(objLower);
+                    const topLookup = TOPLEVEL_LOOKUPS.get(objectLower);
                     if (topLookup) {
                         const entry = topLookup.get(methodName.toLowerCase());
                         if (entry) {
-                            checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                            checkArguments(entry, node.arguments, `${objectName}.${methodName}`);
                         }
                         return;
                     }
 
                     // WSProxy instance method: proxy.Retrieve(...)
-                    if (wsproxyVars.has(objName)) {
+                    if (wsproxyVariables.has(objectName)) {
                         const entry = wsproxyMethodLookup.get(methodName.toLowerCase());
                         if (entry) {
-                            checkArgs(entry, node.arguments, `WSProxy.${methodName}`);
+                            checkArguments(entry, node.arguments, `WSProxy.${methodName}`);
                         }
                         return;
                     }
 
                     // Core Library instance method: de.Add(...)
-                    const coreType = coreVars.get(objName);
+                    const coreType = coreVariables.get(objectName);
                     if (coreType) {
                         const classLookup = coreMethodArityLookup.get(coreType.toLowerCase());
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
                             if (entry) {
-                                checkArgs(entry, node.arguments, `${coreType}.${methodName}`);
+                                checkArguments(entry, node.arguments, `${coreType}.${methodName}`);
                             }
                         }
                         return;
                     }
 
                     // Static Core Library single-name: DataExtension.Init(...), BounceEvent.Retrieve(...)
-                    if (coreObjectNames.has(objName)) {
-                        const classLookup = coreMethodArityLookup.get(objLower);
+                    if (coreObjectNames.has(objectName)) {
+                        const classLookup = coreMethodArityLookup.get(objectLower);
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
                             if (entry) {
-                                checkArgs(entry, node.arguments, `${objName}.${methodName}`);
+                                checkArguments(
+                                    entry,
+                                    node.arguments,
+                                    `${objectName}.${methodName}`,
+                                );
                             }
                         }
                     }
@@ -225,7 +233,7 @@ export default {
                     if (classLookup) {
                         const entry = classLookup.get(methodName.toLowerCase());
                         if (entry) {
-                            checkArgs(entry, node.arguments, `${objectPath}.${methodName}`);
+                            checkArguments(entry, node.arguments, `${objectPath}.${methodName}`);
                         }
                     }
                 }
@@ -266,13 +274,13 @@ function getMemberPath(node) {
         return node.name;
     }
     if (node.type === 'MemberExpression' && node.property.type === 'Identifier') {
-        const obj = getMemberPath(node.object);
-        return obj ? `${obj}.${node.property.name}` : null;
+        const object = getMemberPath(node.object);
+        return object ? `${object}.${node.property.name}` : null;
     }
     return null;
 }
 
-function inferArgType(node) {
+function inferArgumentType(node) {
     if (!node || node.type === 'SpreadElement') {
         return null;
     }
@@ -294,14 +302,22 @@ function inferArgType(node) {
         return 'string';
     }
     if (node.type === 'ArrayExpression') {
-        const elems = node.elements.filter(Boolean);
-        if (elems.length === 0) {
+        const elements = node.elements.filter(Boolean);
+        if (elements.length === 0) {
             return 'array';
         }
-        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'string')) {
+        if (
+            elements.every(
+                (element) => element.type === 'Literal' && typeof element.value === 'string',
+            )
+        ) {
             return 'string[]';
         }
-        if (elems.every((e) => e.type === 'Literal' && typeof e.value === 'number')) {
+        if (
+            elements.every(
+                (element) => element.type === 'Literal' && typeof element.value === 'number',
+            )
+        ) {
             return 'number[]';
         }
         return 'array';
@@ -321,10 +337,7 @@ function isTypeCompatible(actual, expected) {
         return true;
     }
     // 'array' is compatible with typed array variants
-    if (allowed.includes('array') && (actual === 'string[]' || actual === 'number[]')) {
-        return true;
-    }
-    return false;
+    return Boolean(allowed.includes('array') && (actual === 'string[]' || actual === 'number[]'));
 }
 
 function isWSProxyConstructor(node) {

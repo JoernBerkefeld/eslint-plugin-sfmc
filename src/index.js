@@ -15,7 +15,7 @@ import * as handlebarsParser from './handlebars-parser.js';
 // ── AMPscript rules ───────────────────────────────────────────────────────────
 
 import ampNoUnknownFunction from './rules/amp/no-unknown-function.js';
-import ampNoVariableRedeclaration from './rules/amp/no-var-redeclaration.js';
+import ampNoVariableRedeclaration from './rules/amp/no-variable-redeclaration.js';
 import ampSetRequiresTarget from './rules/amp/set-requires-target.js';
 import ampNoEmptyBlock from './rules/amp/no-empty-block.js';
 import ampNoSmartQuotes from './rules/amp/no-smart-quotes.js';
@@ -24,7 +24,7 @@ import ampNoLoopCounterAssign from './rules/amp/no-loop-counter-assign.js';
 import ampNoInlineStatement from './rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from './rules/amp/require-variable-declaration.js';
 import ampFunctionArity from './rules/amp/function-arity.js';
-import ampArgTypes from './rules/amp/arg-types.js';
+import ampArgumentTypes from './rules/amp/argument-types.js';
 import ampNoEmailExcludedFunction from './rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from './rules/amp/no-deprecated-function.js';
 import ampNamingConvention from './rules/amp/naming-convention.js';
@@ -49,10 +49,10 @@ import ssjsRequirePlatformLoadOrder from './rules/ssjs/require-platform-load-ord
 import ssjsNoHardcodedCredentials from './rules/ssjs/no-hardcoded-credentials.js';
 import ssjsPreferPlatformLoadVersion from './rules/ssjs/prefer-platform-load-version.js';
 import ssjsNoUnavailableMethod from './rules/ssjs/no-unavailable-method.js';
-import ssjsPreferParsejsonSafeArg from './rules/ssjs/prefer-parsejson-safe-arg.js';
+import ssjsPreferParsejsonSafeArgument from './rules/ssjs/prefer-parsejson-safe-argument.js';
 import ssjsNoSwitchDefault from './rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from './rules/ssjs/no-treatascontent-injection.js';
-import ssjsArgTypes from './rules/ssjs/ssjs-arg-types.js';
+import ssjsArgumentTypes from './rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
 
 // ── Handlebars (MCN) rules ──────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ const plugin = {
         'amp-no-inline-statement': ampNoInlineStatement,
         'amp-require-variable-declaration': ampRequireVariableDeclaration,
         'amp-function-arity': ampFunctionArity,
-        'amp-arg-types': ampArgTypes,
+        'amp-arg-types': ampArgumentTypes,
         'amp-no-email-excluded-function': ampNoEmailExcludedFunction,
         'amp-no-deprecated-function': ampNoDeprecatedFunction,
         'amp-naming-convention': ampNamingConvention,
@@ -116,10 +116,10 @@ const plugin = {
         'ssjs-no-hardcoded-credentials': ssjsNoHardcodedCredentials,
         'ssjs-prefer-platform-load-version': ssjsPreferPlatformLoadVersion,
         'ssjs-no-unavailable-method': ssjsNoUnavailableMethod,
-        'ssjs-prefer-parsejson-safe-arg': ssjsPreferParsejsonSafeArg,
+        'ssjs-prefer-parsejson-safe-arg': ssjsPreferParsejsonSafeArgument,
         'ssjs-no-switch-default': ssjsNoSwitchDefault,
         'ssjs-no-treatascontent-injection': ssjsNoTreatAsContentInjection,
-        'ssjs-arg-types': ssjsArgTypes,
+        'ssjs-arg-types': ssjsArgumentTypes,
         'ssjs-core-method-arity': ssjsCoreMethodArity,
 
         // Handlebars (MCN) rules (hbs- prefix)
@@ -135,8 +135,6 @@ const plugin = {
         ssjs: ssjsProcessor,
         sfmc: combinedProcessor,
     },
-
-    configs: {},
 };
 
 // ── MCN SSJS rule set (all SSJS rules off except ssjs-no-unknown-function) ────
@@ -289,7 +287,7 @@ const hbsLanguageOptions = { parser: handlebarsParser };
 
 // ── Configs (defined after plugin so they can reference it) ───────────────────
 
-Object.assign(plugin.configs, {
+plugin.configs = {
     /**
      * AMPscript-only config for standalone .ampscript/.amp files.
      */
@@ -600,6 +598,6 @@ Object.assign(plugin.configs, {
             rules: { ...hbsNextRules },
         },
     ],
-});
+};
 
 export default plugin;

@@ -39,10 +39,7 @@ function isLikelyPersonalization(node) {
     if (functionNames.has(lower)) {
         return false;
     }
-    if (AMPSCRIPT_KEYWORDS.has(lower)) {
-        return false;
-    }
-    return true;
+    return !AMPSCRIPT_KEYWORDS.has(lower);
 }
 
 export default {
@@ -63,19 +60,19 @@ export default {
     },
 
     create(context) {
-        function reportWithSuggestion(identNode) {
+        function reportWithSuggestion(identifierNode) {
             context.report({
-                node: identNode,
+                node: identifierNode,
                 messageId: 'preferAttributeValue',
-                data: { name: identNode.value },
+                data: { name: identifierNode.value },
                 suggest: [
                     {
                         messageId: 'wrapWithAttributeValue',
-                        data: { name: identNode.value },
+                        data: { name: identifierNode.value },
                         fix(fixer) {
                             return fixer.replaceText(
-                                identNode,
-                                `AttributeValue("${identNode.value}")`,
+                                identifierNode,
+                                `AttributeValue("${identifierNode.value}")`,
                             );
                         },
                     },

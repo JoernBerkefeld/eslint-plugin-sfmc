@@ -39,6 +39,22 @@ function countNewlinesBefore(text, pos) {
 }
 
 /**
+ * Scans forward for the closing `=%%` of an inline AMPscript expression.
+ *
+ * @param {string} text - Full document text.
+ * @param {number} from - Index to start scanning from (just past the opening `%%=`).
+ * @returns {number} Index just past the closing `=%%`, or -1 when not found.
+ */
+function findInlineExpressionEnd(text, from) {
+    for (let index = from; index < text.length; index++) {
+        if (text[index] === '=' && text[index + 1] === '%' && text[index + 2] === '%') {
+            return index + 3;
+        }
+    }
+    return -1;
+}
+
+/**
  * Returns a copy of the document where every AMPscript region is replaced with
  * spaces, preserving newlines and overall offsets. HTML, Handlebars `{{...}}`
  * expressions, and `{!$...}` bindings are kept verbatim so the Handlebars
@@ -56,9 +72,9 @@ function sanitizeAmpscriptRegions(text) {
         let match;
         while ((match = pattern.exec(text)) !== null) {
             const end = match.index + match[0].length;
-            for (let i = match.index; i < end && i < chars.length; i++) {
-                if (chars[i] !== '\n' && chars[i] !== '\r') {
-                    chars[i] = ' ';
+            for (let index = match.index; index < end && index < chars.length; index++) {
+                if (chars[index] !== '\n' && chars[index] !== '\r') {
+                    chars[index] = ' ';
                 }
             }
         }
@@ -129,23 +145,15 @@ export function preprocess(text, filename) {
 
         // %%= ... =%%
         if (text[index] === '%' && text[index + 1] === '%' && text[index + 2] === '=') {
-            const exprStart = index;
-            index += 3;
-            let found = false;
-            while (index < text.length) {
-                if (text[index] === '=' && text[index + 1] === '%' && text[index + 2] === '%') {
-                    index += 3;
-                    found = true;
-                    break;
-                }
-                index++;
-            }
-            if (!found) {
+            const expressionStart = index;
+            const expressionEnd = findInlineExpressionEnd(text, index + 3);
+            if (expressionEnd === -1) {
                 continue;
             }
-            const innerCode = text.slice(exprStart + 3, index - 3);
+            index = expressionEnd;
+            const innerCode = text.slice(expressionStart + 3, index - 3);
             const wrappedBlock = `%%[${innerCode}]%%`;
-            const padding = '\n'.repeat(countNewlinesBefore(text, exprStart));
+            const padding = '\n'.repeat(countNewlinesBefore(text, expressionStart));
             blocks.push({
                 text: padding + wrappedBlock,
                 filename: `${filename}/ampscript-block-${ampCount++}.amp`,

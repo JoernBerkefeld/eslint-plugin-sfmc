@@ -29,16 +29,16 @@ export default {
     create(context) {
         return {
             InlineExpression(node) {
-                const expr = node.expression;
-                if (!expr) {
+                const expression = node.expression;
+                if (!expression) {
                     return;
                 }
 
-                if (STATEMENT_TYPES.has(expr.type)) {
+                if (STATEMENT_TYPES.has(expression.type)) {
                     context.report({
-                        node: expr,
+                        node: expression,
                         messageId: 'inlineStatement',
-                        data: { kind: expr.type },
+                        data: { kind: expression.type },
                     });
                 }
             },

@@ -25,14 +25,14 @@ const STATIC_LITERAL_TYPES = new Set(['StringLiteral', 'NumberLiteral', 'Boolean
  * literal (e.g. a variable or expression) and cannot be validated against an
  * enum.
  *
- * @param {object} arg - AMPscript argument AST node.
+ * @param {object} argument - AMPscript argument AST node.
  * @returns {string | null} The literal value as a string, or null.
  */
-function staticLiteralValue(arg) {
-    if (!arg || !STATIC_LITERAL_TYPES.has(arg.type)) {
+function staticLiteralValue(argument) {
+    if (!argument || !STATIC_LITERAL_TYPES.has(argument.type)) {
         return null;
     }
-    return String(arg.value);
+    return String(argument.value);
 }
 
 export default {
@@ -58,28 +58,32 @@ export default {
                     return;
                 }
 
-                for (const [i, arg] of node.arguments.entries()) {
-                    const param = entry.params[i];
-                    if (!param || !Array.isArray(param.enum) || param.enum.length === 0) {
+                for (const [index, argument] of node.arguments.entries()) {
+                    const parameter = entry.params[index];
+                    if (
+                        !parameter ||
+                        !Array.isArray(parameter.enum) ||
+                        parameter.enum.length === 0
+                    ) {
                         continue;
                     }
                     // Only validate static literals (string, number, boolean);
                     // variables/expressions cannot be resolved statically.
-                    const actual = staticLiteralValue(arg);
+                    const actual = staticLiteralValue(argument);
                     if (actual === null) {
                         continue;
                     }
-                    const isAllowed = param.enum.some(
+                    const isAllowed = parameter.enum.some(
                         (v) => String(v).toLowerCase() === actual.toLowerCase(),
                     );
                     if (!isAllowed) {
                         context.report({
-                            node: arg,
+                            node: argument,
                             messageId: 'invalidEnumValue',
                             data: {
                                 name: entry.name,
-                                param: param.name,
-                                allowed: param.enum.join(', '),
+                                param: parameter.name,
+                                allowed: parameter.enum.join(', '),
                                 actual,
                             },
                         });

@@ -46,8 +46,8 @@ export function simpleHelperName(path) {
  * @returns {boolean} True when the node invokes a helper.
  */
 export function isInvocation(node) {
-    const hasArgs = (node.params?.length ?? 0) > 0 || (node.hash?.pairs?.length ?? 0) > 0;
-    return node.type === 'SubExpression' || hasArgs;
+    const hasArguments = (node.params?.length ?? 0) > 0 || (node.hash?.pairs?.length ?? 0) > 0;
+    return node.type === 'SubExpression' || hasArguments;
 }
 
 /**
@@ -68,18 +68,22 @@ export function levenshtein(a, b) {
         return a.length;
     }
 
-    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-    const curr = Array.from({ length: b.length + 1 }, () => 0);
+    let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+    const current = Array.from({ length: b.length + 1 }, () => 0);
 
-    for (let i = 1; i <= a.length; i++) {
-        curr[0] = i;
-        for (let j = 1; j <= b.length; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    for (let index = 1; index <= a.length; index++) {
+        current[0] = index;
+        for (let index_ = 1; index_ <= b.length; index_++) {
+            const cost = a[index - 1] === b[index_ - 1] ? 0 : 1;
+            current[index_] = Math.min(
+                current[index_ - 1] + 1,
+                previous[index_] + 1,
+                previous[index_ - 1] + cost,
+            );
         }
-        prev = curr.slice();
+        previous = current.slice();
     }
-    return prev[b.length];
+    return previous[b.length];
 }
 
 /**
@@ -95,7 +99,7 @@ export function closestMatch(word, candidates) {
     const maxDistance = lowerWord.length <= 4 ? 1 : 2;
 
     let best = null;
-    let bestDistance = Number.POSITIVE_INFINITY;
+    let bestDistance = Infinity;
 
     for (const candidate of candidates) {
         const distance = levenshtein(lowerWord, candidate.toLowerCase());

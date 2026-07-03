@@ -91,7 +91,7 @@ function annotateNode(node, lineStarts, comments) {
     }
 
     // Rename colliding ESTree types to Amp-prefixed equivalents
-    if (node.type && NODE_RENAME[node.type]) {
+    if (node.type && Object.hasOwn(NODE_RENAME, node.type)) {
         node.type = NODE_RENAME[node.type];
     }
 

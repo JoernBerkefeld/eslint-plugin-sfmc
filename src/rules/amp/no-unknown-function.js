@@ -33,7 +33,7 @@ export default {
 
     create(context) {
         const options = context.options[0] ?? {};
-        const targetNext = options.target === 'next';
+        const isTargetNext = options.target === 'next';
 
         return {
             FunctionCall(node) {
@@ -48,7 +48,7 @@ export default {
                     return;
                 }
 
-                if (targetNext && !isMcnSupported(lower)) {
+                if (isTargetNext && !isMcnSupported(lower)) {
                     context.report({
                         node,
                         messageId: 'notSupportedInMcn',
@@ -59,7 +59,7 @@ export default {
 
                 // Category C: the function works in MCN AMPscript but has no
                 // Handlebars counterpart, so it cannot be migrated to Handlebars.
-                if (targetNext && functionLookup.get(lower)?.mcnHandlebarsGap === true) {
+                if (isTargetNext && functionLookup.get(lower)?.mcnHandlebarsGap === true) {
                     context.report({
                         node,
                         messageId: 'noHandlebarsEquivalent',

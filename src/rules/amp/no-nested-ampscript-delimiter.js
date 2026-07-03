@@ -61,13 +61,13 @@ export default {
                 while ((match = DELIMITER_RE.exec(text)) !== null) {
                     const delimiter = match[0];
                     const start = match.index;
-                    const end = start + delimiter.length;
 
                     // Skip the outermost %%[ opener (it is the block wrapper, not nested)
                     if (!isScriptBlock && start === outerOpenStart) {
                         continue;
                     }
 
+                    const end = start + delimiter.length;
                     const closeToken = delimiter === '%%[' ? ']%%' : '=%%';
 
                     // Find the matching close token for the fix (first occurrence after this open)

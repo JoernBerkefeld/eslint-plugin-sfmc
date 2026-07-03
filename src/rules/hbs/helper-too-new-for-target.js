@@ -31,7 +31,7 @@ export default {
                     apiVersion: {
                         type: 'number',
                         description:
-                            'The targeted Marketing Cloud Next API version (e.g. 65 = Winter \u201926, 67 = Summer \u201926). Helpers newer than this are flagged.',
+                            'The targeted Marketing Cloud Next API version (e.g. 65 = Winter \u{2019}26, 67 = Summer \u{2019}26). Helpers newer than this are flagged.',
                     },
                 },
                 additionalProperties: false,

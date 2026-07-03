@@ -25,7 +25,7 @@ export default {
 
     create(context) {
         const declared = new Set();
-        const fixedVars = new Set();
+        const fixedVariables = new Set();
 
         return {
             VarDeclaration(node) {
@@ -44,9 +44,9 @@ export default {
                 }
                 const lower = name.toLowerCase();
                 if (!declared.has(lower)) {
-                    const isFirstFix = !fixedVars.has(lower);
+                    const isFirstFix = !fixedVariables.has(lower);
                     if (isFirstFix) {
-                        fixedVars.add(lower);
+                        fixedVariables.add(lower);
                     }
 
                     context.report({

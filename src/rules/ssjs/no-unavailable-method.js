@@ -98,8 +98,8 @@ export default {
 
         function buildSuggestFix(entry) {
             return function fix(fixer) {
-                const src = context.sourceCode;
-                const end = src.ast.range[1];
+                const source = context.sourceCode;
+                const end = source.ast.range[1];
                 return fixer.insertTextAfterRange([end, end], '\n\n' + entry.polyfill);
             };
         }
@@ -113,27 +113,27 @@ export default {
                     return;
                 }
 
-                const obj = left.object;
-                const prop = left.property;
-                if (prop.type !== 'Identifier') {
+                const object = left.object;
+                const property = left.property;
+                if (property.type !== 'Identifier') {
                     return;
                 }
 
                 // Array.X = ...
-                if (obj.type === 'Identifier' && obj.name === 'Array') {
-                    alreadyPolyfilled.add(prop.name);
+                if (object.type === 'Identifier' && object.name === 'Array') {
+                    alreadyPolyfilled.add(property.name);
                     return;
                 }
 
                 // Array.prototype.X = ...  or  String.prototype.X = ...
                 if (
-                    obj.type === 'MemberExpression' &&
-                    obj.object.type === 'Identifier' &&
-                    (obj.object.name === 'Array' || obj.object.name === 'String') &&
-                    obj.property.type === 'Identifier' &&
-                    obj.property.name === 'prototype'
+                    object.type === 'MemberExpression' &&
+                    object.object.type === 'Identifier' &&
+                    (object.object.name === 'Array' || object.object.name === 'String') &&
+                    object.property.type === 'Identifier' &&
+                    object.property.name === 'prototype'
                 ) {
-                    alreadyPolyfilled.add(prop.name);
+                    alreadyPolyfilled.add(property.name);
                 }
             },
 
@@ -143,12 +143,12 @@ export default {
                     return;
                 }
 
-                const prop = callee.property;
-                if (prop.type !== 'Identifier') {
+                const property = callee.property;
+                if (property.type !== 'Identifier') {
                     return;
                 }
 
-                const methodName = prop.name;
+                const methodName = property.name;
                 const receiver = callee.object;
 
                 const lowerMethod = methodName.toLowerCase();
@@ -163,7 +163,7 @@ export default {
                         return;
                     }
                     const entry = polyfillByStaticName.get(methodName);
-                    pendingReports.push({ node: prop, entry });
+                    pendingReports.push({ node: property, entry });
                     return;
                 }
 
@@ -176,7 +176,7 @@ export default {
                     const entry = knownUnsupportedByStaticName.get(lowerMethod);
                     const ownerBase = entry.owner.replace(/\.prototype$/, '');
                     if (receiver.name === ownerBase && !ignored.has(methodName)) {
-                        pendingReports.push({ node: prop, entry, noPolyfill: true });
+                        pendingReports.push({ node: property, entry, noPolyfill: true });
                         return;
                     }
                 }
@@ -187,12 +187,12 @@ export default {
                         return;
                     }
 
-                    const entry = polyfillByPrototypeName.get(methodName);
-
                     // Skip known SFMC top-level objects to avoid false positives.
                     if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
                         return;
                     }
+
+                    const entry = polyfillByPrototypeName.get(methodName);
 
                     // For methods that also exist on String.prototype in ES3
                     // (indexOf, lastIndexOf), only flag when the receiver is
@@ -211,7 +211,7 @@ export default {
                         }
                     }
 
-                    pendingReports.push({ node: prop, entry });
+                    pendingReports.push({ node: property, entry });
                     return;
                 }
 
@@ -225,7 +225,7 @@ export default {
                         return;
                     }
                     const entry = knownUnsupportedByPrototypeName.get(lowerMethod);
-                    pendingReports.push({ node: prop, entry, noPolyfill: true });
+                    pendingReports.push({ node: property, entry, noPolyfill: true });
                 }
             },
 

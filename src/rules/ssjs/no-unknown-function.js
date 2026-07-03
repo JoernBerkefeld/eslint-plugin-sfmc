@@ -70,7 +70,7 @@ export default {
 
     create(context) {
         const options = context.options[0] ?? {};
-        const targetNext = options.target === 'next';
+        const isTargetNext = options.target === 'next';
 
         // Track variable name → Core Library type name (assigned via TypeName.Init())
         const coreVariables = new Map();
@@ -79,16 +79,20 @@ export default {
 
         return {
             VariableDeclaration(node) {
-                for (const decl of node.declarations) {
-                    if (!decl.init || !decl.id || decl.id.type !== 'Identifier') {
+                for (const declaration of node.declarations) {
+                    if (
+                        !declaration.init ||
+                        !declaration.id ||
+                        declaration.id.type !== 'Identifier'
+                    ) {
                         continue;
                     }
-                    const coreType = getCoreInitType(decl.init);
+                    const coreType = getCoreInitType(declaration.init);
                     if (coreType) {
-                        coreVariables.set(decl.id.name, coreType);
+                        coreVariables.set(declaration.id.name, coreType);
                     }
-                    if (isWSProxyConstructor(decl.init)) {
-                        wsproxyVariables.add(decl.id.name);
+                    if (isWSProxyConstructor(declaration.init)) {
+                        wsproxyVariables.add(declaration.id.name);
                     }
                 }
             },
@@ -119,7 +123,7 @@ export default {
                 const methodName = property.name;
 
                 // ── MCN target: flag all SSJS API calls as unsupported ────────
-                if (targetNext) {
+                if (isTargetNext) {
                     // Only report on Platform.<NS>.<method>(), HTTP.<method>(),
                     // Core Library instance calls, or WSProxy calls — not bare JS.
                     const isPlatformCall =
@@ -189,10 +193,10 @@ export default {
                     // Core library: var de = DataExtension.Init("key"); de.Foo();
                     const coreType = coreVariables.get(objectName);
                     if (coreType) {
-                        const objectDef = coreObjectLookup.get(coreType);
-                        if (objectDef) {
+                        const objectDefinition = coreObjectLookup.get(coreType);
+                        if (objectDefinition) {
                             const knownMethods = new Set(
-                                objectDef.methods.map((m) => m.toLowerCase()),
+                                objectDefinition.methods.map((m) => m.toLowerCase()),
                             );
                             if (!knownMethods.has(methodName.toLowerCase())) {
                                 context.report({
@@ -201,7 +205,7 @@ export default {
                                     data: {
                                         method: methodName,
                                         objectType: coreType,
-                                        available: objectDef.methods.join(', '),
+                                        available: objectDefinition.methods.join(', '),
                                     },
                                 });
                             }

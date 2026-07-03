@@ -18,10 +18,10 @@ import { simpleHelperName } from './_shared.js';
  * @returns {{required: number, max: number}} Required and max positional counts.
  */
 function arityOf(helper) {
-    const params = helper.params ?? [];
-    const hasVariadic = params.some((p) => p.variadic);
-    const required = params.filter((p) => !p.optional && !p.variadic).length;
-    const max = hasVariadic ? Number.POSITIVE_INFINITY : params.length;
+    const parameters = helper.params ?? [];
+    const hasVariadic = parameters.some((p) => p.variadic);
+    const required = parameters.filter((p) => !p.optional && !p.variadic).length;
+    const max = hasVariadic ? Infinity : parameters.length;
     return { required, max };
 }
 
