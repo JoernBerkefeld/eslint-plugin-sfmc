@@ -1481,7 +1481,7 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                                 ' * @param {Function} predicate - test called with (element, index, array)\n' +
                                 ' * @returns {boolean} true when the predicate passes for any element\n' +
                                 ' */\n' +
-                                'Array.prototype.some = function (predicate) {\n' +
+                                'Array.prototype.some = Array.prototype.some || function (predicate) {\n' +
                                 "    if (typeof predicate !== 'function') { return false; }\n" +
                                 '    for (var i = 0; i < this.length; i++) {\n' +
                                 '        if (predicate(this[i], i, this)) { return true; }\n' +
@@ -1509,7 +1509,7 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                                 ' * @param {*} value - the value to test\n' +
                                 ' * @returns {boolean} true when the value is an Array\n' +
                                 ' */\n' +
-                                'Array.isArray = function (value) {\n' +
+                                'Array.isArray = Array.isArray || function (value) {\n' +
                                 "    return Object.prototype.toString.call(value) === '[object Array]';\n" +
                                 '};',
                         },
