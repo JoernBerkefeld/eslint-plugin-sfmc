@@ -1,12 +1,14 @@
 /**
- * Combined SFMC processor that extracts both AMPscript and SSJS regions
- * from HTML files.
+ * Combined SFMC processor that extracts AMPscript, SSJS, and Handlebars
+ * (Marketing Cloud Next) regions from HTML files.
  *
  * Detects:
  *   1. %%[ ... ]%% blocks (with nesting support) → virtual .amp files
  *   2. %%= ... =%% inline expressions → virtual .amp files
  *   3. <script runat="server" language="ampscript"> → virtual .amp files
  *   4. <script runat="server"> (non-ampscript) → virtual .js files
+ *   5. {{ ... }} Handlebars expressions and {!$...} bindings → one virtual .hbs
+ *      file holding the whole document with AMPscript regions blanked out
  *
  * Returns extracted regions as virtual files for ESLint to lint with the
  * appropriate parser/rules based on file extension matching.
@@ -19,6 +21,13 @@ const SSJS_SCRIPT_OPEN_RE =
     /<script\b(?=[^>]*\brunat\s*=\s*['"]server['"])(?![^>]*\blanguage\s*=\s*['"]ampscript['"])[^>]*>/gi;
 const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
 
+/** AMPscript region patterns blanked before the Handlebars parser runs. */
+const AMPSCRIPT_REGION_PATTERNS = [
+    /%%\[[\s\S]*?\]%%/g,
+    /%%=[\s\S]*?=%%/g,
+    /<script\s[^>]*language\s*=\s*["']ampscript["'][^>]*>[\s\S]*?<\/script>/gi,
+];
+
 function countNewlinesBefore(text, pos) {
     let count = 0;
     for (let index = 0; index < pos; index++) {
@@ -27,6 +36,34 @@ function countNewlinesBefore(text, pos) {
         }
     }
     return count;
+}
+
+/**
+ * Returns a copy of the document where every AMPscript region is replaced with
+ * spaces, preserving newlines and overall offsets. HTML, Handlebars `{{...}}`
+ * expressions, and `{!$...}` bindings are kept verbatim so the Handlebars
+ * parser can run over a mixed document without choking on AMPscript syntax.
+ *
+ * Mirrors `getSanitizedHandlebarsText` in sfmc-language-lsp.
+ *
+ * @param {string} text - Full document text.
+ * @returns {string} Text with AMPscript regions blanked out.
+ */
+function sanitizeAmpscriptRegions(text) {
+    const chars = Array.from(text);
+    for (const pattern of AMPSCRIPT_REGION_PATTERNS) {
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(text)) !== null) {
+            const end = match.index + match[0].length;
+            for (let i = match.index; i < end && i < chars.length; i++) {
+                if (chars[i] !== '\n' && chars[i] !== '\r') {
+                    chars[i] = ' ';
+                }
+            }
+        }
+    }
+    return chars.join('');
 }
 
 export function preprocess(text, filename) {
@@ -138,6 +175,21 @@ export function preprocess(text, filename) {
         blocks.push({
             text: padding + jsCode,
             filename: `${filename}/ssjs-block-${ssjsCount++}.js`,
+        });
+    }
+
+    // --- Pass 3: extract Handlebars (MCN) regions ---
+    // Handlebars expressions and {!$...} bindings can appear anywhere in the
+    // HTML. The Handlebars parser treats surrounding HTML as content, so we emit
+    // the whole document (with AMPscript regions blanked, offsets preserved) as
+    // a single virtual .hbs file. Only emit it when the document actually
+    // contains Handlebars/binding syntax to avoid paying the parse cost on plain
+    // HTML/AMPscript content.
+    const sanitizedForHbs = sanitizeAmpscriptRegions(text);
+    if (sanitizedForHbs.includes('{{') || sanitizedForHbs.includes('{!$')) {
+        blocks.push({
+            text: sanitizedForHbs,
+            filename: `${filename}/handlebars-block-0.hbs`,
         });
     }
 

@@ -10,6 +10,7 @@
  */
 
 import * as ampscriptParser from './ampscript-parser.js';
+import * as handlebarsParser from './handlebars-parser.js';
 
 // ── AMPscript rules ───────────────────────────────────────────────────────────
 
@@ -53,6 +54,14 @@ import ssjsNoSwitchDefault from './rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from './rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgTypes from './rules/ssjs/ssjs-arg-types.js';
 import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
+
+// ── Handlebars (MCN) rules ──────────────────────────────────────────────────────
+
+import hbsNoUnknownHelper from './rules/hbs/no-unknown-helper.js';
+import hbsHelperTooNewForTarget from './rules/hbs/helper-too-new-for-target.js';
+import hbsNoUnknownBinding from './rules/hbs/no-unknown-binding.js';
+import hbsHelperArity from './rules/hbs/helper-arity.js';
+import hbsNoUnsupportedConstruct from './rules/hbs/no-unsupported-construct.js';
 
 // ── Processors ────────────────────────────────────────────────────────────────
 
@@ -112,6 +121,13 @@ const plugin = {
         'ssjs-no-treatascontent-injection': ssjsNoTreatAsContentInjection,
         'ssjs-arg-types': ssjsArgTypes,
         'ssjs-core-method-arity': ssjsCoreMethodArity,
+
+        // Handlebars (MCN) rules (hbs- prefix)
+        'hbs-no-unknown-helper': hbsNoUnknownHelper,
+        'hbs-helper-too-new-for-target': hbsHelperTooNewForTarget,
+        'hbs-no-unknown-binding': hbsNoUnknownBinding,
+        'hbs-helper-arity': hbsHelperArity,
+        'hbs-no-unsupported-construct': hbsNoUnsupportedConstruct,
     },
 
     processors: {
@@ -240,6 +256,37 @@ const ssjsStrictRules = {
     'no-cond-assign': 'error',
 };
 
+// ── Handlebars (MCN) rule sets ────────────────────────────────────────────────
+
+/**
+ * Handlebars rules for Marketing Cloud Next targets. Handlebars only exists when
+ * targeting MCN, so these are enabled only in `-next` configs and applied to the
+ * virtual `.hbs` files the combined processor extracts from HTML.
+ */
+const hbsNextRules = {
+    'sfmc/hbs-no-unknown-helper': 'error',
+    'sfmc/hbs-no-unknown-binding': 'error',
+    'sfmc/hbs-helper-arity': 'error',
+    'sfmc/hbs-no-unsupported-construct': 'error',
+    'sfmc/hbs-helper-too-new-for-target': 'off',
+};
+
+/**
+ * Handlebars rules for non-MCN (classic) targets — all disabled. Classic SFMC
+ * does not run Handlebars, so any `{{...}}` is plain content and must not be
+ * flagged.
+ */
+const hbsOffRules = {
+    'sfmc/hbs-no-unknown-helper': 'off',
+    'sfmc/hbs-no-unknown-binding': 'off',
+    'sfmc/hbs-helper-arity': 'off',
+    'sfmc/hbs-no-unsupported-construct': 'off',
+    'sfmc/hbs-helper-too-new-for-target': 'off',
+};
+
+/** Shared languageOptions for linting virtual `.hbs` files. */
+const hbsLanguageOptions = { parser: handlebarsParser };
+
 // ── Configs (defined after plugin so they can reference it) ───────────────────
 
 Object.assign(plugin.configs, {
@@ -323,6 +370,16 @@ Object.assign(plugin.configs, {
             },
             rules: { ...ssjsRecommendedRules },
         },
+        {
+            // Classic (non-MCN) HTML: Handlebars is not executed, so all hbs
+            // rules are off. The parser is still required so the extracted .hbs
+            // virtual file is not handed to espree.
+            name: 'sfmc/embedded-handlebars-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { ...hbsLanguageOptions },
+            files: ['**/*.html/*.hbs'],
+            rules: { ...hbsOffRules },
+        },
     ],
 
     /**
@@ -370,6 +427,14 @@ Object.assign(plugin.configs, {
                 globals: SSJS_GLOBALS_MAP,
             },
             rules: { ...ssjsStrictRules },
+        },
+        {
+            // Classic (non-MCN) HTML: Handlebars rules off, parser still wired.
+            name: 'sfmc/strict-embedded-handlebars-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { ...hbsLanguageOptions },
+            files: ['**/*.html/*.hbs'],
+            rules: { ...hbsOffRules },
         },
     ],
 
@@ -464,6 +529,14 @@ Object.assign(plugin.configs, {
             },
             rules: { ...ssjsMcnRules },
         },
+        {
+            // MCN HTML: Handlebars is the templating language — enable hbs rules.
+            name: 'sfmc/embedded-next-handlebars-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { ...hbsLanguageOptions },
+            files: ['**/*.html/*.hbs'],
+            rules: { ...hbsNextRules },
+        },
     ],
 
     /**
@@ -517,6 +590,14 @@ Object.assign(plugin.configs, {
                 globals: SSJS_GLOBALS_MAP,
             },
             rules: { ...ssjsMcnRules },
+        },
+        {
+            // MCN HTML (strict): all Handlebars rules at error severity.
+            name: 'sfmc/strict-next-embedded-handlebars-rules',
+            plugins: { sfmc: plugin },
+            languageOptions: { ...hbsLanguageOptions },
+            files: ['**/*.html/*.hbs'],
+            rules: { ...hbsNextRules },
         },
     ],
 });

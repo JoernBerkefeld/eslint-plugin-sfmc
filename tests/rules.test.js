@@ -1,5 +1,6 @@
-import { RuleTester } from 'eslint';
+import { RuleTester, ESLint } from 'eslint';
 import * as parser from '../src/ampscript-parser.js';
+import sfmcPlugin from '../src/index.js';
 
 // ── AMPscript rule imports ────────────────────────────────────────────────────
 
@@ -43,6 +44,18 @@ import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgTypes from '../src/rules/ssjs/ssjs-arg-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
+
+// ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
+
+import hbsNoUnknownHelper from '../src/rules/hbs/no-unknown-helper.js';
+import hbsHelperTooNewForTarget from '../src/rules/hbs/helper-too-new-for-target.js';
+import hbsNoUnknownBinding from '../src/rules/hbs/no-unknown-binding.js';
+import hbsHelperArity from '../src/rules/hbs/helper-arity.js';
+import hbsNoUnsupportedConstruct from '../src/rules/hbs/no-unsupported-construct.js';
+
+// ── Parser imports ────────────────────────────────────────────────────────────
+
+import * as handlebarsParser from '../src/handlebars-parser.js';
 
 // ── Processor imports ─────────────────────────────────────────────────────────
 
@@ -100,6 +113,17 @@ ampTester.run('amp-no-unknown-function (target:next)', ampNoUnknownFunction, {
             code: '%%[set @x = FooBar(@v)]%%',
             options: [{ target: 'next' }],
             errors: [{ messageId: 'unknownFunction', data: { name: 'FooBar' } }],
+        },
+        // Category C: MCN-supported AMPscript function with no Handlebars equivalent
+        {
+            code: '%%= ContentBlockByID(123) =%%',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByID' } }],
+        },
+        {
+            code: '%%= ContentBlockByName("Public/MyBlock") =%%',
+            options: [{ target: 'next' }],
+            errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByName' } }],
         },
     ],
 });
@@ -1856,6 +1880,44 @@ describe('combined SFMC processor', () => {
         assert.equal(jsBlocks.length, 0, 'AMPscript script tags should not produce .js blocks');
     });
 
+    it('extracts {{ }} Handlebars expressions as a single virtual .hbs file', () => {
+        const html = '<p>Hello {{firstName}}, you have {{add 1 2}} points</p>';
+        const result = preprocess(html, 'test.html');
+        const hbsBlocks = result.filter((b) => b.filename && b.filename.endsWith('.hbs'));
+        assert.equal(hbsBlocks.length, 1, 'Should extract exactly one .hbs block');
+        assert.ok(hbsBlocks[0].text.includes('{{firstName}}'));
+        assert.ok(hbsBlocks[0].text.includes('{{add 1 2}}'));
+    });
+
+    it('extracts {!$...} bindings into the virtual .hbs file', () => {
+        const html = '<p>{!$organization.Address}</p>';
+        const result = preprocess(html, 'test.html');
+        const hbsBlocks = result.filter((b) => b.filename && b.filename.endsWith('.hbs'));
+        assert.equal(hbsBlocks.length, 1, 'Should extract one .hbs block for bindings');
+        assert.ok(hbsBlocks[0].text.includes('{!$organization.Address}'));
+    });
+
+    it('blanks AMPscript regions but keeps Handlebars in the virtual .hbs file', () => {
+        const html = '%%[set @x = 1]%%<p>{{firstName}}</p>';
+        const result = preprocess(html, 'test.html');
+        const hbsBlocks = result.filter((b) => b.filename && b.filename.endsWith('.hbs'));
+        assert.equal(hbsBlocks.length, 1, 'Should extract one .hbs block');
+        // AMPscript is blanked so the Handlebars parser never sees %%[ ]%%
+        assert.ok(!hbsBlocks[0].text.includes('%%['), 'AMPscript region should be blanked');
+        assert.ok(!hbsBlocks[0].text.includes('set @x'), 'AMPscript body should be blanked');
+        // Offsets are preserved: the .hbs text has the same length as the source
+        assert.equal(hbsBlocks[0].text.length, html.length, 'Offsets must be preserved');
+        // Handlebars content survives
+        assert.ok(hbsBlocks[0].text.includes('{{firstName}}'));
+    });
+
+    it('does not emit a .hbs file when there is no Handlebars or binding syntax', () => {
+        const html = '<p>Just HTML</p>%%[set @x = 1]%%';
+        const result = preprocess(html, 'test.html');
+        const hbsBlocks = result.filter((b) => b.filename && b.filename.endsWith('.hbs'));
+        assert.equal(hbsBlocks.length, 0, 'No .hbs block should be emitted without {{ or {!$');
+    });
+
     it('postprocess flattens messages', () => {
         const messages = [['msg1', 'msg2'], ['msg3']];
         const result = postprocess(messages);
@@ -1908,3 +1970,265 @@ ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
 });
 
 console.log('All ssjs-arg-types and ssjs-core-method-arity tests passed.');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Handlebars (Marketing Cloud Next) Rule Tests
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const hbsTester = new RuleTester({
+    languageOptions: { parser: handlebarsParser },
+});
+
+// ── H1. hbs-no-unknown-helper ─────────────────────────────────────────────────
+
+hbsTester.run('hbs-no-unknown-helper', hbsNoUnknownHelper, {
+    valid: [
+        // Known inline helper invocation
+        { code: '{{add 1 2}}' },
+        { code: '{{uppercase name}}' },
+        // Known block helper
+        { code: '{{#each items}}{{this}}{{/each}}' },
+        { code: '{{#if ready}}yes{{/if}}' },
+        // Bare mustache with no args is a data binding, not a helper invocation
+        { code: '<p>{{firstName}}</p>' },
+        { code: '{{customer.email}}' },
+        // Plain HTML content with no Handlebars
+        { code: '<p>Hello world</p>' },
+        // Known helper as subexpression
+        { code: '{{uppercase (concat first last)}}' },
+    ],
+    invalid: [
+        // Unknown inline helper (with args → invocation)
+        {
+            code: '{{fooBar 1 2}}',
+            errors: [{ messageId: 'unknownHelper', data: { kind: 'helper', name: 'fooBar' } }],
+        },
+        // Unknown block helper
+        {
+            code: '{{#fooBlock items}}{{this}}{{/fooBlock}}',
+            errors: [
+                { messageId: 'unknownHelper', data: { kind: 'block helper', name: 'fooBlock' } },
+            ],
+        },
+        // Unknown helper with a close catalog match → suggestion
+        {
+            code: '{{addd 1 2}}',
+            errors: [
+                {
+                    messageId: 'unknownHelperSuggest',
+                    data: { kind: 'helper', name: 'addd', suggestion: 'add' },
+                },
+            ],
+        },
+        // Unknown helper in a subexpression
+        {
+            code: '{{uppercase (fooBar x)}}',
+            errors: [{ messageId: 'unknownHelper', data: { kind: 'helper', name: 'fooBar' } }],
+        },
+    ],
+});
+
+// ── H2. hbs-helper-arity ──────────────────────────────────────────────────────
+
+hbsTester.run('hbs-helper-arity', hbsHelperArity, {
+    valid: [
+        // add requires exactly 2 positional args
+        { code: '{{add 1 2}}' },
+        // concat is variadic (1 required, no upper bound)
+        { code: '{{concat a}}' },
+        { code: '{{concat a b c d}}' },
+        // each block helper with its single collection arg
+        { code: '{{#each items}}{{this}}{{/each}}' },
+        // Bare mustache binding (no args) — not validated as an invocation
+        { code: '{{firstName}}' },
+        // Unknown helper — arity rule defers to no-unknown-helper
+        { code: '{{fooBar 1 2 3}}' },
+    ],
+    invalid: [
+        // add with too few args
+        {
+            code: '{{add 1}}',
+            errors: [{ messageId: 'tooFewArgs', data: { name: 'add', min: '2', actual: '1' } }],
+        },
+        // add with too many args
+        {
+            code: '{{add 1 2 3}}',
+            errors: [{ messageId: 'tooManyArgs', data: { name: 'add', max: '2', actual: '3' } }],
+        },
+        // concat with zero args as a subexpression (always an invocation; requires at least 1)
+        {
+            code: '{{uppercase (concat)}}',
+            errors: [{ messageId: 'tooFewArgs', data: { name: 'concat', min: '1', actual: '0' } }],
+        },
+    ],
+});
+
+// ── H3. hbs-no-unknown-binding ────────────────────────────────────────────────
+
+hbsTester.run('hbs-no-unknown-binding', hbsNoUnknownBinding, {
+    valid: [
+        // Known built-in bindings
+        { code: '<p>{!$organization.Address}</p>' },
+        { code: '{!$link.EmailAddressOptOutUrl}' },
+        { code: '{!$link.PreferenceCenterUrl}' },
+        // No binding syntax at all
+        { code: '<p>{{firstName}}</p>' },
+    ],
+    invalid: [
+        // Unknown binding with no close match
+        {
+            code: '<p>{!$foo.Bar}</p>',
+            errors: [{ messageId: 'unknownBinding', data: { token: '{!$foo.Bar}' } }],
+        },
+        // Unknown binding with a close catalog match → suggestion
+        {
+            code: '{!$organization.Addres}',
+            errors: [
+                {
+                    messageId: 'unknownBindingSuggest',
+                    data: {
+                        token: '{!$organization.Addres}',
+                        suggestion: '{!$organization.Address}',
+                    },
+                },
+            ],
+        },
+    ],
+});
+
+// ── H4. hbs-no-unsupported-construct ──────────────────────────────────────────
+
+hbsTester.run('hbs-no-unsupported-construct', hbsNoUnsupportedConstruct, {
+    valid: [
+        // Supported helpers and blocks
+        { code: '{{add 1 2}}' },
+        { code: '{{#each items}}{{this}}{{/each}}' },
+        { code: '<p>{{firstName}}</p>' },
+    ],
+    invalid: [
+        // Partial
+        {
+            code: '{{> myPartial}}',
+            errors: [{ messageId: 'partial' }],
+        },
+        // Partial block
+        {
+            code: '{{#> layout}}content{{/layout}}',
+            errors: [{ messageId: 'partial-block' }],
+        },
+        // Decorator
+        {
+            code: '{{* myDecorator}}',
+            errors: [{ messageId: 'decorator' }],
+        },
+        // log helper (handlebars.js-only debugging helper)
+        {
+            code: '{{log message}}',
+            errors: [{ messageId: 'log' }],
+        },
+    ],
+});
+
+// ── H5. hbs-helper-too-new-for-target ─────────────────────────────────────────
+
+hbsTester.run('hbs-helper-too-new-for-target', hbsHelperTooNewForTarget, {
+    valid: [
+        // No apiVersion option → nothing flagged
+        { code: '{{dateAdd d 1}}' },
+        // Helper available at the target version (add: mcnSince 65)
+        { code: '{{add 1 2}}', options: [{ apiVersion: 65 }] },
+        // Helper introduced exactly at the target version (dateAdd: mcnSince 67)
+        { code: '{{dateAdd d 1}}', options: [{ apiVersion: 67 }] },
+        // Bare binding — not an invocation, not checked
+        { code: '{{firstName}}', options: [{ apiVersion: 65 }] },
+    ],
+    invalid: [
+        // dateAdd (mcnSince 67) used while targeting 65
+        {
+            code: '{{dateAdd d 1}}',
+            options: [{ apiVersion: 65 }],
+            errors: [
+                {
+                    messageId: 'helperTooNew',
+                    data: { name: 'dateAdd', since: '67', target: '65' },
+                },
+            ],
+        },
+        // now (mcnSince 67) as a block-less invocation while targeting 65
+        {
+            code: '{{lookup "DE" "key"}}',
+            options: [{ apiVersion: 65 }],
+            errors: [
+                {
+                    messageId: 'helperTooNew',
+                    data: { name: 'lookup', since: '67', target: '65' },
+                },
+            ],
+        },
+    ],
+});
+
+console.log('All Handlebars (MCN) rule tests passed.');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Handlebars end-to-end config wiring (processor + .hbs routing)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Verifies the full pipeline: the combined processor extracts {{...}} from HTML
+// into a virtual .hbs file, and the -next configs lint it while the classic
+// configs leave it alone.
+
+/**
+ * Lints an HTML string with a flat config array and returns the messages.
+ *
+ * @param {Array} config - Flat ESLint config array (e.g. a plugin config).
+ * @param {string} html - HTML source containing embedded Handlebars.
+ * @returns {Promise.<import('eslint').Linter.LintMessage[]>} Lint messages.
+ */
+async function lintHtml(config, html) {
+    const eslint = new ESLint({
+        overrideConfigFile: true,
+        overrideConfig: config,
+        cwd: process.cwd(),
+        warnIgnored: false,
+    });
+    const results = await eslint.lintText(html, { filePath: 'fixture.html' });
+    return results[0]?.messages ?? [];
+}
+
+describe('Handlebars config wiring (embedded HTML)', () => {
+    // Unknown helper + unsupported construct in one document.
+    const html = '<p>{{fooBar 1 2}}</p>\n<p>{{> myPartial}}</p>\n';
+
+    it('embedded-next flags Handlebars issues in HTML', async () => {
+        const messages = await lintHtml(sfmcPlugin.configs['embedded-next'], html);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('sfmc/hbs-no-unknown-helper'),
+            `Expected hbs-no-unknown-helper, got ${JSON.stringify(ruleIds)}`,
+        );
+        assert.ok(
+            ruleIds.includes('sfmc/hbs-no-unsupported-construct'),
+            `Expected hbs-no-unsupported-construct, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('classic embedded config does NOT flag Handlebars in HTML', async () => {
+        const messages = await lintHtml(sfmcPlugin.configs.embedded, html);
+        const hbsMessages = messages.filter((m) => m.ruleId && m.ruleId.startsWith('sfmc/hbs-'));
+        assert.deepEqual(
+            hbsMessages.map((m) => m.ruleId),
+            [],
+            'Classic (non-MCN) config must not emit any hbs-* diagnostics',
+        );
+    });
+
+    it('plain HTML with no Handlebars produces no hbs diagnostics in -next', async () => {
+        const plain = '<p>Hello world</p>';
+        const messages = await lintHtml(sfmcPlugin.configs['embedded-next'], plain);
+        const hbsMessages = messages.filter((m) => m.ruleId && m.ruleId.startsWith('sfmc/hbs-'));
+        assert.deepEqual(hbsMessages, [], 'Plain HTML must not trigger hbs-* rules');
+    });
+});
+
+console.log('All Handlebars config-wiring tests passed.');

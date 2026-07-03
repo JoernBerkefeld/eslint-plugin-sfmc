@@ -1,4 +1,4 @@
-import { functionNames, isMcnSupported } from 'ampscript-data';
+import { functionNames, functionLookup, isMcnSupported } from 'ampscript-data';
 
 export default {
     meta: {
@@ -12,6 +12,8 @@ export default {
             unknownFunction:
                 "'{{name}}' is not a recognized AMPscript function. AMPscript does not support custom functions.",
             notSupportedInMcn: "'{{name}}' is not supported in Marketing Cloud Next.",
+            noHandlebarsEquivalent:
+                "'{{name}}' is supported by Marketing Cloud Next AMPscript but has no Handlebars for Marketing Cloud Next equivalent. It cannot be migrated to a Handlebars helper.",
         },
         schema: [
             {
@@ -50,6 +52,17 @@ export default {
                     context.report({
                         node,
                         messageId: 'notSupportedInMcn',
+                        data: { name: node.name },
+                    });
+                    return;
+                }
+
+                // Category C: the function works in MCN AMPscript but has no
+                // Handlebars counterpart, so it cannot be migrated to Handlebars.
+                if (targetNext && functionLookup.get(lower)?.mcnHandlebarsGap === true) {
+                    context.report({
+                        node,
+                        messageId: 'noHandlebarsEquivalent',
                         data: { name: node.name },
                     });
                 }
