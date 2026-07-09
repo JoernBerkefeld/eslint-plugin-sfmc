@@ -12,7 +12,7 @@ SET @name = UpperCase("hello world")
 VAR @val
 SET @val = Lookup("MyDE", "Field", "Email", "test@example.com")
 
-/* ❌ LookupRows is NOT supported in MCN → [amp-no-unknown-function] error */
+/* ❌ LookupRows is NOT supported in MCN → [amp-no-mcn-unsupported] error */
 VAR @results
 SET @results = LookupRows("MyDE", "Email", "test@example.com")
 
@@ -20,11 +20,11 @@ SET @results = LookupRows("MyDE", "Email", "test@example.com")
 VAR @date
 SET @date = FormatDate(NOW(), "MM/dd/yyyy", "en-US")
 
-/* ❌ InsertDE is NOT supported in MCN → [amp-no-unknown-function] error */
+/* ❌ InsertData is NOT supported in MCN → [amp-no-mcn-unsupported] error */
 VAR @rows
 SET @rows = InsertData("MyDE", "Field1", "Value1")
 
-/* ❌ AddObjectArrayItem is NOT supported in MCN → [amp-no-unknown-function] error */
+/* ❌ AddObjectArrayItem is NOT supported in MCN → [amp-no-mcn-unsupported] error */
 AddObjectArrayItem(@obj, "key", "value")
 
 /* ❌ Unknown function (also errors in MCE mode) → [amp-no-unknown-function] error */

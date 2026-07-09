@@ -4,9 +4,10 @@
    Open this file in VS Code — the ESLint extension shows live squiggles.
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* ❌ Platform.Load flagged → [ssjs-no-mcn-unsupported] error */
 Platform.Load("Core", "1.1.1");
 
-/* ❌ ALL Platform.Function calls → [ssjs-no-unknown-function target:next] errors */
+/* ❌ ALL Platform.Function calls → [ssjs-no-mcn-unsupported] errors */
 var de = Platform.Function.CreateObject("DataExtension");
 var proxy = new Script.Util.WSProxy();
 var result = proxy.retrieve("DataExtension", ["CustomerKey", "Name"]);

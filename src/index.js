@@ -15,6 +15,7 @@ import * as handlebarsParser from './handlebars-parser.js';
 // ── AMPscript rules ───────────────────────────────────────────────────────────
 
 import ampNoUnknownFunction from './rules/amp/no-unknown-function.js';
+import ampNoMcnUnsupported from './rules/amp/no-mcn-unsupported.js';
 import ampNoVariableRedeclaration from './rules/amp/no-variable-redeclaration.js';
 import ampSetRequiresTarget from './rules/amp/set-requires-target.js';
 import ampNoEmptyBlock from './rules/amp/no-empty-block.js';
@@ -40,6 +41,7 @@ import ampNoNestedAmpscriptDelimiter from './rules/amp/no-nested-ampscript-delim
 import ssjsRequirePlatformLoad from './rules/ssjs/require-platform-load.js';
 import ssjsNoUnsupportedSyntax from './rules/ssjs/no-unsupported-syntax.js';
 import ssjsNoUnknownFunction from './rules/ssjs/no-unknown-function.js';
+import ssjsNoMcnUnsupported from './rules/ssjs/no-mcn-unsupported.js';
 import ssjsNoDeprecatedFunction from './rules/ssjs/no-deprecated-function.js';
 import ssjsNoPropertyCall from './rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from './rules/ssjs/platform-function-arity.js';
@@ -58,7 +60,7 @@ import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
 // ── Handlebars (MCN) rules ──────────────────────────────────────────────────────
 
 import hbsNoUnknownHelper from './rules/hbs/no-unknown-helper.js';
-import hbsHelperTooNewForTarget from './rules/hbs/helper-too-new-for-target.js';
+import hbsNoMcnUnsupported from './rules/hbs/no-mcn-unsupported.js';
 import hbsNoUnknownBinding from './rules/hbs/no-unknown-binding.js';
 import hbsHelperArity from './rules/hbs/helper-arity.js';
 import hbsNoUnsupportedConstruct from './rules/hbs/no-unsupported-construct.js';
@@ -83,6 +85,7 @@ const plugin = {
     rules: {
         // AMPscript rules (amp- prefix)
         'amp-no-unknown-function': ampNoUnknownFunction,
+        'amp-no-mcn-unsupported': ampNoMcnUnsupported,
         'amp-no-var-redeclaration': ampNoVariableRedeclaration,
         'amp-set-requires-target': ampSetRequiresTarget,
         'amp-no-empty-block': ampNoEmptyBlock,
@@ -107,6 +110,7 @@ const plugin = {
         'ssjs-require-platform-load': ssjsRequirePlatformLoad,
         'ssjs-no-unsupported-syntax': ssjsNoUnsupportedSyntax,
         'ssjs-no-unknown-function': ssjsNoUnknownFunction,
+        'ssjs-no-mcn-unsupported': ssjsNoMcnUnsupported,
         'ssjs-no-deprecated-function': ssjsNoDeprecatedFunction,
         'ssjs-no-property-call': ssjsNoPropertyCall,
         'ssjs-platform-function-arity': ssjsPlatformFunctionArity,
@@ -124,7 +128,7 @@ const plugin = {
 
         // Handlebars (MCN) rules (hbs- prefix)
         'hbs-no-unknown-helper': hbsNoUnknownHelper,
-        'hbs-helper-too-new-for-target': hbsHelperTooNewForTarget,
+        'hbs-no-mcn-unsupported': hbsNoMcnUnsupported,
         'hbs-no-unknown-binding': hbsNoUnknownBinding,
         'hbs-helper-arity': hbsHelperArity,
         'hbs-no-unsupported-construct': hbsNoUnsupportedConstruct,
@@ -141,11 +145,13 @@ const plugin = {
 
 /**
  * SSJS rules for MCN targets.
- * All quality rules are disabled — only the presence of SSJS is flagged,
- * because SSJS as a whole must be deleted when targeting Marketing Cloud Next.
+ * All quality rules are disabled — only the presence of SSJS is flagged, via the
+ * dedicated `ssjs-no-mcn-unsupported` rule, because SSJS as a whole must be
+ * deleted when targeting Marketing Cloud Next.
  */
 const ssjsMcnRules = {
-    'sfmc/ssjs-no-unknown-function': ['error', { target: 'next' }],
+    'sfmc/ssjs-no-mcn-unsupported': 'error',
+    'sfmc/ssjs-no-unknown-function': 'off',
     'sfmc/ssjs-require-platform-load': 'off',
     'sfmc/ssjs-no-unsupported-syntax': 'off',
     'sfmc/ssjs-no-deprecated-function': 'off',
@@ -191,7 +197,7 @@ const ampStrictRules = {
     'sfmc/amp-no-unknown-function': 'error',
     'sfmc/amp-no-var-redeclaration': 'error',
     'sfmc/amp-set-requires-target': 'error',
-    'sfmc/amp-no-empty-block': 'error',
+    'sfmc/amp-no-empty-block': 'warn',
     'sfmc/amp-no-smart-quotes': 'error',
     'sfmc/amp-prefer-attribute-value': 'warn',
     'sfmc/amp-no-loop-counter-assign': 'error',
@@ -199,8 +205,8 @@ const ampStrictRules = {
     'sfmc/amp-require-variable-declaration': 'warn',
     'sfmc/amp-function-arity': 'error',
     'sfmc/amp-arg-types': 'error',
-    'sfmc/amp-no-email-excluded-function': ['error', { context: 'email' }],
-    'sfmc/amp-no-deprecated-function': 'error',
+    'sfmc/amp-no-email-excluded-function': 'off',
+    'sfmc/amp-no-deprecated-function': 'warn',
     'sfmc/amp-naming-convention': ['error', { format: 'camelCase' }],
     'sfmc/amp-no-empty-then': 'error',
     'sfmc/amp-require-rowcount-check': 'error',
@@ -244,7 +250,7 @@ const ssjsStrictRules = {
     'sfmc/ssjs-require-hasownproperty': 'error',
     'sfmc/ssjs-require-platform-load-order': 'error',
     'sfmc/ssjs-no-hardcoded-credentials': 'error',
-    'sfmc/ssjs-prefer-platform-load-version': 'error',
+    'sfmc/ssjs-prefer-platform-load-version': 'warn',
     'sfmc/ssjs-no-unavailable-method': 'warn',
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'error',
     'sfmc/ssjs-no-switch-default': 'error',
@@ -266,7 +272,7 @@ const hbsNextRules = {
     'sfmc/hbs-no-unknown-binding': 'error',
     'sfmc/hbs-helper-arity': 'error',
     'sfmc/hbs-no-unsupported-construct': 'error',
-    'sfmc/hbs-helper-too-new-for-target': 'off',
+    'sfmc/hbs-no-mcn-unsupported': 'error',
 };
 
 /**
@@ -279,7 +285,7 @@ const hbsOffRules = {
     'sfmc/hbs-no-unknown-binding': 'off',
     'sfmc/hbs-helper-arity': 'off',
     'sfmc/hbs-no-unsupported-construct': 'off',
-    'sfmc/hbs-helper-too-new-for-target': 'off',
+    'sfmc/hbs-no-mcn-unsupported': 'off',
 };
 
 /** Shared languageOptions for linting virtual `.hbs` files. */
@@ -449,7 +455,7 @@ plugin.configs = {
         files: ['**/*.ampscript', '**/*.amp'],
         rules: {
             ...ampRecommendedRules,
-            'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+            'sfmc/amp-no-mcn-unsupported': 'error',
         },
     },
 
@@ -480,7 +486,7 @@ plugin.configs = {
             files: ['**/*.ampscript', '**/*.amp'],
             rules: {
                 ...ampRecommendedRules,
-                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+                'sfmc/amp-no-mcn-unsupported': 'error',
             },
         },
         {
@@ -513,7 +519,7 @@ plugin.configs = {
             files: ['**/*.html/*.amp'],
             rules: {
                 ...ampRecommendedRules,
-                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+                'sfmc/amp-no-mcn-unsupported': 'error',
             },
         },
         {
@@ -548,7 +554,7 @@ plugin.configs = {
             files: ['**/*.ampscript', '**/*.amp'],
             rules: {
                 ...ampStrictRules,
-                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+                'sfmc/amp-no-mcn-unsupported': 'error',
             },
         },
         {
@@ -575,7 +581,7 @@ plugin.configs = {
             files: ['**/*.html/*.amp'],
             rules: {
                 ...ampStrictRules,
-                'sfmc/amp-no-unknown-function': ['error', { target: 'next' }],
+                'sfmc/amp-no-mcn-unsupported': 'error',
             },
         },
         {

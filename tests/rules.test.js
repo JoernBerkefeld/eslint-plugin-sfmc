@@ -5,6 +5,7 @@ import sfmcPlugin from '../src/index.js';
 // ── AMPscript rule imports ────────────────────────────────────────────────────
 
 import ampNoUnknownFunction from '../src/rules/amp/no-unknown-function.js';
+import ampNoMcnUnsupported from '../src/rules/amp/no-mcn-unsupported.js';
 import ampNoHtmlComment from '../src/rules/amp/no-html-comment.js';
 import ampNoJsLineComment from '../src/rules/amp/no-js-line-comment.js';
 import ampNoNestedScriptTag from '../src/rules/amp/no-nested-script-tag.js';
@@ -30,6 +31,7 @@ import ampRequireRowcountCheck from '../src/rules/amp/require-rowcount-check.js'
 import ssjsRequirePlatformLoad from '../src/rules/ssjs/require-platform-load.js';
 import ssjsNoUnsupportedSyntax from '../src/rules/ssjs/no-unsupported-syntax.js';
 import ssjsNoUnknownFunction from '../src/rules/ssjs/no-unknown-function.js';
+import ssjsNoMcnUnsupported from '../src/rules/ssjs/no-mcn-unsupported.js';
 import ssjsNoDeprecatedFunction from '../src/rules/ssjs/no-deprecated-function.js';
 import ssjsNoPropertyCall from '../src/rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from '../src/rules/ssjs/platform-function-arity.js';
@@ -48,7 +50,7 @@ import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
 // ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
 
 import hbsNoUnknownHelper from '../src/rules/hbs/no-unknown-helper.js';
-import hbsHelperTooNewForTarget from '../src/rules/hbs/helper-too-new-for-target.js';
+import hbsNoMcnUnsupported from '../src/rules/hbs/no-mcn-unsupported.js';
 import hbsNoUnknownBinding from '../src/rules/hbs/no-unknown-binding.js';
 import hbsHelperArity from '../src/rules/hbs/helper-arity.js';
 import hbsNoUnsupportedConstruct from '../src/rules/hbs/no-unsupported-construct.js';
@@ -88,42 +90,44 @@ ampTester.run('amp-no-unknown-function', ampNoUnknownFunction, {
     ],
 });
 
-// ── 1b. amp-no-unknown-function — target:'next' ───────────────────────────────
+// ── 1b. amp-no-mcn-unsupported ────────────────────────────────────────────────
 
-ampTester.run('amp-no-unknown-function (target:next)', ampNoUnknownFunction, {
+ampTester.run('amp-no-mcn-unsupported', ampNoMcnUnsupported, {
     valid: [
-        // MCN-supported functions pass with target:'next'
-        { code: '%%[set @x = Lookup("DE", "F", "K", @v)]%%', options: [{ target: 'next' }] },
-        { code: '%%= Concat("hello", " ", "world") =%%', options: [{ target: 'next' }] },
-        { code: '%%[set @d = Now()]%%', options: [{ target: 'next' }] },
-        // target:'engagement' behaves like default — no MCN flag
-        { code: '%%[InsertDE("MyDE", "Col", "Val")]%%', options: [{ target: 'engagement' }] },
-        // No target option — MCN-unsupported functions are still valid
-        { code: '%%[InsertDE("MyDE", "Col", "Val")]%%' },
+        // No apiVersion → MCN-supported functions pass.
+        { code: '%%[set @x = Lookup("DE", "F", "K", @v)]%%' },
+        { code: '%%= Concat("hello", " ", "world") =%%' },
+        { code: '%%[set @d = Now()]%%' },
+        // Unknown functions are handled by amp-no-unknown-function, not here.
+        { code: '%%[set @x = FooBar(@v)]%%' },
+        // apiVersion 67 → a function introduced in 67 passes (mcnSince <= target).
+        { code: '%%[set @d = Now()]%%', options: [{ apiVersion: 67 }] },
     ],
     invalid: [
-        // MCN-unsupported known function flagged with notSupportedInMcn
+        // Never supported in MCN → always flagged (no apiVersion).
         {
             code: '%%[InsertDE("MyDE", "Col", "Val")]%%',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'notSupportedInMcn', data: { name: 'InsertDE' } }],
         },
-        // Unknown function is still flagged with unknownFunction (regardless of target)
-        {
-            code: '%%[set @x = FooBar(@v)]%%',
-            options: [{ target: 'next' }],
-            errors: [{ messageId: 'unknownFunction', data: { name: 'FooBar' } }],
-        },
-        // Category C: MCN-supported AMPscript function with no Handlebars equivalent
+        // MCN-supported AMPscript function with no Handlebars equivalent.
         {
             code: '%%= ContentBlockByID(123) =%%',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByID' } }],
         },
         {
             code: '%%= ContentBlockByName("Public/MyBlock") =%%',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByName' } }],
+        },
+        // apiVersion 65 → a function introduced in 67 is too new for the target.
+        {
+            code: '%%[set @d = Now()]%%',
+            options: [{ apiVersion: 65 }],
+            errors: [
+                {
+                    messageId: 'tooNewForTarget',
+                    data: { name: 'Now', since: '67', target: '65' },
+                },
+            ],
         },
     ],
 });
@@ -211,13 +215,18 @@ ampTester.run('amp-no-smart-quotes', ampNoSmartQuotes, {
             ],
         },
         {
-            // double curly quotes inside a "-delimited string — switch outer to '
+            // double curly quotes — each smart quote is flagged and swapped for a
+            // straight ASCII double quote (per-character scan, matches the LSP).
             code: '%%[set @x = "\u{201C}hello\u{201D}"]%%',
-            output: '%%[set @x = \'"hello"\']%%',
+            output: '%%[set @x = ""hello""]%%',
             errors: [
                 {
                     messageId: 'smartQuote',
                     data: { kind: 'left double curly quote \u{201C}' },
+                },
+                {
+                    messageId: 'smartQuote',
+                    data: { kind: 'right double curly quote \u{201D}' },
                 },
             ],
         },
@@ -870,43 +879,54 @@ ssjsTester.run('ssjs-no-unknown-function', ssjsNoUnknownFunction, {
     ],
 });
 
-// ─── 3b. ssjs-no-unknown-function — target:'next' ─────────────────────────────
+// ─── 3b. ssjs-no-mcn-unsupported ──────────────────────────────────────────────
 
-ssjsTester.run('ssjs-no-unknown-function (target:next)', ssjsNoUnknownFunction, {
+ssjsTester.run('ssjs-no-mcn-unsupported', ssjsNoMcnUnsupported, {
     valid: [
-        // Bare JS calls (not SFMC API calls) are not flagged even with target:'next'
-        { code: 'someObj.unknownMethod();', options: [{ target: 'next' }] },
-        { code: 'var x = somethingElse(); x.Anything();', options: [{ target: 'next' }] },
-        // With target:'engagement' (or no target), valid SFMC calls pass
-        {
-            code: 'Platform.Function.Lookup("DE", "F", "K", "V");',
-            options: [{ target: 'engagement' }],
-        },
-        { code: 'HTTP.Get("https://example.com");' },
+        // Bare JS calls (not SFMC API calls) are not flagged.
+        { code: 'someObj.unknownMethod();' },
+        { code: 'var x = somethingElse(); x.Anything();' },
+        // apiVersion is accepted for parity but has no effect (SSJS never supported).
+        { code: 'var y = plainHelper();', options: [{ apiVersion: 67 }] },
     ],
     invalid: [
-        // Platform.Function call flagged with ssjsNotSupportedInMcn
+        // Platform namespace call flagged.
         {
             code: 'Platform.Function.Lookup("DE", "F", "K", "V");',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
         },
-        // HTTP call flagged with ssjsNotSupportedInMcn
+        // Platform.Load flagged (previously missed by no-unknown-function).
+        {
+            code: 'Platform.Load("Core", "1.1.1");',
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
+        },
+        // HTTP call flagged.
         {
             code: 'HTTP.Get("https://example.com");',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
         },
-        // Core Library instance call flagged
+        // Core Library instance call flagged.
         {
             code: 'var de = DataExtension.Init("MyDE"); de.Rows.Retrieve();',
-            options: [{ target: 'next' }],
             errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
         },
-        // WSProxy instance call flagged
+        // WSProxy construction flagged (previously missed by no-unknown-function).
+        {
+            code: 'var api = new Script.Util.WSProxy();',
+            errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
+        },
+        // WSProxy instance call flagged (construction + call = two reports).
         {
             code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
-            options: [{ target: 'next' }],
+            errors: [
+                { messageId: 'ssjsNotSupportedInMcn' },
+                { messageId: 'ssjsNotSupportedInMcn' },
+            ],
+        },
+        // apiVersion has no effect — still flagged.
+        {
+            code: 'Platform.Function.Lookup("DE", "F", "K", "V");',
+            options: [{ apiVersion: 67 }],
             errors: [{ messageId: 'ssjsNotSupportedInMcn' }],
         },
     ],
@@ -1792,6 +1812,8 @@ ampTester.run('amp-no-nested-ampscript-delimiter', ampNoNestedAmpscriptDelimiter
         { code: '%%[ set @x = 1 ]%%' },
         { code: '%%= V(@name) =%%' },
         { code: '<script runat="server" language="ampscript">\nset @x = 1\n</script>' },
+        // Two sibling blocks in a raw .amp file: the 2nd %%[ is not nested.
+        { code: '%%[ set @x = 1 ]%%\n\n%%[ set @y = 2 ]%%' },
     ],
     invalid: [
         {
@@ -1956,6 +1978,8 @@ ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
         {
             code: 'BounceEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 });',
         },
+        // Instance sub-path with the correct arity passes.
+        { code: 'var de = DataExtension.Init("key");\nde.Rows.Add(row);' },
     ],
     invalid: [
         {
@@ -1964,6 +1988,11 @@ ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
         },
         {
             code: 'DataExtension.Init("key", "extra");',
+            errors: [{ messageId: 'tooManyArgs' }],
+        },
+        // Instance sub-path: de.Rows.Add resolves via the tracked DataExtension.Init instance.
+        {
+            code: 'var de = DataExtension.Init("key");\nde.Rows.Add(row, "extra");',
             errors: [{ messageId: 'tooManyArgs' }],
         },
     ],
@@ -2129,21 +2158,25 @@ hbsTester.run('hbs-no-unsupported-construct', hbsNoUnsupportedConstruct, {
     ],
 });
 
-// ── H5. hbs-helper-too-new-for-target ─────────────────────────────────────────
+// ── H5. hbs-no-mcn-unsupported ────────────────────────────────────────────────
 
-hbsTester.run('hbs-helper-too-new-for-target', hbsHelperTooNewForTarget, {
+hbsTester.run('hbs-no-mcn-unsupported', hbsNoMcnUnsupported, {
     valid: [
-        // No apiVersion option → nothing flagged
+        // No apiVersion → nothing flagged (no null-mcnSince items in the catalog).
         { code: '{{dateAdd d 1}}' },
-        // Helper available at the target version (add: mcnSince 65)
+        // Helper available at the target version (add: mcnSince 65).
         { code: '{{add 1 2}}', options: [{ apiVersion: 65 }] },
-        // Helper introduced exactly at the target version (dateAdd: mcnSince 67)
+        // Helper introduced exactly at the target version (dateAdd: mcnSince 67).
         { code: '{{dateAdd d 1}}', options: [{ apiVersion: 67 }] },
-        // Bare binding — not an invocation, not checked
+        // Bare binding — not an invocation, not checked.
         { code: '{{firstName}}', options: [{ apiVersion: 65 }] },
+        // Unknown helper is handled by hbs-no-unknown-helper, not here.
+        { code: '{{totallyUnknownHelper x}}', options: [{ apiVersion: 65 }] },
+        // Supported binding at the target version passes.
+        { code: '{!$organization.Address}', options: [{ apiVersion: 65 }] },
     ],
     invalid: [
-        // dateAdd (mcnSince 67) used while targeting 65
+        // dateAdd (mcnSince 67) used while targeting 65.
         {
             code: '{{dateAdd d 1}}',
             options: [{ apiVersion: 65 }],
@@ -2154,7 +2187,7 @@ hbsTester.run('hbs-helper-too-new-for-target', hbsHelperTooNewForTarget, {
                 },
             ],
         },
-        // now (mcnSince 67) as a block-less invocation while targeting 65
+        // lookup (mcnSince 67) as a block-less invocation while targeting 65.
         {
             code: '{{lookup "DE" "key"}}',
             options: [{ apiVersion: 65 }],
@@ -2162,6 +2195,17 @@ hbsTester.run('hbs-helper-too-new-for-target', hbsHelperTooNewForTarget, {
                 {
                     messageId: 'helperTooNew',
                     data: { name: 'lookup', since: '67', target: '65' },
+                },
+            ],
+        },
+        // Binding (mcnSince 65) too new for an older target.
+        {
+            code: '{!$organization.Address}',
+            options: [{ apiVersion: 40 }],
+            errors: [
+                {
+                    messageId: 'bindingTooNew',
+                    data: { token: '{!$organization.Address}', since: '65', target: '40' },
                 },
             ],
         },

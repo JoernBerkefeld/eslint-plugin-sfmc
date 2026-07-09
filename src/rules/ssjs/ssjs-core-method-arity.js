@@ -135,6 +135,28 @@ export default {
                             callee.property,
                         );
                     }
+                    return;
+                }
+
+                // Instance sub-path: de.Rows.Add(...) where `de` is a tracked
+                // DataExtension.Init(...) instance. Substitute the instance's
+                // core type for the leftmost identifier and resolve the class key.
+                if (objectPath) {
+                    const segments = objectPath.split('.');
+                    const rootCoreType = coreVariables.get(segments[0]);
+                    if (rootCoreType) {
+                        const resolvedPath = [rootCoreType, ...segments.slice(1)].join('.');
+                        const classLookup = coreMethodArityLookup.get(resolvedPath.toLowerCase());
+                        if (classLookup) {
+                            const entry = classLookup.get(methodName.toLowerCase());
+                            checkArity(
+                                entry,
+                                node.arguments,
+                                `${resolvedPath}.${methodName}`,
+                                callee.property,
+                            );
+                        }
+                    }
                 }
             },
         };

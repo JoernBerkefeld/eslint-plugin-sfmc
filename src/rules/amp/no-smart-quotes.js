@@ -1,4 +1,4 @@
-const SMART_QUOTE_RE = /[\u{2018}\u{2019}\u{201C}\u{201D}\u{201A}\u{201E}\u{2039}\u{203A}]/u;
+const SMART_QUOTE_RE = /[\u{2018}\u{2019}\u{201C}\u{201D}\u{201A}\u{201E}\u{2039}\u{203A}]/gu;
 
 const SMART_QUOTES = {
     '\u{2018}': 'left single curly quote \u{2018}',
@@ -30,7 +30,7 @@ export default {
         fixable: 'code',
         docs: {
             description:
-                'Disallow smart/curly quotes in string literals (AMPscript requires ASCII quotes)',
+                'Disallow smart/curly quotes in AMPscript (AMPscript requires ASCII quotes)',
             recommended: true,
         },
         messages: {
@@ -41,36 +41,30 @@ export default {
     },
 
     create(context) {
+        const sourceCode = context.sourceCode;
+
         return {
-            StringLiteral(node) {
-                if (SMART_QUOTE_RE.test(node.value)) {
-                    for (const [char, kind] of Object.entries(SMART_QUOTES)) {
-                        if (node.value.includes(char)) {
-                            context.report({
-                                node,
-                                messageId: 'smartQuote',
-                                data: { kind },
-                                fix(fixer) {
-                                    const fixed = node.value.replaceAll(
-                                        /[\u{2018}\u{2019}\u{201C}\u{201D}\u{201A}\u{201E}\u{2039}\u{203A}]/gu,
-                                        (c) => SMART_TO_ASCII[c],
-                                    );
-                                    const q = node.quote;
-                                    // If the replacement introduces the outer delimiter, try switching quotes.
-                                    if (fixed.includes(q)) {
-                                        const other = q === '"' ? "'" : '"';
-                                        if (!fixed.includes(other)) {
-                                            return fixer.replaceText(node, other + fixed + other);
-                                        }
-                                        // Both quote chars present — cannot safely auto-fix.
-                                        return null;
-                                    }
-                                    return fixer.replaceText(node, q + fixed + q);
-                                },
-                            });
-                            return;
-                        }
-                    }
+            // The AMPscript parser tokenizes string literals as RAW + IDENTIFIER
+            // tokens rather than a StringLiteral node, so a node listener never
+            // matches. Scan the virtual .amp region's raw text instead — the whole
+            // extracted file is AMPscript, mirroring the LSP smart-quote check.
+            Program() {
+                const text = sourceCode.getText();
+                SMART_QUOTE_RE.lastIndex = 0;
+                let match;
+                while ((match = SMART_QUOTE_RE.exec(text)) !== null) {
+                    const char = match[0];
+                    const start = match.index;
+                    const end = start + char.length;
+                    context.report({
+                        loc: {
+                            start: sourceCode.getLocFromIndex(start),
+                            end: sourceCode.getLocFromIndex(end),
+                        },
+                        messageId: 'smartQuote',
+                        data: { kind: SMART_QUOTES[char] },
+                        fix: (fixer) => fixer.replaceTextRange([start, end], SMART_TO_ASCII[char]),
+                    });
                 }
             },
         };

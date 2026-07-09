@@ -1,0 +1,26 @@
+%%[
+/* ── amp-no-mcn-unsupported · apiVersion 65 (Winter '26) ──────────────────────
+   This folder's eslint.config.mjs pins apiVersion: 65. Every MCN-supported
+   AMPscript function currently ships in 67 (Summer '26), so at 65 they are all
+   flagged as "too new for target". Functions never supported in MCN
+   (mcnSince: null) are flagged as "not supported". The three ContentBlock*
+   functions ship in 67 but also have no Handlebars equivalent; at apiVersion 65
+   the "too new" gate fires first (since 67 > 65).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Variable assignments and literals are never flagged. */
+set @firstName = "Ada"
+set @count = 3
+
+/* ❌ mcnSince 67 → too new for apiVersion 65 [tooNewForTarget] */
+set @greeting = Concat("Hello ", @firstName)
+set @total = Add(@count, 1)
+
+/* ❌ mcnSince null → never supported in MCN [notSupportedInMcn] */
+InsertDE("MyDE", "Email", "test@example.com")
+set @emp = AuthenticatedEmployeeID()
+
+/* ❌ mcnSince 67 but no Handlebars equivalent → at apiVersion 65 the too-new
+   gate fires first [tooNewForTarget] */
+set @block = ContentBlockByName("Public\MyBlock")
+]%%

@@ -9,7 +9,7 @@
 VAR @name
 SET @name = UpperCase("hello world")
 
-/* ❌ InsertDE is NOT supported in MCN → [amp-no-unknown-function] error */
+/* ❌ InsertDE is NOT supported in MCN → [amp-no-mcn-unsupported] error */
 SET @name = InsertDE("MyDE", "Email", "test@example.com")
 ]%%
 
@@ -17,7 +17,7 @@ SET @name = InsertDE("MyDE", "Email", "test@example.com")
 
 <!-- ── Embedded SSJS (MCN mode) ───────────────────────────────────────────── -->
 <script runat="server">
-    /* ❌ ALL SSJS calls are flagged in MCN mode → [ssjs-no-unknown-function target:next] errors */
+    /* ❌ ALL SSJS calls are flagged in MCN mode → [ssjs-no-mcn-unsupported] errors */
     Platform.Load("Core", "1.1.1");
     var de = Platform.Function.CreateObject("DataExtension");
 </script>

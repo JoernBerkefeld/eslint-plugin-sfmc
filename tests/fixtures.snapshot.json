@@ -13,22 +13,10 @@
       "messageId": "tooFewArgs"
     },
     {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
-      "severity": 2,
-      "line": 23,
-      "messageId": "emailExcluded"
-    },
-    {
       "ruleId": "sfmc/amp-function-arity",
       "severity": 2,
       "line": 26,
       "messageId": "incompleteGroup"
-    },
-    {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
-      "severity": 2,
-      "line": 26,
-      "messageId": "emailExcluded"
     }
   ],
   "testFixture/rules/amp/naming-convention.amp": [
@@ -48,43 +36,23 @@
   "testFixture/rules/amp/no-deprecated-function.amp": [
     {
       "ruleId": "sfmc/amp-no-deprecated-function",
-      "severity": 2,
+      "severity": 1,
       "line": 20,
       "messageId": "deprecated"
     },
     {
       "ruleId": "sfmc/amp-no-deprecated-function",
-      "severity": 2,
+      "severity": 1,
       "line": 24,
       "messageId": "deprecated"
-    }
-  ],
-  "testFixture/rules/amp/no-email-excluded-function.amp": [
-    {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
-      "severity": 2,
-      "line": 17,
-      "messageId": "emailExcluded"
-    },
-    {
-      "ruleId": "sfmc/amp-no-email-excluded-function",
-      "severity": 2,
-      "line": 21,
-      "messageId": "emailExcluded"
     }
   ],
   "testFixture/rules/amp/no-empty-block.amp": [
     {
       "ruleId": "sfmc/amp-no-empty-block",
-      "severity": 2,
+      "severity": 1,
       "line": 14,
       "messageId": "emptyBlock"
-    },
-    {
-      "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
-      "severity": 2,
-      "line": 14,
-      "messageId": "nestedDelimiter"
     }
   ],
   "testFixture/rules/amp/no-empty-then.amp": [
@@ -151,12 +119,6 @@
       "severity": 2,
       "line": 16,
       "messageId": "inlineStatement"
-    },
-    {
-      "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
-      "severity": 2,
-      "line": 16,
-      "messageId": "nestedDelimiter"
     }
   ],
   "testFixture/rules/amp/no-js-line-comment.amp": [
@@ -258,6 +220,18 @@
     }
   ],
   "testFixture/rules/amp/no-smart-quotes.amp": [
+    {
+      "ruleId": "sfmc/amp-no-smart-quotes",
+      "severity": 2,
+      "line": 17,
+      "messageId": "smartQuote"
+    },
+    {
+      "ruleId": "sfmc/amp-no-smart-quotes",
+      "severity": 2,
+      "line": 17,
+      "messageId": "smartQuote"
+    },
     {
       "ruleId": "sfmc/amp-prefer-attribute-value",
       "severity": 1,
@@ -361,6 +335,12 @@
       "severity": 2,
       "line": 16,
       "messageId": "tooFewArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 20,
+      "messageId": "tooManyArgs"
     }
   ],
   "testFixture/rules/ssjs/no-deprecated-function.ssjs": [
@@ -519,7 +499,7 @@
   "testFixture/rules/ssjs/prefer-platform-load-version.ssjs": [
     {
       "ruleId": "sfmc/ssjs-prefer-platform-load-version",
-      "severity": 2,
+      "severity": 1,
       "line": 8,
       "messageId": "outdatedVersion"
     }

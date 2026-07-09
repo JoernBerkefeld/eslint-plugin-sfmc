@@ -45,9 +45,10 @@
     <!-- ❌ log helper → [hbs-no-unsupported-construct] -->
     {{log "debug message"}}
 
-    <!-- ✅ helper-too-new-for-target is OFF by default in embedded-next.
-         `dateAdd`/`now` (mcnSince 67) do NOT error here. Open
-         test-handlebars-apiversion.html to see that rule fire with apiVersion 65. -->
+    <!-- ✅ hbs-no-mcn-unsupported runs in embedded-next but with no apiVersion set,
+         so only never-in-MCN items flag. `dateAdd`/`now` (mcnSince 67) are
+         supported at some point in MCN and do NOT error here. Open
+         test-handlebars-apiversion.html to see them flagged with apiVersion 65. -->
     <p>{{dateAdd startDate 7 "D"}}</p>
     <p>{{now}}</p>
   </body>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>MCN mode · mixed AMPscript + SSJS + Handlebars fixture (apiVersion 65)</title>
+  </head>
+  <body>
+    <!-- ── Mixed embedding · apiVersion 65 (Winter '26) ─────────────────────────
+       This folder's eslint.config.mjs pins apiVersion: 65 on all three MCN
+       rules. The combined processor extracts each embedded language into its own
+       virtual file, so amp-no-mcn-unsupported, ssjs-no-mcn-unsupported, and
+       hbs-no-mcn-unsupported all run with apiVersion: 65 here.
+       ────────────────────────────────────────────────────────────────────── -->
+
+    <!-- ── Embedded AMPscript ─────────────────────────────────────────────── -->
+    %%[
+    /* ❌ Concat ships in MCN 67 → too new for apiVersion 65 [tooNewForTarget] */
+    set @greeting = Concat("Hello ", "world")
+
+    /* ❌ InsertDE never supported in MCN [notSupportedInMcn] */
+    InsertDE("MyDE", "Email", "test@example.com")
+    ]%%
+    <!-- ❌ inline v() ships in MCN 67 → too new for apiVersion 65 [tooNewForTarget] -->
+    <p>%%=v(@greeting)=%%</p>
+
+    <!-- ── Embedded SSJS (apiVersion has no effect — always flagged) ───────── -->
+    <script runat="server">
+      /* ❌ Platform.Load flagged [ssjsNotSupportedInMcn] */
+      Platform.Load("Core", "1.1.1");
+      /* ❌ Platform.Function call flagged [ssjsNotSupportedInMcn] */
+      var value = Platform.Function.Lookup("MyDE", "Field", "Key", "Value");
+    </script>
+
+    <!-- ── Embedded Handlebars ────────────────────────────────────────────── -->
+    <!-- ✅ uppercase ships in MCN 65 → available at apiVersion 65 → no error -->
+    <p>{{uppercase firstName}}</p>
+    <!-- ❌ dateAdd ships in MCN 67 → too new for apiVersion 65 [helperTooNew] -->
+    <p>{{dateAdd startDate 7 "D"}}</p>
+    <!-- ✅ supported binding at apiVersion 65 → no error -->
+    <p>{!$organization.Address}</p>
+  </body>
+</html>

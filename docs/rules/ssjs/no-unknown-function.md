@@ -2,7 +2,7 @@
 
 Flags calls to SFMC API methods that do not exist in the catalog. This single rule replaces the seven narrow `no-unknown-*` rules from earlier versions of the plugin.
 
-When targeting **Marketing Cloud Next**, SSJS is not supported at all. Set `target: 'next'` to flag every SSJS API call as an error, signalling that the SSJS block must be removed or rewritten in AMPscript.
+This rule only reports **unknown** method names. When targeting Marketing Cloud Next, SSJS is not supported at all — every SSJS API call is flagged by the dedicated [`sfmc/ssjs-no-mcn-unsupported`](no-mcn-unsupported.md) rule instead.
 
 ## Covered namespaces
 
@@ -19,13 +19,9 @@ When targeting **Marketing Cloud Next**, SSJS is not supported at all. Set `targ
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `target` | `'engagement'` \| `'next'` | — | Target platform. Set to `'next'` to flag every SSJS API call (all of `Platform.*`, `HTTP.*`, Core Library, and WSProxy) as unsupported in Marketing Cloud Next. |
+This rule takes no options.
 
 ## Examples
-
-### Standard usage (Marketing Cloud Engagement)
 
 #### ❌ Incorrect
 
@@ -54,32 +50,9 @@ var de = DataExtension.Init('CustomerData');
 de.Rows.Retrieve();
 ```
 
-### MCN target (`target: 'next'`)
-
-SSJS is not supported in Marketing Cloud Next. Configuring `target: 'next'` flags every SFMC API call within SSJS files, indicating they must be rewritten or removed.
-
-```js
-// eslint.config.js
-rules: {
-  'sfmc/ssjs-no-unknown-function': ['error', { target: 'next' }]
-}
-```
-
-Or use the built-in `recommended-next` / `strict-next` / `embedded-next` configs which apply this automatically (and disable all other SSJS quality rules, since the entire SSJS block must be migrated).
-
-#### ❌ Flagged (with `target: 'next'`)
-
-```js
-// All SFMC API calls are flagged — SSJS is not available in MCN
-Platform.Function.LookupRows('MyDE', 'Status', 'Active');
-
-var de = DataExtension.Init('CustomerData');
-de.Rows.Retrieve();
-```
-
 ## When to use
 
-Enable this rule to catch typos, outdated method names, and unsupported API calls before they cause runtime failures. Use `target: 'next'` when migrating content to Marketing Cloud Next.
+Enable this rule to catch typos and outdated method names before they cause runtime failures. When migrating content to Marketing Cloud Next, use [`sfmc/ssjs-no-mcn-unsupported`](no-mcn-unsupported.md) (applied automatically by the `recommended-next` / `strict-next` / `embedded-next` configs).
 
 ## Rule details
 
@@ -87,4 +60,4 @@ Enable this rule to catch typos, outdated method names, and unsupported API call
 - **Fixable:** No
 - **Recommended:** Yes (`engagement` mode)
 - **Strict:** Yes (`engagement` mode)
-- **`recommended-next` / `strict-next` / `embedded-next`:** Yes (`next` mode — all other SSJS rules disabled)
+- **`recommended-next` / `strict-next` / `embedded-next`:** Off (superseded by `ssjs-no-mcn-unsupported`)

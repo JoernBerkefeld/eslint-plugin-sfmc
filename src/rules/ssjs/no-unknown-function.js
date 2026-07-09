@@ -49,29 +49,11 @@ export default {
             unknownCoreMethod:
                 "'{{method}}' is not a known method of {{objectType}}. Available methods: {{available}}.",
             unknownWsproxyMethod: "'{{name}}' is not a recognized WSProxy method.",
-            ssjsNotSupportedInMcn:
-                'SSJS is not supported in Marketing Cloud Next. Use AMPscript instead.',
         },
-        schema: [
-            {
-                type: 'object',
-                properties: {
-                    target: {
-                        type: 'string',
-                        enum: ['engagement', 'next'],
-                        description:
-                            "Target platform. Set to 'next' to flag all SSJS API calls as unsupported in Marketing Cloud Next.",
-                    },
-                },
-                additionalProperties: false,
-            },
-        ],
+        schema: [],
     },
 
     create(context) {
-        const options = context.options[0] ?? {};
-        const isTargetNext = options.target === 'next';
-
         // Track variable name → Core Library type name (assigned via TypeName.Init())
         const coreVariables = new Map();
         // Track variable names assigned via new Script.Util.WSProxy()
@@ -121,36 +103,6 @@ export default {
                 }
 
                 const methodName = property.name;
-
-                // ── MCN target: flag all SSJS API calls as unsupported ────────
-                if (isTargetNext) {
-                    // Only report on Platform.<NS>.<method>(), HTTP.<method>(),
-                    // Core Library instance calls, or WSProxy calls — not bare JS.
-                    const isPlatformCall =
-                        callee.object.type === 'MemberExpression' &&
-                        callee.object.object.type === 'Identifier' &&
-                        callee.object.object.name === 'Platform';
-                    const isHttpCall =
-                        callee.object.type === 'Identifier' && callee.object.name === 'HTTP';
-
-                    // Traverse the object chain to find the root identifier
-                    // (handles de.Rows.Retrieve() where root is `de`)
-                    let rootNode = callee.object;
-                    while (rootNode.type === 'MemberExpression') {
-                        rootNode = rootNode.object;
-                    }
-                    const isInstanceCall =
-                        rootNode.type === 'Identifier' &&
-                        (coreVariables.has(rootNode.name) || wsproxyVariables.has(rootNode.name));
-
-                    if (isPlatformCall || isHttpCall || isInstanceCall) {
-                        context.report({
-                            node: property,
-                            messageId: 'ssjsNotSupportedInMcn',
-                        });
-                        return;
-                    }
-                }
 
                 // ── Platform.<NS>.<method>() ──────────────────────────────────
                 if (
