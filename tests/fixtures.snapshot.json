@@ -307,6 +307,20 @@
       "messageId": "missingTarget"
     }
   ],
+  "testFixture/rules/mso/mso-conditionals.html": [
+    {
+      "ruleId": "mso/valid-mso-condition",
+      "severity": 2,
+      "line": 15,
+      "messageId": "invalidCondition"
+    },
+    {
+      "ruleId": "mso/table-presentation-role",
+      "severity": 1,
+      "line": 16,
+      "messageId": "missingRole"
+    }
+  ],
   "testFixture/rules/ssjs/arg-types.ssjs": [
     {
       "ruleId": "sfmc/ssjs-arg-types",

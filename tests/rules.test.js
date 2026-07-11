@@ -2275,4 +2275,195 @@ describe('Handlebars config wiring (embedded HTML)', () => {
     });
 });
 
+/**
+ * Lints a standalone Handlebars source string with a flat config array.
+ *
+ * @param {Array} config - Flat ESLint config array (e.g. a plugin config).
+ * @param {string} hbs - Handlebars source (the full file, no HTML wrapper).
+ * @returns {Promise.<import('eslint').Linter.LintMessage[]>} Lint messages.
+ */
+async function lintHbs(config, hbs) {
+    const eslint = new ESLint({
+        overrideConfigFile: true,
+        overrideConfig: config,
+        cwd: process.cwd(),
+        warnIgnored: false,
+    });
+    const results = await eslint.lintText(hbs, { filePath: 'fixture.hbs' });
+    return results[0]?.messages ?? [];
+}
+
+describe('Handlebars config wiring (standalone .hbs)', () => {
+    // Unknown helper + unsupported construct in one standalone Handlebars file.
+    const hbs = '<p>{{fooBar 1 2}}</p>\n{{> myPartial}}\n';
+
+    it('recommended-next lints standalone .hbs files', async () => {
+        const messages = await lintHbs(sfmcPlugin.configs['recommended-next'], hbs);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('sfmc/hbs-no-unknown-helper'),
+            `Expected hbs-no-unknown-helper, got ${JSON.stringify(ruleIds)}`,
+        );
+        assert.ok(
+            ruleIds.includes('sfmc/hbs-no-unsupported-construct'),
+            `Expected hbs-no-unsupported-construct, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('strict-next lints standalone .hbs files', async () => {
+        const messages = await lintHbs(sfmcPlugin.configs['strict-next'], hbs);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('sfmc/hbs-no-unknown-helper'),
+            `Expected hbs-no-unknown-helper in strict-next, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('classic recommended config does NOT lint standalone .hbs files', async () => {
+        const messages = await lintHbs(sfmcPlugin.configs.recommended, hbs);
+        const hbsMessages = messages.filter((m) => m.ruleId && m.ruleId.startsWith('sfmc/hbs-'));
+        assert.deepEqual(
+            hbsMessages.map((m) => m.ruleId),
+            [],
+            'Classic (MCE) recommended config must not emit hbs-* diagnostics for .hbs files',
+        );
+    });
+
+    it('classic strict config does NOT lint standalone .hbs files', async () => {
+        const messages = await lintHbs(sfmcPlugin.configs.strict, hbs);
+        const hbsMessages = messages.filter((m) => m.ruleId && m.ruleId.startsWith('sfmc/hbs-'));
+        assert.deepEqual(
+            hbsMessages.map((m) => m.ruleId),
+            [],
+            'Classic (MCE) strict config must not emit hbs-* diagnostics for .hbs files',
+        );
+    });
+});
+
 console.log('All Handlebars config-wiring tests passed.');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MSO / Outlook email config wiring (processor delegation + mso/* routing)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Verifies that the combined sfmc processor delegates MSO extraction to
+// eslint-plugin-mso-email and that the re-exported mso/* rule-configs fire
+// through the embedded/strict configs — without a second processor and without
+// a processor conflict.
+
+describe('MSO config wiring (embedded HTML)', () => {
+    // An invalid MSO condition ("mos" typo) plus a layout table missing
+    // role="presentation" — one conditional-rule error and one document-rule warning.
+    const html = ['<!--[if mos]>', '<table><tr><td>x</td></tr></table>', '<![endif]-->'].join('\n');
+
+    it('strict flags the invalid MSO condition (mso/valid-mso-condition)', async () => {
+        const messages = await lintHtml(sfmcPlugin.configs.strict, html);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('mso/valid-mso-condition'),
+            `Expected mso/valid-mso-condition, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('strict flags the layout table missing role (mso/table-presentation-role)', async () => {
+        const messages = await lintHtml(sfmcPlugin.configs.strict, html);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('mso/table-presentation-role'),
+            `Expected mso/table-presentation-role, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('embedded also flags MSO issues in HTML', async () => {
+        const messages = await lintHtml(sfmcPlugin.configs.embedded, html);
+        const ruleIds = messages.map((m) => m.ruleId);
+        assert.ok(
+            ruleIds.includes('mso/valid-mso-condition'),
+            `Expected mso/valid-mso-condition in embedded, got ${JSON.stringify(ruleIds)}`,
+        );
+    });
+
+    it('does not emit an MSO document block for plain HTML without MSO markup', () => {
+        // The sfmc processor only delegates to MSO when MSO markup is present, so a
+        // plain table (no conditional comment) must NOT be extracted as an MSO block.
+        const plain = '<table><tr><td>x</td></tr></table>';
+        const result = preprocess(plain, 'plain.html');
+        const msoBlocks = result.filter(
+            (b) => b.filename && (b.filename.endsWith('.mso') || b.filename.endsWith('.msohtml')),
+        );
+        assert.deepEqual(msoBlocks, [], 'No MSO blocks should be emitted without MSO markup');
+    });
+
+    it('delegates MSO extraction when MSO markup is present', () => {
+        const withMso = '<!--[if mso]>\n<p>x</p>\n<![endif]-->';
+        const result = preprocess(withMso, 'mso.html');
+        const msoBlocks = result.filter(
+            (b) => b.filename && (b.filename.endsWith('.mso') || b.filename.endsWith('.msohtml')),
+        );
+        assert.ok(msoBlocks.length > 0, 'MSO blocks should be appended when MSO markup is present');
+    });
+});
+
+console.log('All MSO config-wiring tests passed.');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Optional eslint-plugin-unicorn override configs (unicorn-ssjs*)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// These are plain rules objects with NO `plugins` key: they only resolve when the
+// consumer has already loaded eslint-plugin-unicorn (which registers the `unicorn`
+// plugin) earlier in the flat-config array. Assert their shape here.
+
+describe('unicorn-ssjs override configs', () => {
+    it('exposes unicorn-ssjs and unicorn-ssjs-embedded configs', () => {
+        assert.ok(sfmcPlugin.configs['unicorn-ssjs'], 'unicorn-ssjs config must exist');
+        assert.ok(
+            sfmcPlugin.configs['unicorn-ssjs-embedded'],
+            'unicorn-ssjs-embedded config must exist',
+        );
+    });
+
+    it('registers NO plugins (relies on the user loading unicorn)', () => {
+        assert.equal(
+            sfmcPlugin.configs['unicorn-ssjs'].plugins,
+            undefined,
+            'unicorn-ssjs must not register any plugin',
+        );
+        assert.equal(
+            sfmcPlugin.configs['unicorn-ssjs-embedded'].plugins,
+            undefined,
+            'unicorn-ssjs-embedded must not register any plugin',
+        );
+    });
+
+    it('targets SSJS files and embedded SSJS respectively', () => {
+        assert.deepEqual(sfmcPlugin.configs['unicorn-ssjs'].files, ['**/*.ssjs']);
+        assert.deepEqual(sfmcPlugin.configs['unicorn-ssjs-embedded'].files, ['**/*.html/*.js']);
+    });
+
+    it('turns every override rule OFF and only touches unicorn/* rules', () => {
+        const rules = sfmcPlugin.configs['unicorn-ssjs'].rules;
+        const ruleNames = Object.keys(rules);
+        assert.ok(ruleNames.length > 0, 'Expected at least one overridden rule');
+        for (const name of ruleNames) {
+            assert.ok(
+                name.startsWith('unicorn/'),
+                `Only unicorn/* rules may be overridden, found ${name}`,
+            );
+            assert.equal(rules[name], 'off', `${name} must be set to 'off'`);
+        }
+    });
+
+    it('both configs override the identical rule set', () => {
+        assert.deepEqual(
+            Object.keys(sfmcPlugin.configs['unicorn-ssjs'].rules).toSorted((a, b) =>
+                a.localeCompare(b),
+            ),
+            Object.keys(sfmcPlugin.configs['unicorn-ssjs-embedded'].rules).toSorted((a, b) =>
+                a.localeCompare(b),
+            ),
+        );
+    });
+});
+
+console.log('All unicorn-ssjs override-config tests passed.');

@@ -71,6 +71,16 @@ import ampscriptProcessor from './ampscript-processor.js';
 import ssjsProcessor from './ssjs-processor.js';
 import combinedProcessor from './processor.js';
 
+// ── MSO / Outlook email plugin (auto-included in embedded/strict configs) ──────
+
+import msoPlugin from 'eslint-plugin-mso-email';
+import msoEslintParser from 'eslint-plugin-mso-email/mso-parser';
+import htmlEslintParser from 'eslint-plugin-mso-email/html-parser';
+import {
+    MSO_VIRTUAL_BASENAME,
+    DOCUMENT_VIRTUAL_BASENAME,
+} from 'eslint-plugin-mso-email/comment-pattern';
+
 // ── Data imports ──────────────────────────────────────────────────────────────
 import { SSJS_GLOBALS_MAP } from 'ssjs-data';
 
@@ -291,6 +301,143 @@ const hbsOffRules = {
 /** Shared languageOptions for linting virtual `.hbs` files. */
 const hbsLanguageOptions = { parser: handlebarsParser };
 
+/**
+ * Config block(s) for **standalone** `.hbs` files (a real Handlebars file on
+ * disk, opened under VS Code's built-in `handlebars` language id). Handlebars
+ * only runs on Marketing Cloud Next, so a `.hbs` file is always treated as MCN
+ * and the full `hbsNextRules` set applies — no processor is needed because the
+ * whole file is Handlebars and is parsed directly. This is deliberately wired
+ * only into the `-next` configs; `recommended`/`strict` (MCE) never lint `.hbs`.
+ *
+ * @param {string} configName - the owning config, used for a unique block name
+ * @returns {object[]} a single-entry array with the standalone `.hbs` config
+ */
+function standaloneHandlebarsConfigs(configName) {
+    return [
+        {
+            name: `sfmc/${configName}-standalone-handlebars`,
+            plugins: { sfmc: plugin },
+            languageOptions: { ...hbsLanguageOptions },
+            files: ['**/*.hbs'],
+            rules: { ...hbsNextRules },
+        },
+    ];
+}
+
+// ── Optional eslint-plugin-unicorn override for SSJS ──────────────────────────
+
+/**
+ * The 46 `eslint-plugin-unicorn` recommended rules (analysed against
+ * unicorn v71.1.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
+ * engine — they either autofix code to a missing built-in or forbid a required
+ * SFMC workaround, or enforce ES-module / async / ES6-only syntax that the
+ * engine cannot run. Each is mapped to `'off'`.
+ *
+ * This is exposed via the optional `unicorn-ssjs` / `unicorn-ssjs-embedded`
+ * configs. eslint-plugin-sfmc does NOT depend on or load unicorn; these configs
+ * are plain rules objects (no `plugins` key) and only resolve when the user has
+ * loaded their own unicorn config earlier in the flat-config array. See
+ * docs/unicorn-compatibility.md for the full rationale and evidence links.
+ */
+const unicornSsjsOffRules = {
+    // Group A — autofix to a missing built-in / forbid a documented SFMC workaround
+    'unicorn/prefer-includes': 'off',
+    'unicorn/prefer-string-starts-ends-with': 'off',
+    'unicorn/prefer-string-trim-start-end': 'off',
+    'unicorn/prefer-string-slice': 'off',
+    'unicorn/prefer-string-replace-all': 'off',
+    'unicorn/prefer-string-repeat': 'off',
+    'unicorn/prefer-string-pad-start-end': 'off',
+    'unicorn/prefer-string-match-all': 'off',
+    'unicorn/prefer-string-raw': 'off',
+    'unicorn/prefer-code-point': 'off',
+    'unicorn/prefer-array-find': 'off',
+    'unicorn/prefer-array-some': 'off',
+    'unicorn/prefer-array-index-of': 'off',
+    'unicorn/prefer-array-flat': 'off',
+    'unicorn/prefer-array-flat-map': 'off',
+    'unicorn/prefer-array-last-methods': 'off',
+    'unicorn/prefer-array-from-async': 'off',
+    'unicorn/no-array-reverse': 'off',
+    'unicorn/prefer-at': 'off',
+    'unicorn/prefer-negative-index': 'off',
+    'unicorn/prefer-spread': 'off',
+    'unicorn/prefer-date-now': 'off',
+    'unicorn/prefer-object-from-entries': 'off',
+    'unicorn/prefer-reflect-apply': 'off',
+    'unicorn/prefer-number-properties': 'off',
+    'unicorn/prefer-number-is-safe-integer': 'off',
+    'unicorn/prefer-number-coercion': 'off',
+    'unicorn/prefer-global-number-constants': 'off',
+    'unicorn/prefer-native-coercion-functions': 'off',
+    'unicorn/prefer-math-trunc': 'off',
+    'unicorn/prefer-modern-math-apis': 'off',
+    'unicorn/no-instanceof-builtins': 'off',
+    'unicorn/no-for-each': 'off',
+    'unicorn/prefer-set-has': 'off',
+    'unicorn/prefer-set-size': 'off',
+    'unicorn/prefer-set-methods': 'off',
+    'unicorn/prefer-map-from-entries': 'off',
+    'unicorn/prefer-group-by': 'off',
+    'unicorn/prefer-iterator-helpers': 'off',
+    'unicorn/prefer-structured-clone': 'off',
+    'unicorn/require-array-join-separator': 'off',
+    // Group B — forbid ES6+ syntax / ES-module / async constructs
+    'unicorn/prefer-optional-catch-binding': 'off',
+    'unicorn/prefer-module': 'off',
+    'unicorn/prefer-node-protocol': 'off',
+    'unicorn/prefer-top-level-await': 'off',
+    'unicorn/prefer-export-from': 'off',
+};
+
+// ── MSO / Outlook email rule configs (auto-included, no separate plugin load) ──
+
+/**
+ * Virtual-file globs for the MSO blocks the combined processor appends.
+ * sfmc's processor only runs on `**\/*.html`, so MSO blocks are emitted as
+ * `email.html/{index}_mso-comments.mso` and `email.html/{index}_document.msohtml`.
+ */
+const msoVirtualFiles = [`**/*.html/*_${MSO_VIRTUAL_BASENAME}`];
+const msoDocumentFiles = [`**/*.html/*_${DOCUMENT_VIRTUAL_BASENAME}`];
+
+/**
+ * Returns MSO's two rule-config entries (conditional-comment rules on `.mso`
+ * virtual files, document rules on `.msohtml` virtual files) wired to the MSO
+ * parsers. The `mso/html-processor` entry from eslint-plugin-mso-email is
+ * intentionally omitted — sfmc's own combined processor already emits the MSO
+ * blocks, so registering MSO's processor too would create a processor conflict.
+ *
+ * @returns {import('eslint').Linter.Config[]} MSO conditional + document rule configs.
+ */
+function msoRuleConfigs() {
+    return [
+        {
+            name: 'sfmc/mso-conditional-rules',
+            plugins: { mso: msoPlugin },
+            files: msoVirtualFiles,
+            languageOptions: { parser: msoEslintParser },
+            rules: {
+                'mso/valid-mso-condition': 'error',
+                'mso/matching-mso-endif': 'error',
+                'mso/matching-mso-endif-type': 'warn',
+            },
+        },
+        {
+            name: 'sfmc/mso-document-rules',
+            plugins: { mso: msoPlugin },
+            files: msoDocumentFiles,
+            languageOptions: { parser: htmlEslintParser },
+            rules: {
+                'mso/no-unknown-mso-property': 'warn',
+                'mso/vml-requires-namespace': 'warn',
+                'mso/no-unknown-vml-tag': 'warn',
+                'mso/no-unknown-vml-attribute': 'warn',
+                'mso/table-presentation-role': 'warn',
+            },
+        },
+    ];
+}
+
 // ── Configs (defined after plugin so they can reference it) ───────────────────
 
 plugin.configs = {
@@ -384,6 +531,8 @@ plugin.configs = {
             files: ['**/*.html/*.hbs'],
             rules: { ...hbsOffRules },
         },
+        // MSO / Outlook conditional-comment + VML/CSS checks (auto-included).
+        ...msoRuleConfigs(),
     ],
 
     /**
@@ -440,6 +589,8 @@ plugin.configs = {
             files: ['**/*.html/*.hbs'],
             rules: { ...hbsOffRules },
         },
+        // MSO / Outlook conditional-comment + VML/CSS checks (auto-included).
+        ...msoRuleConfigs(),
     ],
 
     // ── Marketing Cloud Next configs ──────────────────────────────────────────
@@ -500,6 +651,8 @@ plugin.configs = {
             },
             rules: { ...ssjsMcnRules },
         },
+        // Standalone .hbs files are Handlebars templates — always MCN.
+        ...standaloneHandlebarsConfigs('recommended-next'),
     ],
 
     /**
@@ -541,6 +694,10 @@ plugin.configs = {
             files: ['**/*.html/*.hbs'],
             rules: { ...hbsNextRules },
         },
+        // Standalone .hbs files are Handlebars templates — always MCN.
+        ...standaloneHandlebarsConfigs('embedded-next'),
+        // MSO / Outlook conditional-comment + VML/CSS checks (auto-included).
+        ...msoRuleConfigs(),
     ],
 
     /**
@@ -603,7 +760,37 @@ plugin.configs = {
             files: ['**/*.html/*.hbs'],
             rules: { ...hbsNextRules },
         },
+        // Standalone .hbs files are Handlebars templates — always MCN.
+        ...standaloneHandlebarsConfigs('strict-next'),
+        // MSO / Outlook conditional-comment + VML/CSS checks (auto-included).
+        ...msoRuleConfigs(),
     ],
+
+    // ── Optional eslint-plugin-unicorn override configs ───────────────────────
+
+    /**
+     * OPTIONAL: turns off the 46 unicorn recommended rules incompatible with
+     * SFMC SSJS, for standalone `.ssjs` files. Plain rules object with NO
+     * `plugins` key — eslint-plugin-sfmc does not load unicorn. Spread this
+     * AFTER your own unicorn config (which registers the `unicorn` plugin);
+     * otherwise ESLint cannot resolve the `unicorn/*` keys. If you don't use
+     * unicorn, omit this config entirely.
+     */
+    'unicorn-ssjs': {
+        name: 'sfmc/unicorn-ssjs',
+        files: ['**/*.ssjs'],
+        rules: { ...unicornSsjsOffRules },
+    },
+
+    /**
+     * OPTIONAL: same 46-rule override for SSJS embedded in HTML
+     * (virtual `**\/*.html/*.js` files). Spread AFTER your unicorn config.
+     */
+    'unicorn-ssjs-embedded': {
+        name: 'sfmc/unicorn-ssjs-embedded',
+        files: ['**/*.html/*.js'],
+        rules: { ...unicornSsjsOffRules },
+    },
 };
 
 export default plugin;

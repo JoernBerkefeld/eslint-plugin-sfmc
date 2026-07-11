@@ -13,7 +13,15 @@
  * Returns extracted regions as virtual files for ESLint to lint with the
  * appropriate parser/rules based on file extension matching.
  * Line offsets are preserved so ESLint reports errors at correct locations.
+ *
+ * MSO / Outlook conditional-comment checks are delegated to
+ * eslint-plugin-mso-email: when the document contains MSO markup, that plugin's
+ * extractor is called and its virtual blocks are appended verbatim, so a single
+ * processor (this one) runs on every HTML file and no processor conflict arises.
  */
+
+import { preprocess as msoPreprocess } from 'eslint-plugin-mso-email/processor';
+import { MSO_COMMENT_PATTERN } from 'eslint-plugin-mso-email/comment-pattern';
 
 const AMPSCRIPT_SCRIPT_OPEN_RE =
     /^<script\b(?=[^>]*\brunat\s*=\s*['"]server['"])(?=[^>]*\blanguage\s*=\s*['"]ampscript['"])[^>]*>/i;
@@ -199,6 +207,18 @@ export function preprocess(text, filename) {
             text: sanitizedForHbs,
             filename: `${filename}/handlebars-block-0.hbs`,
         });
+    }
+
+    // --- Pass 4: delegate MSO / Outlook conditional-comment extraction ---
+    // Only when the document actually contains MSO markup, so plain HTML/AMPscript
+    // files don't get an extra full-document virtual block. MSO_COMMENT_PATTERN is
+    // a global regex with lastIndex state — reset before testing.
+    MSO_COMMENT_PATTERN.lastIndex = 0;
+    if (MSO_COMMENT_PATTERN.test(text)) {
+        // MSO already preserves line offsets and returns bare virtual basenames
+        // (mso-comments.mso, document.msohtml); append verbatim so ESLint routes
+        // them to eslint-plugin-mso-email's rule configs via their own globs.
+        blocks.push(...msoPreprocess(text, filename));
     }
 
     if (blocks.length === 0) {

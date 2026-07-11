@@ -73,15 +73,17 @@ Add the following to your `.vscode/settings.json`:
 
 ### Marketing Cloud Next
 
-Use the `-next` config variants when targeting **Marketing Cloud Next (MCN)**. MCN supports only a subset of AMPscript functions and does **not** support SSJS at all. Handlebars is MCN's templating language, so the `embedded-next` and `strict-next` configs also lint the `{{...}}` helpers and `{!$...}` bindings extracted from HTML (see [Handlebars Rules](#handlebars-rules-hbs-)).
+Use the `-next` config variants when targeting **Marketing Cloud Next (MCN)**. MCN supports only a subset of AMPscript functions and does **not** support SSJS at all. Handlebars is MCN's templating language, so the `-next` configs also lint the `{{...}}` helpers and `{!$...}` bindings extracted from HTML **and** standalone `.hbs` files (see [Handlebars Rules](#handlebars-rules-hbs-)).
 
-| Config                             | Files                        | What it does                                                                                |
-| ---------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
-| `sfmc.configs['ampscript-next']`   | `**/*.ampscript`, `**/*.amp` | AMPscript rules + flags functions unsupported in MCN (single config object)                 |
-| `sfmc.configs['ssjs-next']`        | `**/*.ssjs`                  | Flags all SSJS API calls as MCN-unsupported; all other SSJS quality rules disabled          |
-| `sfmc.configs['recommended-next']` | Both of the above            | AMPscript MCN-aware + SSJS flagged for standalone files                                     |
-| `sfmc.configs['embedded-next']`    | `**/*.html`                  | AMPscript MCN-aware + SSJS flagged + Handlebars rules for HTML-embedded code                |
-| `sfmc.configs['strict-next']`      | All of the above + HTML      | All AMPscript rules at `error` severity + MCN flag; SSJS fully flagged; Handlebars rules on |
+| Config                             | Files                                | What it does                                                                                |
+| ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `sfmc.configs['ampscript-next']`   | `**/*.ampscript`, `**/*.amp`         | AMPscript rules + flags functions unsupported in MCN (single config object)                 |
+| `sfmc.configs['ssjs-next']`        | `**/*.ssjs`                          | Flags all SSJS API calls as MCN-unsupported; all other SSJS quality rules disabled          |
+| `sfmc.configs['recommended-next']` | Both of the above + `**/*.hbs`       | AMPscript MCN-aware + SSJS flagged + Handlebars rules for standalone `.hbs` files            |
+| `sfmc.configs['embedded-next']`    | `**/*.html`, `**/*.hbs`              | AMPscript MCN-aware + SSJS flagged + Handlebars rules for HTML-embedded code and `.hbs`      |
+| `sfmc.configs['strict-next']`      | All of the above + HTML + `**/*.hbs` | All AMPscript rules at `error` severity + MCN flag; SSJS fully flagged; Handlebars rules on |
+
+Standalone `.hbs` files (VS Code's built-in **Handlebars** language) are treated as MCN by default — Handlebars only runs on Marketing Cloud Next, so a `.hbs` file is always linted with the full Handlebars rule set. This is deliberately wired **only** into the `-next` configs; the classic `recommended` / `strict` (Engagement) configs never lint `.hbs`.
 
 `recommended-next`, `embedded-next`, and `strict-next` are arrays — spread them with `...`.
 
@@ -143,7 +145,7 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 
 ## Handlebars Rules (`hbs-*`)
 
-Handlebars is the templating language for **Marketing Cloud Next (MCN)** only. These rules are enabled at `error` severity in the `-next` configs and are `off` in the classic (Engagement) configs — in classic SFMC, `{{...}}` is plain content and must not be flagged.
+Handlebars is the templating language for **Marketing Cloud Next (MCN)** only. These rules are enabled at `error` severity in the `-next` configs — applied both to `{{...}}` extracted from HTML and to standalone `.hbs` files — and are `off` in the classic (Engagement) configs — in classic SFMC, `{{...}}` is plain content and must not be flagged.
 
 | Rule                                                                              | Default (`-next`) | Description                                                                          |
 | --------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------ |
@@ -153,13 +155,60 @@ Handlebars is the templating language for **Marketing Cloud Next (MCN)** only. T
 | [`sfmc/hbs-no-unsupported-construct`](docs/rules/hbs/no-unsupported-construct.md) | `error`           | Disallow constructs unsupported by the MCN engine (partials, decorators, `log`)      |
 | [`sfmc/hbs-no-mcn-unsupported`](docs/rules/hbs/no-mcn-unsupported.md)             | `error`           | Flag helpers and bindings unavailable in the targeted MCN API version (`apiVersion`) |
 
+## MSO / Outlook email checks
+
+Email HTML for SFMC frequently contains **Outlook conditional comments** (`<!--[if mso]>…<![endif]-->`), MSO-only CSS, and VML fallbacks. These checks are provided by [`eslint-plugin-mso-email`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email), which ships as a **bundled dependency** of `eslint-plugin-sfmc` — you do **not** load it separately.
+
+The MSO rules are **auto-included** in the HTML-embedded configs: `embedded`, `strict`, `embedded-next`, and `strict-next`. When you lint an `.html` file with any of these, the combined `sfmc/sfmc` processor also extracts MSO conditional comments and the document body and runs the MSO rules on them — no extra processor or config to wire up, and no processor conflict.
+
+| Rule (`mso/*`)                     | Default (embedded/strict) | Description                                                    |
+| ---------------------------------- | ------------------------- | ------------------------------------------------------------- |
+| `mso/valid-mso-condition`          | `error`                   | Validate the `[if …]` expression syntax of MSO comments       |
+| `mso/matching-mso-endif`           | `error`                   | Require every MSO opener to have a matching `<![endif]>`       |
+| `mso/matching-mso-endif-type`      | `warn`                    | Require the endif comment style to match its opener           |
+| `mso/no-unknown-mso-property`      | `warn`                    | Flag unknown `mso-*` CSS properties                           |
+| `mso/vml-requires-namespace`       | `warn`                    | Require the `v:` VML namespace declaration when VML is used   |
+| `mso/no-unknown-vml-tag`           | `warn`                    | Flag unknown `v:*` VML tags                                   |
+| `mso/no-unknown-vml-attribute`     | `warn`                    | Flag unknown attributes on VML tags                          |
+| `mso/table-presentation-role`      | `warn`                    | Require `role="presentation"` on layout tables               |
+
+Severities above are the same in `embedded`, `strict`, `embedded-next`, and `strict-next` (MSO markup is engine-agnostic — it behaves identically for Engagement and Next). For MSO rule details and options, see the [`eslint-plugin-mso-email` docs](https://github.com/JoernBerkefeld/eslint-plugin-mso-email).
+
+## Using `eslint-plugin-unicorn` with SFMC
+
+[`eslint-plugin-unicorn`](https://github.com/sindresorhus/eslint-plugin-unicorn) is a high-quality, widely used plugin that we **strongly recommend** — but it is built for modern JavaScript, not SFMC's **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that lacks many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Object.fromEntries`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …).
+
+If you enable unicorn's `recommended` set on SSJS, about **46** of its 300 recommended rules would either **autofix your code to a missing built-in** (breaking it at runtime) or **forbid a required SFMC workaround**. `eslint-plugin-sfmc` offers an **optional** override config that turns off exactly those 46 rules for SSJS.
+
+**Important — this is optional and only needed if you use unicorn.** `eslint-plugin-sfmc` does **not** depend on or load unicorn. The override configs are plain rules objects with **no** `plugins` key, so they only resolve when your own unicorn config (which registers the `unicorn` plugin) is loaded **earlier** in the flat-config array. Spread the sfmc override **after** it:
+
+```js
+import sfmc from 'eslint-plugin-sfmc';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+
+export default [
+    eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
+    ...sfmc.configs.recommended,
+    ...sfmc.configs['unicorn-ssjs'], // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
+    // For SSJS embedded in HTML (<script runat="server">), also add:
+    // ...sfmc.configs['unicorn-ssjs-embedded'],
+];
+```
+
+| Config                                | Files                | What it does                                                       |
+| ------------------------------------- | -------------------- | ----------------------------------------------------------------- |
+| `sfmc.configs['unicorn-ssjs']`        | `**/*.ssjs`          | Turns off the 46 SFMC-incompatible unicorn rules for SSJS         |
+| `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js`   | Same 46-rule override for SSJS embedded in HTML                    |
+
+Only **46** of unicorn's 300 recommended rules are overridden — the other **254** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v71.1.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
+
 ## Processors
 
 | Processor        | Purpose                                                       |
 | ---------------- | ------------------------------------------------------------- |
 | `sfmc/ampscript` | Extract `%%[ ]%%`, `%%= =%%`, `<script language="ampscript">` |
 | `sfmc/ssjs`      | Extract `<script runat="server">` (non-ampscript)             |
-| `sfmc/sfmc`      | Combined: extracts both AMPscript and SSJS from HTML          |
+| `sfmc/sfmc`      | Combined: extracts AMPscript, SSJS, Handlebars, and MSO from HTML |
 
 ## License
 

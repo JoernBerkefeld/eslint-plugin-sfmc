@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<!-- Rule: sfmc/mso-* (from eslint-plugin-mso-email, auto-included in embedded/strict)
+     MSO conditional-comment and document-level checks are delegated to
+     eslint-plugin-mso-email through the combined sfmc processor. -->
+
+<!-- ACCEPTED - valid MSO opener with a matching endif and a presentation table -->
+<!--[if mso]>
+<table role="presentation"><tr><td>Outlook only</td></tr></table>
+<![endif]-->
+
+<!-- FAIL - "mos" is not a valid MSO condition keyword (mso/valid-mso-condition) -->
+<!--[if mos]>
+<table><tr><td>typo in condition</td></tr></table>
+<![endif]-->
+
+</body>
+</html>
