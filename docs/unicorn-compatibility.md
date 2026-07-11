@@ -9,11 +9,100 @@
 - **ECMAScript built-ins support** — <https://ssjs.guide/ecmascript-builtins/>
 - **Engine limitations** — <https://ssjs.guide/engine-limitations/>
 
-Of unicorn's **300** recommended rules (v71.1.0), **254** are safe to keep on for SSJS and **46** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 46 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 3](#section-3--how-to-apply).
+Of unicorn's **300** recommended rules (v71.1.0), **254** are safe to keep on for SSJS and **46** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 46 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
 
 ---
 
-## Section 1 — Rules OK as-is (254)
+## Section 1 — How to apply
+
+The override is **optional** and **SSJS-scoped**. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Spread the sfmc override **after** it:
+
+```js
+import sfmc from 'eslint-plugin-sfmc';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+
+export default [
+    eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
+    ...sfmc.configs.recommended,
+    ...sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
+    ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
+];
+```
+
+| Config | Applies to |
+|---|---|
+| `unicorn-ssjs` | `**/*.ssjs` |
+| `unicorn-ssjs-embedded` | `**/*.html/*.js` (SSJS extracted from `<script runat="server">`) |
+
+If you don't use unicorn, omit these configs entirely — nothing else in `eslint-plugin-sfmc` references them.
+
+---
+
+## Section 2 — Rules to override for SSJS (46)
+
+These 46 recommended rules either **autofix code to a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 46 are confirmed `recommended` in unicorn v71.1.0.
+
+### Group A — autofix to a missing built-in / forbid a SFMC workaround (41)
+
+| Rule | Why it breaks SSJS | SFMC evidence |
+|---|---|---|
+| [`prefer-includes`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes.md) | Pushes `Array/String#includes()` — missing in SSJS | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-starts-ends-with`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-starts-ends-with.md) | Pushes `String#startsWith/endsWith` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-trim-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-trim-start-end.md) | Pushes `trimStart/trimEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-slice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-slice.md) | Forbids `substring`, the SFMC-safe choice | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-replace-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-replace-all.md) | Pushes `String#replaceAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-repeat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-repeat.md) | Pushes `String#repeat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-pad-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-pad-start-end.md) | Pushes `padStart/padEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-match-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-match-all.md) | Pushes `String#matchAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-raw`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-raw.md) | Pushes `String.raw` tag — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-code-point`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-code-point.md) | Pushes `codePointAt/fromCodePoint` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-find`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-find.md) | Pushes `Array#find/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-some`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-some.md) | Pushes `Array#some` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-index-of`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-index-of.md) | Pushes `findIndex/findLastIndex` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-flat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat.md) | Pushes `Array#flat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-flat-map`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat-map.md) | Pushes `Array#flatMap` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-last-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-last-methods.md) | Pushes `.at()/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-from-async`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-async.md) | Pushes `Array.fromAsync` — missing + async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Autofixes to `Array#toReversed()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-at`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-at.md) | Pushes `.at()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-negative-index`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-negative-index.md) | Pushes `.at()` — missing; forbids the `.length - i` workaround | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-spread`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-spread.md) | Pushes spread `...` — ES6 syntax, throws on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-date-now`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-date-now.md) | Pushes `Date.now()` — missing static | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-object-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-from-entries.md) | Pushes `Object.fromEntries` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-reflect-apply`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-reflect-apply.md) | Pushes `Reflect.apply` — `Reflect` missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-number-properties`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-properties.md) | Pushes `Number.parseInt/parseFloat/isNaN/isFinite` statics — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-number-is-safe-integer`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-is-safe-integer.md) | Pushes `Number.isSafeInteger` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-number-coercion`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-coercion.md) | Number-static patterns unsafe on the ES3 engine | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-global-number-constants`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-global-number-constants.md) | Pushes `Number.NaN/Number.POSITIVE_INFINITY` etc. — missing statics | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-native-coercion-functions`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-native-coercion-functions.md) | Native coercion refs that are missing/unsafe | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-math-trunc`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-math-trunc.md) | Pushes `Math.trunc` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-modern-math-apis`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-modern-math-apis.md) | Pushes `Math.log10/log2/hypot` — missing; forbids `Math.log(x)/Math.LN10` and `Math.sqrt(a*a+b*b)` workarounds | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-instanceof-builtins`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-instanceof-builtins.md) | Autofixes `instanceof Array` to `Array.isArray` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-for-each`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-for-each.md) | Assumes `.forEach` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-set-has`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-set-size`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-size.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-set-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-methods.md) | Pushes `Set` methods — ES2024, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-map-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-map-from-entries.md) | Pushes `Map` + `Object.fromEntries` — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-group-by`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-group-by.md) | Pushes `Object.groupBy/Map.groupBy` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-iterator-helpers`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-helpers.md) | Pushes the iterator-helper protocol — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-structured-clone`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-structured-clone.md) | Pushes `structuredClone` global — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`require-array-join-separator`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-join-separator.md) | Safe alone, but grouped here to avoid pushing modern array idioms under the strict set | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+
+### Group B — forbid ES6+ syntax / ES-module / async constructs (5)
+
+| Rule | Why it breaks SSJS | SFMC evidence |
+|---|---|---|
+| [`prefer-optional-catch-binding`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-optional-catch-binding.md) | Pushes `catch {}` (ES2019) — may not parse on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-module`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-module.md) | Pushes ES modules — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-node-protocol`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-node-protocol.md) | Pushes `node:` imports — no module system | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-top-level-await`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-top-level-await.md) | Pushes top-level `await` — async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-export-from`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-export-from.md) | Pushes `export … from` — ES modules | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+
+> **Note:** [`prefer-regexp-test`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-regexp-test.md) stays **active** — `RegExp#test` exists in SFMC SSJS, so it is intentionally **not** in the override list.
+
+---
+
+## Section 3 — Rules OK as-is (254)
 
 These recommended rules are **not** disabled by the override config. They are either genuinely SFMC-safe (readability / best-practice rules that work on the ES3/ES5 engine) or **inert** on SSJS — many target the DOM, Node.js, Promises, TypeScript, or ES modules and therefore never fire on server-side SFMC code. Each links to its official unicorn documentation.
 
@@ -274,92 +363,3 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [throw-new-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/throw-new-error.md)
 <!-- END 254-OK-LIST -->
 
----
-
-## Section 2 — Rules to override for SSJS (46)
-
-These 46 recommended rules either **autofix code to a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 46 are confirmed `recommended` in unicorn v71.1.0.
-
-### Group A — autofix to a missing built-in / forbid a SFMC workaround (41)
-
-| Rule | Why it breaks SSJS | SFMC evidence |
-|---|---|---|
-| [`prefer-includes`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes.md) | Pushes `Array/String#includes()` — missing in SSJS | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-starts-ends-with`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-starts-ends-with.md) | Pushes `String#startsWith/endsWith` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-trim-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-trim-start-end.md) | Pushes `trimStart/trimEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-slice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-slice.md) | Forbids `substring`, the SFMC-safe choice | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-replace-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-replace-all.md) | Pushes `String#replaceAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-repeat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-repeat.md) | Pushes `String#repeat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-pad-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-pad-start-end.md) | Pushes `padStart/padEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-match-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-match-all.md) | Pushes `String#matchAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-raw`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-raw.md) | Pushes `String.raw` tag — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-code-point`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-code-point.md) | Pushes `codePointAt/fromCodePoint` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-find`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-find.md) | Pushes `Array#find/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-some`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-some.md) | Pushes `Array#some` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-index-of`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-index-of.md) | Pushes `findIndex/findLastIndex` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-flat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat.md) | Pushes `Array#flat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-flat-map`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat-map.md) | Pushes `Array#flatMap` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-last-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-last-methods.md) | Pushes `.at()/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-from-async`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-async.md) | Pushes `Array.fromAsync` — missing + async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Autofixes to `Array#toReversed()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-at`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-at.md) | Pushes `.at()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-negative-index`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-negative-index.md) | Pushes `.at()` — missing; forbids the `.length - i` workaround | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-spread`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-spread.md) | Pushes spread `...` — ES6 syntax, throws on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-date-now`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-date-now.md) | Pushes `Date.now()` — missing static | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-object-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-from-entries.md) | Pushes `Object.fromEntries` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-reflect-apply`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-reflect-apply.md) | Pushes `Reflect.apply` — `Reflect` missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-number-properties`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-properties.md) | Pushes `Number.parseInt/parseFloat/isNaN/isFinite` statics — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-number-is-safe-integer`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-is-safe-integer.md) | Pushes `Number.isSafeInteger` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-number-coercion`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-coercion.md) | Number-static patterns unsafe on the ES3 engine | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-global-number-constants`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-global-number-constants.md) | Pushes `Number.NaN/Number.POSITIVE_INFINITY` etc. — missing statics | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-native-coercion-functions`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-native-coercion-functions.md) | Native coercion refs that are missing/unsafe | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-math-trunc`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-math-trunc.md) | Pushes `Math.trunc` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-modern-math-apis`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-modern-math-apis.md) | Pushes `Math.log10/log2/hypot` — missing; forbids `Math.log(x)/Math.LN10` and `Math.sqrt(a*a+b*b)` workarounds | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`no-instanceof-builtins`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-instanceof-builtins.md) | Autofixes `instanceof Array` to `Array.isArray` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`no-for-each`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-for-each.md) | Assumes `.forEach` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-set-has`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-set-size`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-size.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-set-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-methods.md) | Pushes `Set` methods — ES2024, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-map-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-map-from-entries.md) | Pushes `Map` + `Object.fromEntries` — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-group-by`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-group-by.md) | Pushes `Object.groupBy/Map.groupBy` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-iterator-helpers`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-helpers.md) | Pushes the iterator-helper protocol — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-structured-clone`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-structured-clone.md) | Pushes `structuredClone` global — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`require-array-join-separator`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-join-separator.md) | Safe alone, but grouped here to avoid pushing modern array idioms under the strict set | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-
-### Group B — forbid ES6+ syntax / ES-module / async constructs (5)
-
-| Rule | Why it breaks SSJS | SFMC evidence |
-|---|---|---|
-| [`prefer-optional-catch-binding`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-optional-catch-binding.md) | Pushes `catch {}` (ES2019) — may not parse on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-module`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-module.md) | Pushes ES modules — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-node-protocol`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-node-protocol.md) | Pushes `node:` imports — no module system | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-top-level-await`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-top-level-await.md) | Pushes top-level `await` — async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-export-from`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-export-from.md) | Pushes `export … from` — ES modules | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-
-> **Note:** [`prefer-regexp-test`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-regexp-test.md) stays **active** — `RegExp#test` exists in SFMC SSJS, so it is intentionally **not** in the override list.
-
----
-
-## Section 3 — How to apply
-
-The override is **optional** and **SSJS-scoped**. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Spread the sfmc override **after** it:
-
-```js
-import sfmc from 'eslint-plugin-sfmc';
-import eslintPluginUnicorn from 'eslint-plugin-unicorn';
-
-export default [
-    eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
-    ...sfmc.configs.recommended,
-    ...sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
-    // For SSJS embedded in HTML, also add:
-    // ...sfmc.configs['unicorn-ssjs-embedded'],
-];
-```
-
-| Config | Applies to |
-|---|---|
-| `unicorn-ssjs` | `**/*.ssjs` |
-| `unicorn-ssjs-embedded` | `**/*.html/*.js` (SSJS extracted from `<script runat="server">`) |
-
-If you don't use unicorn, omit these configs entirely — nothing else in `eslint-plugin-sfmc` references them.

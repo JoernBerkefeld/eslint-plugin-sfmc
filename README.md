@@ -163,14 +163,14 @@ The MSO rules are **auto-included** in the HTML-embedded configs: `embedded`, `s
 
 | Rule (`mso/*`)                     | Default (embedded/strict) | Description                                                    |
 | ---------------------------------- | ------------------------- | ------------------------------------------------------------- |
-| `mso/valid-mso-condition`          | `error`                   | Validate the `[if …]` expression syntax of MSO comments       |
-| `mso/matching-mso-endif`           | `error`                   | Require every MSO opener to have a matching `<![endif]>`       |
-| `mso/matching-mso-endif-type`      | `warn`                    | Require the endif comment style to match its opener           |
-| `mso/no-unknown-mso-property`      | `warn`                    | Flag unknown `mso-*` CSS properties                           |
-| `mso/vml-requires-namespace`       | `warn`                    | Require the `v:` VML namespace declaration when VML is used   |
-| `mso/no-unknown-vml-tag`           | `warn`                    | Flag unknown `v:*` VML tags                                   |
-| `mso/no-unknown-vml-attribute`     | `warn`                    | Flag unknown attributes on VML tags                          |
-| `mso/table-presentation-role`      | `warn`                    | Require `role="presentation"` on layout tables               |
+| [`mso/valid-mso-condition`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/valid-mso-condition.md)     | `error` | Validate the `[if …]` expression syntax of MSO comments     |
+| [`mso/matching-mso-endif`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif.md)       | `error` | Require every MSO opener to have a matching `<![endif]>`     |
+| [`mso/matching-mso-endif-type`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif-type.md) | `warn`  | Require the endif comment style to match its opener         |
+| [`mso/no-unknown-mso-property`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-mso-property.md) | `warn`  | Flag unknown `mso-*` CSS properties                         |
+| [`mso/vml-requires-namespace`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/vml-requires-namespace.md)   | `warn`  | Require the `v:` VML namespace declaration when VML is used |
+| [`mso/no-unknown-vml-tag`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-tag.md)       | `warn`  | Flag unknown `v:*` VML tags                                 |
+| [`mso/no-unknown-vml-attribute`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-attribute.md) | `warn`  | Flag unknown attributes on VML tags                         |
+| [`mso/table-presentation-role`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/table-presentation-role.md) | `warn`  | Require `role="presentation"` on layout tables              |
 
 Severities above are the same in `embedded`, `strict`, `embedded-next`, and `strict-next` (MSO markup is engine-agnostic — it behaves identically for Engagement and Next). For MSO rule details and options, see the [`eslint-plugin-mso-email` docs](https://github.com/JoernBerkefeld/eslint-plugin-mso-email).
 
@@ -190,8 +190,7 @@ export default [
     eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
     ...sfmc.configs.recommended,
     ...sfmc.configs['unicorn-ssjs'], // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
-    // For SSJS embedded in HTML (<script runat="server">), also add:
-    // ...sfmc.configs['unicorn-ssjs-embedded'],
+    ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
 ];
 ```
 
