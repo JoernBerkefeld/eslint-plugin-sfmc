@@ -24,6 +24,7 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 export default [
     eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
     ...sfmc.configs.recommended,
+    ...sfmc.configs.embedded,                 // AMPscript + SSJS embedded in HTML (<script runat="server">)
     ...sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
     ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
 ];
