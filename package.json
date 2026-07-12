@@ -1,6 +1,6 @@
 {
     "name": "eslint-plugin-sfmc",
-    "version": "4.1.2",
+    "version": "4.2.0",
     "description": "ESLint plugin for Salesforce Marketing Cloud Engagement+Next - AMPscript, Server-Side JavaScript (SSJS) and Handlebars",
     "type": "module",
     "main": "src/index.js",
