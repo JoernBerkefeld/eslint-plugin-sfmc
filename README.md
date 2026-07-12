@@ -130,6 +130,8 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 | [`sfmc/ssjs-no-mcn-unsupported`](docs/rules/ssjs/no-mcn-unsupported.md)                     | off (`error` in `-next`) | Flag all SSJS API usage as unsupported in Marketing Cloud Next           |
 | [`sfmc/ssjs-no-deprecated-function`](docs/rules/ssjs/no-deprecated-function.md)             | `error`                  | Flag use of deprecated SFMC SSJS APIs (e.g. ContentArea, ContentAreaObj) |
 | [`sfmc/ssjs-no-property-call`](docs/rules/ssjs/no-property-call.md)                         | `error`                  | Disallow calling Platform.Request/Response properties as functions       |
+| [`sfmc/ssjs-no-clr-header-access`](docs/rules/ssjs/no-clr-header-access.md)                 | `error`                  | Disallow CLR-unsafe reads of `HttpResponse.headers`; read via `for..in`  |
+| [`sfmc/ssjs-require-string-clr-content`](docs/rules/ssjs/require-string-clr-content.md)     | `error`                  | Require wrapping `HttpResponse.content` with `String()` before use       |
 | [`sfmc/ssjs-platform-function-arity`](docs/rules/ssjs/platform-function-arity.md)           | `error`                  | Enforce correct arity for `Platform.Function.*`                          |
 | [`sfmc/ssjs-require-platform-load-order`](docs/rules/ssjs/require-platform-load-order.md)   | `error`                  | Require `Platform.Load()` before Core usage in order                     |
 | [`sfmc/ssjs-no-hardcoded-credentials`](docs/rules/ssjs/no-hardcoded-credentials.md)         | `error`                  | Flag hardcoded keys in encryption calls                                  |

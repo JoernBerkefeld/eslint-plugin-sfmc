@@ -357,6 +357,32 @@
       "messageId": "tooManyArgs"
     }
   ],
+  "testFixture/rules/ssjs/no-clr-header-access.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-clr-header-access",
+      "severity": 2,
+      "line": 27,
+      "messageId": "clrHeaderAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-clr-header-access",
+      "severity": 2,
+      "line": 30,
+      "messageId": "clrHeaderAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-clr-header-access",
+      "severity": 2,
+      "line": 33,
+      "messageId": "clrHeaderAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-clr-header-access",
+      "severity": 2,
+      "line": 36,
+      "messageId": "clrHeaderAccess"
+    }
+  ],
   "testFixture/rules/ssjs/no-deprecated-function.ssjs": [
     {
       "ruleId": "sfmc/ssjs-no-deprecated-function",
@@ -548,6 +574,50 @@
       "severity": 2,
       "line": 11,
       "messageId": "missingLoad"
+    }
+  ],
+  "testFixture/rules/ssjs/require-string-clr-content.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-prefer-parsejson-safe-arg",
+      "severity": 2,
+      "line": 25,
+      "messageId": "unsafeArg"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-string-clr-content",
+      "severity": 2,
+      "line": 25,
+      "messageId": "clrContentAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-string-clr-content",
+      "severity": 2,
+      "line": 28,
+      "messageId": "clrContentAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-string-clr-content",
+      "severity": 2,
+      "line": 31,
+      "messageId": "clrContentAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-string-clr-content",
+      "severity": 2,
+      "line": 34,
+      "messageId": "clrContentAccess"
+    },
+    {
+      "ruleId": "sfmc/ssjs-prefer-parsejson-safe-arg",
+      "severity": 2,
+      "line": 37,
+      "messageId": "unsafeArg"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-string-clr-content",
+      "severity": 2,
+      "line": 37,
+      "messageId": "clrContentAccess"
     }
   ]
 }

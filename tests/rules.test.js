@@ -46,6 +46,8 @@ import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgumentTypes from '../src/rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
+import ssjsNoClrHeaderAccess from '../src/rules/ssjs/no-clr-header-access.js';
+import ssjsRequireStringClrContent from '../src/rules/ssjs/require-string-clr-content.js';
 
 // ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
 
@@ -1727,6 +1729,134 @@ ssjsTester.run('ssjs-no-treatascontent-injection', ssjsNoTreatAsContentInjection
         {
             code: 'TreatAsContent("%%[ " + code + " ]%%");',
             errors: [{ messageId: 'injection' }],
+        },
+    ],
+});
+
+// ─── 22. ssjs-no-clr-header-access ────────────────────────────────────────────
+
+const HEADER_MAP_HELPER_OUTPUT = `/**
+ * Build a plain { name: value } header map from an HttpResponse.
+ * Reads only the for..in enumeration keys (shaped "[Name, Value]") so it never
+ * touches a CLR value — avoiding "Use of Common Language Runtime (CLR) is not allowed".
+ * @param {object} resp - the response returned by req.send()
+ * @returns {object} map of lowercased header name => value string
+ */
+function getHeaderMap(resp) {
+    var map = {};
+    for (var k in resp.headers) {
+        var pair = String(k);
+        if (pair.charAt(0) === "[") { pair = pair.substring(1); }
+        if (pair.charAt(pair.length - 1) === "]") { pair = pair.substring(0, pair.length - 1); }
+        var idx = pair.indexOf(", ");
+        if (idx > -1) {
+            map[pair.substring(0, idx).toLowerCase()] = pair.substring(idx + 2);
+        }
+    }
+    return map;
+}
+`;
+
+ssjsTester.run('ssjs-no-clr-header-access', ssjsNoClrHeaderAccess, {
+    valid: [
+        // .headers on an object that is not a tracked HttpResponse — ignored.
+        { code: 'var config = { headers: {} }; var x = config.headers["Content-Type"];' },
+        // Reading a tracked response's headers via for..in — the correct pattern.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); for (var k in resp.headers) { var v = String(k); }',
+        },
+        // A `.send()` call on an untracked object does not make a response var.
+        { code: 'var resp = foo.send(); var ct = resp.headers["Content-Type"];' },
+    ],
+    invalid: [
+        // Computed index read of a tracked HttpRequest response's headers.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var ct = resp.headers["Content-Type"];',
+            errors: [
+                {
+                    messageId: 'clrHeaderAccess',
+                    suggestions: [
+                        {
+                            messageId: 'insertHelperAndRewrite',
+                            data: { respName: 'resp' },
+                            output:
+                                `${HEADER_MAP_HELPER_OUTPUT}\n` +
+                                'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var ct = getHeaderMap(resp)["Content-Type"];',
+                        },
+                    ],
+                },
+            ],
+        },
+        // CLR .Get() call on a tracked HttpGet response's headers.
+        {
+            code: 'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var loc = gresp.headers.Get("Location");',
+            errors: [
+                {
+                    messageId: 'clrHeaderAccess',
+                    suggestions: [
+                        {
+                            messageId: 'insertHelperAndRewrite',
+                            data: { respName: 'gresp' },
+                            output:
+                                `${HEADER_MAP_HELPER_OUTPUT}\n` +
+                                'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var loc = getHeaderMap(gresp)["Location"];',
+                        },
+                    ],
+                },
+            ],
+        },
+        // CLR .Item() call on a tracked response's headers.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var enc = resp.headers.Item("Content-Encoding");',
+            errors: [
+                {
+                    messageId: 'clrHeaderAccess',
+                    suggestions: [
+                        {
+                            messageId: 'insertHelperAndRewrite',
+                            data: { respName: 'resp' },
+                            output:
+                                `${HEADER_MAP_HELPER_OUTPUT}\n` +
+                                'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var enc = getHeaderMap(resp)["Content-Encoding"];',
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+});
+
+// ─── 23. ssjs-require-string-clr-content ──────────────────────────────────────
+
+ssjsTester.run('ssjs-require-string-clr-content', ssjsRequireStringClrContent, {
+    valid: [
+        // .content on an object that is not a tracked HttpResponse — ignored.
+        { code: 'var config = { content: "x" }; var raw = config.content;' },
+        // Reading a tracked response's content already wrapped in String().
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var d = Platform.Function.ParseJSON(String(resp.content));',
+        },
+        // A `.send()` call on an untracked object does not make a response var.
+        { code: 'var resp = foo.send(); var body = resp.content;' },
+    ],
+    invalid: [
+        // content passed to ParseJSON without String() wrap.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var d = Platform.Function.ParseJSON(resp.content);',
+            errors: [{ messageId: 'clrContentAccess', data: { text: 'resp.content' } }],
+            output: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var d = Platform.Function.ParseJSON(String(resp.content));',
+        },
+        // content assigned directly to a variable.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var body = resp.content;',
+            errors: [{ messageId: 'clrContentAccess' }],
+            output: 'var req = new Script.Util.HttpRequest("u"); var resp = req.send(); var body = String(resp.content);',
+        },
+        // content of an HttpGet response used without String().
+        {
+            code: 'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var b = Platform.Function.ParseJSON(gresp.content);',
+            errors: [{ messageId: 'clrContentAccess', data: { text: 'gresp.content' } }],
+            output: 'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var b = Platform.Function.ParseJSON(String(gresp.content));',
         },
     ],
 });

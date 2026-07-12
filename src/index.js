@@ -56,6 +56,8 @@ import ssjsNoSwitchDefault from './rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from './rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgumentTypes from './rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
+import ssjsNoClrHeaderAccess from './rules/ssjs/no-clr-header-access.js';
+import ssjsRequireStringClrContent from './rules/ssjs/require-string-clr-content.js';
 
 // ── Handlebars (MCN) rules ──────────────────────────────────────────────────────
 
@@ -135,6 +137,8 @@ const plugin = {
         'ssjs-no-treatascontent-injection': ssjsNoTreatAsContentInjection,
         'ssjs-arg-types': ssjsArgumentTypes,
         'ssjs-core-method-arity': ssjsCoreMethodArity,
+        'ssjs-no-clr-header-access': ssjsNoClrHeaderAccess,
+        'ssjs-require-string-clr-content': ssjsRequireStringClrContent,
 
         // Handlebars (MCN) rules (hbs- prefix)
         'hbs-no-unknown-helper': hbsNoUnknownHelper,
@@ -178,6 +182,8 @@ const ssjsMcnRules = {
     'sfmc/ssjs-no-treatascontent-injection': 'off',
     'sfmc/ssjs-arg-types': 'off',
     'sfmc/ssjs-core-method-arity': 'off',
+    'sfmc/ssjs-no-clr-header-access': 'off',
+    'sfmc/ssjs-require-string-clr-content': 'off',
     'no-cond-assign': 'off',
 };
 
@@ -246,6 +252,8 @@ const ssjsRecommendedRules = {
     'sfmc/ssjs-no-treatascontent-injection': 'warn',
     'sfmc/ssjs-arg-types': 'warn',
     'sfmc/ssjs-core-method-arity': 'warn',
+    'sfmc/ssjs-no-clr-header-access': 'error',
+    'sfmc/ssjs-require-string-clr-content': 'error',
     'no-cond-assign': 'error',
 };
 
@@ -267,6 +275,8 @@ const ssjsStrictRules = {
     'sfmc/ssjs-no-treatascontent-injection': 'error',
     'sfmc/ssjs-arg-types': 'warn',
     'sfmc/ssjs-core-method-arity': 'error',
+    'sfmc/ssjs-no-clr-header-access': 'error',
+    'sfmc/ssjs-require-string-clr-content': 'error',
     'no-cond-assign': 'error',
 };
 
