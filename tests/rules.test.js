@@ -33,6 +33,7 @@ import ssjsNoUnsupportedSyntax from '../src/rules/ssjs/no-unsupported-syntax.js'
 import ssjsNoUnknownFunction from '../src/rules/ssjs/no-unknown-function.js';
 import ssjsNoMcnUnsupported from '../src/rules/ssjs/no-mcn-unsupported.js';
 import ssjsNoDeprecatedFunction from '../src/rules/ssjs/no-deprecated-function.js';
+import ssjsNoNonexistentGlobal from '../src/rules/ssjs/no-nonexistent-global.js';
 import ssjsNoPropertyCall from '../src/rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from '../src/rules/ssjs/platform-function-arity.js';
 import ssjsCacheLoopLength from '../src/rules/ssjs/cache-loop-length.js';
@@ -1022,6 +1023,31 @@ ssjsTester.run('ssjs-no-deprecated-function', ssjsNoDeprecatedFunction, {
         {
             code: 'var area = ContentAreaObj.Init("myCA"); area.Remove();',
             errors: [{ messageId: 'deprecatedCoreInstance' }],
+        },
+        // ErrorUtil.ThrowWSProxyError — deprecated (Core 1 only)
+        {
+            code: 'ErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'deprecatedErrorUtil' }],
+        },
+    ],
+});
+
+// ─── 6b. ssjs-no-nonexistent-global ───────────────────────────────────────────
+
+ssjsTester.run('ssjs-no-nonexistent-global', ssjsNoNonexistentGlobal, {
+    valid: [
+        // Supported runtime alternative — not flagged
+        { code: 'Platform.Response.Redirect("https://example.com", false);' },
+        // Unrelated bare call
+        { code: 'Write("hello");' },
+        // Member access, not a bare-name call
+        { code: 'Foo.Redirect("https://example.com");' },
+    ],
+    invalid: [
+        // Bare-name Redirect — documented but does not exist at runtime
+        {
+            code: 'Redirect("https://example.com", false);',
+            errors: [{ messageId: 'nonexistentGlobal' }],
         },
     ],
 });

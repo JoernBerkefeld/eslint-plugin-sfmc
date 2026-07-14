@@ -12,3 +12,6 @@ var content = ContentArea("MyContentAreaKey");
 
 /* ❌ FAIL — ContentAreaByName is deprecated; use ContentBlockByName */
 var content2 = ContentAreaByName("My Content Area");
+
+/* ❌ FAIL — ErrorUtil.ThrowWSProxyError is deprecated; check result.Status and throw new Error(...) */
+ErrorUtil.ThrowWSProxyError(content);

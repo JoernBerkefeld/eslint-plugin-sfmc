@@ -1,7 +1,8 @@
 # `sfmc/ssjs-no-deprecated-function`
 
-Flags calls to deprecated SFMC SSJS APIs. Currently focuses on the **Content Areas** feature,
-which has been retired and no longer allows creating or updating content.
+Flags calls to deprecated SFMC SSJS APIs, chiefly the **Content Areas** feature,
+which has been retired and no longer allows creating or updating content, plus the
+legacy `ErrorUtil` helper that only exists under the oldest Core version.
 
 ## What is flagged
 
@@ -16,6 +17,7 @@ which has been retired and no longer allows creating or updating content.
 | `ContentAreaObj.Retrieve(…)` | ContentAreaObj class is deprecated |
 | `<contentAreaVar>.Update(…)` | Instance method on a deprecated ContentAreaObj variable |
 | `<contentAreaVar>.Remove()` | Instance method on a deprecated ContentAreaObj variable |
+| `ErrorUtil.ThrowWSProxyError(…)` | Only exists under `Platform.Load("Core", "1")`; undefined in newer Core versions — check `result.Status` and `throw new Error(…)` instead |
 
 ## Examples
 

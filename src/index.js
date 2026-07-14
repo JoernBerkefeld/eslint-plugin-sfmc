@@ -43,6 +43,7 @@ import ssjsNoUnsupportedSyntax from './rules/ssjs/no-unsupported-syntax.js';
 import ssjsNoUnknownFunction from './rules/ssjs/no-unknown-function.js';
 import ssjsNoMcnUnsupported from './rules/ssjs/no-mcn-unsupported.js';
 import ssjsNoDeprecatedFunction from './rules/ssjs/no-deprecated-function.js';
+import ssjsNoNonexistentGlobal from './rules/ssjs/no-nonexistent-global.js';
 import ssjsNoPropertyCall from './rules/ssjs/no-property-call.js';
 import ssjsPlatformFunctionArity from './rules/ssjs/platform-function-arity.js';
 import ssjsCacheLoopLength from './rules/ssjs/cache-loop-length.js';
@@ -125,6 +126,7 @@ const plugin = {
         'ssjs-no-unknown-function': ssjsNoUnknownFunction,
         'ssjs-no-mcn-unsupported': ssjsNoMcnUnsupported,
         'ssjs-no-deprecated-function': ssjsNoDeprecatedFunction,
+        'ssjs-no-nonexistent-global': ssjsNoNonexistentGlobal,
         'ssjs-no-property-call': ssjsNoPropertyCall,
         'ssjs-platform-function-arity': ssjsPlatformFunctionArity,
         'ssjs-cache-loop-length': ssjsCacheLoopLength,
@@ -171,6 +173,7 @@ const ssjsMcnRules = {
     'sfmc/ssjs-require-platform-load': 'off',
     'sfmc/ssjs-no-unsupported-syntax': 'off',
     'sfmc/ssjs-no-deprecated-function': 'off',
+    'sfmc/ssjs-no-nonexistent-global': 'off',
     'sfmc/ssjs-no-property-call': 'off',
     'sfmc/ssjs-platform-function-arity': 'off',
     'sfmc/ssjs-cache-loop-length': 'off',
@@ -242,6 +245,7 @@ const ssjsRecommendedRules = {
     'sfmc/ssjs-no-unsupported-syntax': 'error',
     'sfmc/ssjs-no-unknown-function': 'error',
     'sfmc/ssjs-no-deprecated-function': 'error',
+    'sfmc/ssjs-no-nonexistent-global': 'error',
     'sfmc/ssjs-no-property-call': 'error',
     'sfmc/ssjs-platform-function-arity': 'error',
     'sfmc/ssjs-cache-loop-length': 'warn',
@@ -266,6 +270,7 @@ const ssjsStrictRules = {
     'sfmc/ssjs-no-unsupported-syntax': 'error',
     'sfmc/ssjs-no-unknown-function': 'error',
     'sfmc/ssjs-no-deprecated-function': 'error',
+    'sfmc/ssjs-no-nonexistent-global': 'error',
     'sfmc/ssjs-no-property-call': 'error',
     'sfmc/ssjs-platform-function-arity': 'error',
     'sfmc/ssjs-cache-loop-length': 'error',

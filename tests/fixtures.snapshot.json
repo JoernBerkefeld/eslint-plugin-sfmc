@@ -421,6 +421,12 @@
       "severity": 2,
       "line": 14,
       "messageId": "deprecatedGlobal"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 17,
+      "messageId": "deprecatedErrorUtil"
     }
   ],
   "testFixture/rules/ssjs/no-hardcoded-credentials.ssjs": [
@@ -459,6 +465,14 @@
       "severity": 2,
       "line": 20,
       "messageId": "hardcodedCredential"
+    }
+  ],
+  "testFixture/rules/ssjs/no-nonexistent-global.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-nonexistent-global",
+      "severity": 2,
+      "line": 12,
+      "messageId": "nonexistentGlobal"
     }
   ],
   "testFixture/rules/ssjs/no-property-call.ssjs": [

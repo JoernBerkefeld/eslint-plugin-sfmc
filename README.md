@@ -128,7 +128,8 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 | [`sfmc/ssjs-no-unsupported-syntax`](docs/rules/ssjs/no-unsupported-syntax.md)               | `error`                  | Flag ES6+ syntax not supported by SFMC                                   |
 | [`sfmc/ssjs-no-unknown-function`](docs/rules/ssjs/no-unknown-function.md)                   | `error`                  | Disallow unknown methods on Platform.\*, HTTP, Core Library, and WSProxy |
 | [`sfmc/ssjs-no-mcn-unsupported`](docs/rules/ssjs/no-mcn-unsupported.md)                     | off (`error` in `-next`) | Flag all SSJS API usage as unsupported in Marketing Cloud Next           |
-| [`sfmc/ssjs-no-deprecated-function`](docs/rules/ssjs/no-deprecated-function.md)             | `error`                  | Flag use of deprecated SFMC SSJS APIs (e.g. ContentArea, ContentAreaObj) |
+| [`sfmc/ssjs-no-deprecated-function`](docs/rules/ssjs/no-deprecated-function.md)             | `error`                  | Flag use of deprecated SFMC SSJS APIs (e.g. ContentArea, ErrorUtil)      |
+| [`sfmc/ssjs-no-nonexistent-global`](docs/rules/ssjs/no-nonexistent-global.md)               | `error`                  | Flag documented SSJS globals that throw ReferenceError at runtime        |
 | [`sfmc/ssjs-no-property-call`](docs/rules/ssjs/no-property-call.md)                         | `error`                  | Disallow calling Platform.Request/Response properties as functions       |
 | [`sfmc/ssjs-no-clr-header-access`](docs/rules/ssjs/no-clr-header-access.md)                 | `error`                  | Disallow CLR-unsafe reads of `HttpResponse.headers`; read via `for..in`  |
 | [`sfmc/ssjs-require-string-clr-content`](docs/rules/ssjs/require-string-clr-content.md)     | `error`                  | Require wrapping `HttpResponse.content` with `String()` before use       |

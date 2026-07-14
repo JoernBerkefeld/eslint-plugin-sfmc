@@ -12,9 +12,15 @@
  *   - ContentAreaObj.Retrieve(...) — static method
  *   - <contentAreaObjVar>.Update(...) — instance method on a tracked ContentAreaObj variable
  *   - <contentAreaObjVar>.Remove()    — instance method on a tracked ContentAreaObj variable
+ *   - ErrorUtil.ThrowWSProxyError(...) — deprecated; only exists under Platform.Load("Core", "1")
  */
 
-import { platformFunctionLookup, SSJS_GLOBALS, CONTENT_AREA_OBJ_METHODS } from 'ssjs-data';
+import {
+    platformFunctionLookup,
+    SSJS_GLOBALS,
+    CONTENT_AREA_OBJ_METHODS,
+    ERROR_UTIL_METHODS,
+} from 'ssjs-data';
 
 // Lookup Map: lowercase name → entry, for SSJS_GLOBALS entries that are deprecated.
 // Used to flag bare calls like ContentArea(...) and ContentAreaByName(...).
@@ -38,6 +44,12 @@ const CONTENT_AREA_INSTANCE_DEPRECATED = new Set(
     ),
 );
 
+// Deprecated ErrorUtil methods (e.g. ThrowWSProxyError). Used to flag calls like
+// ErrorUtil.ThrowWSProxyError(result), which only exists under Platform.Load("Core", "1").
+const ERRORUTIL_DEPRECATED = new Set(
+    ERROR_UTIL_METHODS.filter((m) => m.deprecated).map((m) => m.name.toLowerCase()),
+);
+
 export default {
     meta: {
         type: 'suggestion',
@@ -52,6 +64,8 @@ export default {
                 "'ContentAreaObj.{{name}}' is deprecated. Content Areas are no longer supported.",
             deprecatedCoreInstance:
                 "'{{method}}' called on a ContentAreaObj variable is deprecated. Content Areas are no longer supported.",
+            deprecatedErrorUtil:
+                "'ErrorUtil.{{name}}' is deprecated — it only exists under Platform.Load(\"Core\", \"1\") and is undefined in newer Core versions. Check 'result.Status' and 'throw new Error(...)' instead.",
         },
         schema: [],
     },
@@ -138,6 +152,20 @@ export default {
                     context.report({
                         node: property,
                         messageId: 'deprecatedCoreStatic',
+                        data: { name: methodName },
+                    });
+                    return;
+                }
+
+                // ── ErrorUtil.ThrowWSProxyError(…) — deprecated ───────────────
+                if (
+                    callee.object.type === 'Identifier' &&
+                    callee.object.name === 'ErrorUtil' &&
+                    ERRORUTIL_DEPRECATED.has(methodName.toLowerCase())
+                ) {
+                    context.report({
+                        node: property,
+                        messageId: 'deprecatedErrorUtil',
                         data: { name: methodName },
                     });
                     return;
