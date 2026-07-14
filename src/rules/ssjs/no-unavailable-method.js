@@ -7,7 +7,7 @@
  * Two catalogs from ssjs-data feed this rule:
  *
  * 1. POLYFILLABLE_METHODS — a shipped ES3-safe polyfill exists. The report
- *    carries a suggestion that inserts the polyfill at the end of the file.
+ *    carries a suggestion that inserts the polyfill at the top of the file.
  * 2. KNOWN_UNSUPPORTED — no polyfill is feasible. The report has no fix; the
  *    message carries the ssjs-data `suggestion` (e.g. use Platform.Function.X).
  *
@@ -15,8 +15,9 @@
  * - category 'broken': method exists natively but returns incorrect results.
  *
  * No auto-fix is applied because prototype assignments are not hoisted —
- * the suggestion inserts the polyfill at the end of the file, and users
- * should verify placement before the first call (or load via Content Block).
+ * the suggestion inserts the polyfill at the top of the file (after a leading
+ * `/* global *\/` directive when present), and users should verify placement
+ * before the first call (or load via Content Block).
  */
 
 import {
@@ -58,7 +59,7 @@ export default {
             broken:
                 "'{{owner}}.{{method}}' exists in SFMC SSJS but produces incorrect results. " +
                 'Add a polyfill to get the correct behavior.',
-            addPolyfill: "Insert '{{owner}}.{{method}}' polyfill at end of file",
+            addPolyfill: "Insert '{{owner}}.{{method}}' polyfill at top of file",
             unavailableNoPolyfill:
                 "'{{owner}}.{{method}}' is not available in SFMC SSJS (ECMAScript 3). {{suggestion}}",
             brokenNoPolyfill:
@@ -99,8 +100,21 @@ export default {
         function buildSuggestFix(entry) {
             return function fix(fixer) {
                 const source = context.sourceCode;
-                const end = source.ast.range[1];
-                return fixer.insertTextAfterRange([end, end], '\n\n' + entry.polyfill);
+                // Insert the polyfill at the TOP of the file so it is defined
+                // before any call site (SSJS does not hoist prototype
+                // assignments). This mirrors the LSP quick-fix. When a leading
+                // `/* global ... */` ESLint directive is the first comment,
+                // insert right after it so the directive stays at the very top.
+                const leadingGlobal = source
+                    .getAllComments()
+                    .find(
+                        (c) =>
+                            c.type === 'Block' && c.range[0] === 0 && /^\s*global\b/.test(c.value),
+                    );
+                if (leadingGlobal) {
+                    return fixer.insertTextAfterRange(leadingGlobal.range, '\n\n' + entry.polyfill);
+                }
+                return fixer.insertTextBeforeRange([0, 0], entry.polyfill + '\n\n');
             };
         }
 

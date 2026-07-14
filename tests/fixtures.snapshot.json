@@ -357,6 +357,32 @@
       "messageId": "tooManyArgs"
     }
   ],
+  "testFixture/rules/ssjs/http-property-value.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-http-property-value",
+      "severity": 2,
+      "line": 27,
+      "messageId": "invalidValue"
+    },
+    {
+      "ruleId": "sfmc/ssjs-http-property-value",
+      "severity": 2,
+      "line": 30,
+      "messageId": "invalidValue"
+    },
+    {
+      "ruleId": "sfmc/ssjs-http-property-value",
+      "severity": 2,
+      "line": 33,
+      "messageId": "invalidValue"
+    },
+    {
+      "ruleId": "sfmc/ssjs-http-property-value",
+      "severity": 2,
+      "line": 36,
+      "messageId": "invalidValue"
+    }
+  ],
   "testFixture/rules/ssjs/no-clr-header-access.ssjs": [
     {
       "ruleId": "sfmc/ssjs-no-clr-header-access",

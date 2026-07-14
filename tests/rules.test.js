@@ -48,6 +48,7 @@ import ssjsArgumentTypes from '../src/rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
 import ssjsNoClrHeaderAccess from '../src/rules/ssjs/no-clr-header-access.js';
 import ssjsRequireStringClrContent from '../src/rules/ssjs/require-string-clr-content.js';
+import ssjsHttpPropertyValue from '../src/rules/ssjs/http-property-value.js';
 
 // ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
 
@@ -1486,7 +1487,7 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
             ],
         },
 
-        // ── Suggestion inserts polyfill at end of file ────────────────────────
+        // ── Suggestion inserts polyfill at top of file ────────────────────────
         {
             code: 'var a = [1,2,3]; a.some(function(x){ return x > 2; });',
             errors: [
@@ -1497,7 +1498,6 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                             messageId: 'addPolyfill',
                             data: { owner: 'Array.prototype', method: 'some' },
                             output:
-                                'var a = [1,2,3]; a.some(function(x){ return x > 2; });\n\n' +
                                 '/**\n' +
                                 ' * Polyfill for Array.prototype.some (SFMC SSJS).\n' +
                                 ' * @param {Function} predicate - test called with (element, index, array)\n' +
@@ -1509,7 +1509,8 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                                 '        if (predicate(this[i], i, this)) { return true; }\n' +
                                 '    }\n' +
                                 '    return false;\n' +
-                                '};',
+                                '};\n\n' +
+                                'var a = [1,2,3]; a.some(function(x){ return x > 2; });',
                         },
                     ],
                 },
@@ -1525,7 +1526,6 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                             messageId: 'addPolyfill',
                             data: { owner: 'Array', method: 'isArray' },
                             output:
-                                'Array.isArray([]);\n\n' +
                                 '/**\n' +
                                 ' * Polyfill for Array.isArray (SFMC SSJS).\n' +
                                 ' * @param {*} value - the value to test\n' +
@@ -1533,7 +1533,8 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
                                 ' */\n' +
                                 'Array.isArray = Array.isArray || function (value) {\n' +
                                 "    return Object.prototype.toString.call(value) === '[object Array]';\n" +
-                                '};',
+                                '};\n\n' +
+                                'Array.isArray([]);',
                         },
                     ],
                 },
@@ -1857,6 +1858,125 @@ ssjsTester.run('ssjs-require-string-clr-content', ssjsRequireStringClrContent, {
             code: 'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var b = Platform.Function.ParseJSON(gresp.content);',
             errors: [{ messageId: 'clrContentAccess', data: { text: 'gresp.content' } }],
             output: 'var greq = Script.Util.HttpGet("u"); var gresp = greq.send(); var b = Platform.Function.ParseJSON(String(gresp.content));',
+        },
+    ],
+});
+
+// ─── 24. ssjs-http-property-value ─────────────────────────────────────────────
+
+ssjsTester.run('ssjs-http-property-value', ssjsHttpPropertyValue, {
+    valid: [
+        // Valid enum / numeric assignments on a tracked request.
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.method = "POST";' },
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.emptyContentHandling = 1;' },
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.retries = 3;' },
+        // Non-literal RHS cannot be verified statically — ignored.
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.method = someVar;' },
+        // Assignment on an object that is not a tracked request — ignored.
+        { code: 'var config = { method: "x" }; config.method = "POT";' },
+        // Property without a valueConstraint — ignored.
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.contentType = "anything";' },
+    ],
+    invalid: [
+        // emptyContentHandling outside the allowed enum.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); req.emptyContentHandling = 5;',
+            errors: [
+                {
+                    message: 'Invalid value for emptyContentHandling: it must be one of 0, 1, 2.',
+                    suggestions: [
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: { value: '0', label: 'continue' },
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.emptyContentHandling = 0;',
+                        },
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: { value: '1', label: 'stop' },
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.emptyContentHandling = 1;',
+                        },
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: {
+                                value: '2',
+                                label: 'continue to next subscriber - email sends only',
+                            },
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.emptyContentHandling = 2;',
+                        },
+                    ],
+                },
+            ],
+        },
+        // retries must be a non-negative integer (numeric — no suggestions offered).
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); req.retries = -2.45;',
+            errors: [
+                {
+                    message: 'Invalid value for retries: it must be an integer.',
+                    suggestions: [],
+                },
+            ],
+        },
+        // Invalid method enum value — offers replacement suggestions.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); req.method = "POT";',
+            errors: [
+                {
+                    message:
+                        'Invalid value for method: it must be one of "GET", "POST", "PUT", "PATCH", "DELETE".',
+                    suggestions: [
+                        {
+                            messageId: 'replaceWith',
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.method = \'GET\';',
+                        },
+                        {
+                            messageId: 'replaceWith',
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.method = \'POST\';',
+                        },
+                        {
+                            messageId: 'replaceWith',
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.method = \'PUT\';',
+                        },
+                        {
+                            messageId: 'replaceWith',
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.method = \'PATCH\';',
+                        },
+                        {
+                            messageId: 'replaceWith',
+                            output: 'var req = new Script.Util.HttpRequest("u"); req.method = \'DELETE\';',
+                        },
+                    ],
+                },
+            ],
+        },
+        // Invalid value on an HttpGet instance.
+        {
+            code: 'var greq = Script.Util.HttpGet("u"); greq.emptyContentHandling = 9;',
+            errors: [
+                {
+                    message: 'Invalid value for emptyContentHandling: it must be one of 0, 1, 2.',
+                    suggestions: [
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: { value: '0', label: 'continue' },
+                            output: 'var greq = Script.Util.HttpGet("u"); greq.emptyContentHandling = 0;',
+                        },
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: { value: '1', label: 'stop' },
+                            output: 'var greq = Script.Util.HttpGet("u"); greq.emptyContentHandling = 1;',
+                        },
+                        {
+                            messageId: 'replaceWithLabel',
+                            data: {
+                                value: '2',
+                                label: 'continue to next subscriber - email sends only',
+                            },
+                            output: 'var greq = Script.Util.HttpGet("u"); greq.emptyContentHandling = 2;',
+                        },
+                    ],
+                },
+            ],
         },
     ],
 });

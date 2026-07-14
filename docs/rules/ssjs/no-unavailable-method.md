@@ -21,7 +21,8 @@ return wrong results:
   - `lastIndexOf` always returns `-1`.
 
 This rule detects both categories and offers a lightbulb suggestion to insert a polyfill
-at the end of the file.
+at the top of the file (after a leading `/* global … */` directive when present), matching
+the language-server quick-fix so both tools place polyfills consistently.
 
 ## Covered methods
 
