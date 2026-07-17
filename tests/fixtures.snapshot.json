@@ -467,14 +467,6 @@
       "messageId": "hardcodedCredential"
     }
   ],
-  "testFixture/rules/ssjs/no-nonexistent-global.ssjs": [
-    {
-      "ruleId": "sfmc/ssjs-no-nonexistent-global",
-      "severity": 2,
-      "line": 12,
-      "messageId": "nonexistentGlobal"
-    }
-  ],
   "testFixture/rules/ssjs/no-property-call.ssjs": [
     {
       "ruleId": "sfmc/ssjs-no-property-call",

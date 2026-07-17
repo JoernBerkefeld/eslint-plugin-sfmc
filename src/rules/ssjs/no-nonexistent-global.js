@@ -2,13 +2,17 @@
  * Rule: ssjs-no-nonexistent-global
  *
  * Flags bare-name SSJS globals that are officially documented but proven NOT to
- * exist at runtime — calling them throws a ReferenceError. Currently covers:
+ * exist at runtime as callable identifiers — calling them throws a ReferenceError.
  *
- *   - Redirect(url, movedPermanently) — undefined under every Core version;
- *     use Platform.Response.Redirect(url, movedPermanently) instead.
+ * The offending names come from ssjs-data's `notDefinedAtRuntime` flag, so phantom
+ * globals are picked up automatically without editing this rule. Only bare-name
+ * callable phantoms (Identifier callees) are flagged here; object-namespace
+ * phantoms accessed via member calls (e.g. `Recipient.GetAttributeValue(...)`) are
+ * out of scope for this rule.
  *
- * The offending names come from ssjs-data's `notDefinedAtRuntime` flag, so new
- * phantom globals are picked up automatically without editing this rule.
+ * Note: many bare-name Core globals (Write, Stringify, Base64Encode, Format,
+ * Redirect, …) are NOT phantom — they exist after `Platform.Load("core")` when
+ * called in the same scope as the load, so they are intentionally not flagged.
  */
 
 import { notDefinedAtRuntimeGlobalLookup } from 'ssjs-data';

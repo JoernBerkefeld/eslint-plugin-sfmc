@@ -1042,14 +1042,16 @@ ssjsTester.run('ssjs-no-nonexistent-global', ssjsNoNonexistentGlobal, {
         { code: 'Write("hello");' },
         // Member access, not a bare-name call
         { code: 'Foo.Redirect("https://example.com");' },
+        // Bare-name Redirect — runtime-verified to EXIST as a function after
+        // Platform.Load("core") when called in the same scope, so no longer flagged.
+        { code: 'Redirect("https://example.com", false);' },
     ],
-    invalid: [
-        // Bare-name Redirect — documented but does not exist at runtime
-        {
-            code: 'Redirect("https://example.com", false);',
-            errors: [{ messageId: 'nonexistentGlobal' }],
-        },
-    ],
+    // No bare-name-callable phantom globals remain in ssjs-data: the only current
+    // `notDefinedAtRuntime` entry is `Recipient`, which is an object accessed via a
+    // member call (Recipient.GetAttributeValue) rather than a bare Identifier call,
+    // so this data-driven rule has no invalid Identifier-call case to assert today.
+    // The rule still fires automatically if a bare-name phantom global is added later.
+    invalid: [],
 });
 
 // ─── 7. ssjs-no-property-call ─────────────────────────────────────────────────
