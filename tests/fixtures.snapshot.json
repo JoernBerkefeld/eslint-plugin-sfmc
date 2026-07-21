@@ -558,6 +558,36 @@
       "severity": 2,
       "line": 18,
       "messageId": "tooManyArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 29,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 30,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-platform-function-arity",
+      "severity": 2,
+      "line": 35,
+      "messageId": "invalidArity"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 38,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-platform-function-arity",
+      "severity": 2,
+      "line": 38,
+      "messageId": "invalidArity"
     }
   ],
   "testFixture/rules/ssjs/prefer-parsejson-safe-arg.ssjs": [

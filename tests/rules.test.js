@@ -957,6 +957,14 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             // Correct 3-arg signature: deName, fieldNamesArray, fieldValuesArray
             code: 'Platform.Function.InsertData("DE", ["Col1"], ["Val1"]);',
         },
+        {
+            // HTTPGet discontinuous overload: the 1-argument form is valid
+            code: 'Platform.Function.HTTPGet("https://example.com");',
+        },
+        {
+            // HTTPGet discontinuous overload: the full 6-argument form is valid
+            code: 'Platform.Function.HTTPGet("https://example.com", false, 0, null, null, []);',
+        },
     ],
     invalid: [
         {
@@ -972,6 +980,26 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             // Stringify accepts exactly 1 arg; 2 args should be flagged
             code: 'Platform.Function.Stringify("a", "b");',
             errors: [{ messageId: 'tooManyArgs' }],
+        },
+        {
+            // HTTPGet with 2 args is inside [1,6] but not a valid arity ({1,6})
+            code: 'Platform.Function.HTTPGet("https://example.com", false);',
+            errors: [
+                {
+                    messageId: 'invalidArity',
+                    data: { name: 'HTTPGet', arities: '1 or 6', actual: '2' },
+                },
+            ],
+        },
+        {
+            // HTTPGet with 4 args is inside [1,6] but not a valid arity ({1,6})
+            code: 'Platform.Function.HTTPGet("https://example.com", false, 0, null);',
+            errors: [
+                {
+                    messageId: 'invalidArity',
+                    data: { name: 'HTTPGet', arities: '1 or 6', actual: '4' },
+                },
+            ],
         },
     ],
 });
