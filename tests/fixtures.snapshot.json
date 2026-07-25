@@ -427,6 +427,84 @@
       "severity": 2,
       "line": 17,
       "messageId": "deprecatedErrorUtil"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 20,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 20,
+      "messageId": "tooManyArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 20,
+      "messageId": "deprecatedCoreStatic"
+    },
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 24,
+      "messageId": "tooFewArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 24,
+      "messageId": "deprecatedCoreInstance"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-nonfunctional-method",
+      "severity": 1,
+      "line": 24,
+      "messageId": "nonFunctional"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 27,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 27,
+      "messageId": "tooManyArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 27,
+      "messageId": "deprecatedCoreStatic"
+    },
+    {
+      "ruleId": "sfmc/ssjs-arg-types",
+      "severity": 1,
+      "line": 30,
+      "messageId": "typeMismatch"
+    },
+    {
+      "ruleId": "sfmc/ssjs-core-method-arity",
+      "severity": 2,
+      "line": 30,
+      "messageId": "tooManyArgs"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 30,
+      "messageId": "deprecatedCoreStatic"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-deprecated-function",
+      "severity": 2,
+      "line": 34,
+      "messageId": "deprecatedCoreInstance"
     }
   ],
   "testFixture/rules/ssjs/no-hardcoded-credentials.ssjs": [

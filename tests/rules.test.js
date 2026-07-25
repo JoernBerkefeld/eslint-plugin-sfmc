@@ -1058,6 +1058,46 @@ ssjsTester.run('ssjs-no-deprecated-function', ssjsNoDeprecatedFunction, {
             code: 'ErrorUtil.ThrowWSProxyError(result);',
             errors: [{ messageId: 'deprecatedErrorUtil' }],
         },
+        // Portfolio static method — deprecated (legacy Classic Content)
+        {
+            code: 'var results = Portfolio.Retrieve("Name", "MyPortfolio");',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
+        },
+        // Portfolio instance method — deprecated
+        {
+            code: 'var p = Portfolio.Init("myPortfolioCK"); p.Update();',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
+        },
+        // Template static method — deprecated (legacy Classic Content)
+        {
+            code: 'var results = Template.Retrieve("Name", "MyTemplate");',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
+        },
+        // Template instance method — deprecated
+        {
+            code: 'var t = Template.Init("myTemplateCK"); t.Update();',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
+        },
+        // Send static method — deprecated (legacy Classic Content send)
+        {
+            code: 'var results = Send.Retrieve("Name", "MySend");',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
+        },
+        // Send instance method — deprecated
+        {
+            code: 'var s = Send.Init("mySendCK"); s.CancelSend();',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
+        },
+        // Send.Definition static method (multi-part path) — deprecated
+        {
+            code: 'Send.Definition.Add({ Name: "MySendDefinition" });',
+            errors: [{ messageId: 'deprecatedCoreStatic' }],
+        },
+        // Send.Definition instance method (multi-part Init path) — deprecated
+        {
+            code: 'var sd = Send.Definition.Init("mySendDefinitionCK"); sd.Send();',
+            errors: [{ messageId: 'deprecatedCoreInstance' }],
+        },
     ],
 });
 

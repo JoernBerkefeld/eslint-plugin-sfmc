@@ -1,8 +1,9 @@
 # `sfmc/ssjs-no-deprecated-function`
 
-Flags calls to deprecated SFMC SSJS APIs, chiefly the **Content Areas** feature,
-which has been retired and no longer allows creating or updating content, plus the
-legacy `ErrorUtil` helper that only exists under the oldest Core version.
+Flags calls to deprecated SFMC SSJS APIs, chiefly legacy **Classic Content / Classic
+Email Studio** Core Library classes (Content Areas, Portfolios, Templates, Sends, and
+Send Definitions), which have been superseded by Content Builder and Journey Builder,
+plus the legacy `ErrorUtil` helper that only exists under the oldest Core version.
 
 ## What is flagged
 
@@ -12,11 +13,13 @@ legacy `ErrorUtil` helper that only exists under the oldest Core version.
 | `ContentAreaByName(…)` | Global alias; Content Areas are deprecated |
 | `Platform.Function.ContentArea(…)` | Content Areas are deprecated |
 | `Platform.Function.ContentAreaByName(…)` | Content Areas are deprecated |
-| `ContentAreaObj.Init(…)` | ContentAreaObj class is deprecated |
-| `ContentAreaObj.Add(…)` | ContentAreaObj class is deprecated |
-| `ContentAreaObj.Retrieve(…)` | ContentAreaObj class is deprecated |
-| `<contentAreaVar>.Update(…)` | Instance method on a deprecated ContentAreaObj variable |
-| `<contentAreaVar>.Remove()` | Instance method on a deprecated ContentAreaObj variable |
+| `ContentAreaObj.Init(…)` / `.Add(…)` / `.Retrieve(…)` | `ContentAreaObj` class is deprecated |
+| `<contentAreaVar>.Update(…)` / `.Remove()` | Instance method on a deprecated `ContentAreaObj` variable |
+| `Portfolio.Init(…)` / `.Add(…)` / `.Retrieve(…)` (and instance `.Update(…)` / `.Remove()`) | `Portfolio` class is deprecated (legacy Classic Content) |
+| `Template.Init(…)` / `.Add(…)` / `.Retrieve(…)` (and instance `.Update(…)`) | `Template` class is deprecated (legacy Classic Content) |
+| `Send.Init(…)` / `.Add(…)` / `.Retrieve(…)` (and instance `.RetrieveLists(…)` / `.Remove()` / `.CancelSend()`) | `Send` class is deprecated (legacy Classic Content send) |
+| `Send.Definition.Init(…)` / `.Add(…)` (and instance methods, e.g. `.Send()`) | `Send.Definition` class is deprecated (legacy Classic Content send definition) |
+| `Email.*` | `Email` class is deprecated in favor of Content Builder / Journey Builder sends |
 | `ErrorUtil.ThrowWSProxyError(…)` | Only exists under `Platform.Load("Core", "1")`; undefined in newer Core versions — check `result.Status` and `throw new Error(…)` instead |
 
 ## Examples
