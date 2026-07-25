@@ -140,6 +140,7 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 | [`sfmc/ssjs-require-hasownproperty`](docs/rules/ssjs/require-hasownproperty.md)             | `warn`                   | Require `hasOwnProperty` guard in for-in loops                           |
 | [`sfmc/ssjs-prefer-platform-load-version`](docs/rules/ssjs/prefer-platform-load-version.md) | `warn`                   | Enforce a minimum `Platform.Load` version string                         |
 | [`sfmc/ssjs-no-unavailable-method`](docs/rules/ssjs/no-unavailable-method.md)               | `warn`                   | Flag Array/String methods unavailable or broken in SFMC's ES3 engine     |
+| [`sfmc/ssjs-no-nonfunctional-method`](docs/rules/ssjs/no-nonfunctional-method.md)           | `warn`                   | Flag Core Library methods that never take effect at runtime              |
 | [`sfmc/ssjs-prefer-parsejson-safe-arg`](docs/rules/ssjs/prefer-parsejson-safe-arg.md)       | `warn`                   | Require string coercion on `ParseJSON` argument                          |
 | [`sfmc/ssjs-no-switch-default`](docs/rules/ssjs/no-switch-default.md)                       | `warn`                   | Disallow `default` clause in `switch` statements                         |
 | [`sfmc/ssjs-no-treatascontent-injection`](docs/rules/ssjs/no-treatascontent-injection.md)   | `warn`                   | Flag dynamic string concatenation in `TreatAsContent` calls              |

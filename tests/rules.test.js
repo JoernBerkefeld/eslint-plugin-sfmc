@@ -47,6 +47,7 @@ import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgumentTypes from '../src/rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
+import ssjsNoNonfunctionalMethod from '../src/rules/ssjs/ssjs-no-nonfunctional-method.js';
 import ssjsNoClrHeaderAccess from '../src/rules/ssjs/no-clr-header-access.js';
 import ssjsRequireStringClrContent from '../src/rules/ssjs/require-string-clr-content.js';
 import ssjsHttpPropertyValue from '../src/rules/ssjs/http-property-value.js';
@@ -2305,6 +2306,39 @@ ssjsTester.run('ssjs-core-method-arity', ssjsCoreMethodArity, {
 });
 
 console.log('All ssjs-arg-types and ssjs-core-method-arity tests passed.');
+
+// ─── 24. ssjs-no-nonfunctional-method ─────────────────────────────────────────
+
+ssjsTester.run('ssjs-no-nonfunctional-method', ssjsNoNonfunctionalMethod, {
+    valid: [
+        // Working FilterDefinition methods do not warn.
+        { code: 'var fd = FilterDefinition.Init("x");\nfd.Retrieve();' },
+        { code: 'var fd = FilterDefinition.Init("x");\nfd.Add(filterObj);' },
+        { code: 'FilterDefinition.Init("x");' },
+        // A normal working method on another object does not warn.
+        { code: 'var de = DataExtension.Init("key");\nde.Add(row);' },
+        // Non-core variable is ignored.
+        { code: 'var obj = {};\nobj.Update({});' },
+    ],
+    invalid: [
+        // Instance Init-tracked non-functional methods warn.
+        {
+            code: 'var fd = FilterDefinition.Init("x");\nfd.Update({ Name: "renamed" });',
+            errors: [{ messageId: 'nonFunctional' }],
+        },
+        {
+            code: 'var fd = FilterDefinition.Init("x");\nfd.Remove();',
+            errors: [{ messageId: 'nonFunctional' }],
+        },
+        // Static single-name call also warns.
+        {
+            code: 'FilterDefinition.Update({ Name: "renamed" });',
+            errors: [{ messageId: 'nonFunctional' }],
+        },
+    ],
+});
+
+console.log('All ssjs-no-nonfunctional-method tests passed.');
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Handlebars (Marketing Cloud Next) Rule Tests
