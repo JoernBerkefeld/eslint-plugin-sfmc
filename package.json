@@ -48,7 +48,7 @@
         "eslint": ">=9.0.0"
     },
     "scripts": {
-        "test": "node --test tests/rules.test.js && node --test tests/fixtures.test.mjs && node --test tests/autofix-manual.test.mjs",
+        "test": "node --test tests/rules.test.js && node --test tests/deprecated-catalog.test.js && node --test tests/fixtures.test.mjs && node --test tests/autofix-manual.test.mjs",
         "test:autofix-manual": "node --test tests/autofix-manual.test.mjs",
         "test:fixtures": "node --test tests/fixtures.test.mjs",
         "test:fixtures:update": "node --test tests/fixtures.test.mjs -- --update-snapshots",
