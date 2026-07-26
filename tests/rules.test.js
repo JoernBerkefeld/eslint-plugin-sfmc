@@ -2359,6 +2359,11 @@ ssjsTester.run('ssjs-no-nonfunctional-method', ssjsNoNonfunctionalMethod, {
         { code: 'var de = DataExtension.Init("key");\nde.Add(row);' },
         // Non-core variable is ignored.
         { code: 'var obj = {};\nobj.Update({});' },
+        // Update is instance-only (isStatic: false) — calling it in the static
+        // form does not match a known method in that call style, so it must not
+        // be flagged (it is not a "known" call at all; see also Bug 2 regression
+        // test for the parallel `ssjs/deprecated` behaviour).
+        { code: 'FilterDefinition.Update({ Name: "renamed" });' },
     ],
     invalid: [
         // Instance Init-tracked non-functional methods warn.
@@ -2370,9 +2375,12 @@ ssjsTester.run('ssjs-no-nonfunctional-method', ssjsNoNonfunctionalMethod, {
             code: 'var fd = FilterDefinition.Init("x");\nfd.Remove();',
             errors: [{ messageId: 'nonFunctional' }],
         },
-        // Static single-name call also warns.
+        // Static single-name call also warns — TriggeredSend.Add is a genuinely
+        // static-only (isStatic: true) non-functional method, unlike
+        // FilterDefinition.Update which is instance-only and must NOT be flagged
+        // when called in the (wrong) static form.
         {
-            code: 'FilterDefinition.Update({ Name: "renamed" });',
+            code: 'TriggeredSend.Add({ Name: "renamed" });',
             errors: [{ messageId: 'nonFunctional' }],
         },
     ],

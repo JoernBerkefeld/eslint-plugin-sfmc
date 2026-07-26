@@ -228,7 +228,11 @@ export default {
                 // the same statement (e.g. `var p = Portfolio.Init(...)`).
                 if (coreObjectNames.has(objectPath) && methodName.toLowerCase() !== 'init') {
                     const entry = findDeprecatedEntry(objectPath, methodName);
-                    if (entry) {
+                    // A static-style call (`Class.Method(...)`) only matches a method
+                    // that is actually callable that way — an entry explicitly flagged
+                    // `isStatic: false` exists only on the instance, so it is not a
+                    // "known" deprecated call in this form.
+                    if (entry && entry.isStatic !== false) {
                         context.report({
                             node: property,
                             messageId: 'deprecatedCoreStatic',
@@ -250,7 +254,12 @@ export default {
                 }
                 const resolvedClass = [rootCoreType, ...segments.slice(1)].join('.');
                 const entry = findDeprecatedEntry(resolvedClass, methodName);
-                if (entry) {
+                // An instance-style call (`<var>.Method(...)`) only matches a method
+                // explicitly flagged `isStatic: false` — a static-only method (e.g.
+                // `Send.RetrieveLists`) does not exist on the instance, so it is not
+                // a "known" deprecated call in this form (it should surface as an
+                // unknown-member problem elsewhere, not a misleading deprecation).
+                if (entry && entry.isStatic === false) {
                     context.report({
                         node: property,
                         messageId: 'deprecatedCoreInstance',

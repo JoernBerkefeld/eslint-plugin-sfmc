@@ -53,8 +53,16 @@ export default {
     create(context) {
         const coreVariables = new Map(); // varName → className
 
-        function checkNonFunctional(entry, callName, reportNode) {
+        // `isInstanceStyle` reflects the call syntax used (`<var>.Method(...)`
+        // vs `Class.Method(...)`). An entry only matches when its `isStatic`
+        // flag agrees with that call style — a static-only method does not
+        // exist on the instance (and vice versa), so it is not a "known"
+        // non-functional call in the wrong form.
+        function checkNonFunctional(entry, callName, reportNode, isInstanceStyle) {
             if (!entry) {
+                return;
+            }
+            if (isInstanceStyle ? entry.isStatic !== false : entry.isStatic === false) {
                 return;
             }
             context.report({
@@ -112,7 +120,12 @@ export default {
                         );
                         if (classLookup) {
                             const entry = classLookup.get(methodName.toLowerCase());
-                            checkNonFunctional(entry, `${coreType}.${methodName}`, callee.property);
+                            checkNonFunctional(
+                                entry,
+                                `${coreType}.${methodName}`,
+                                callee.property,
+                                true,
+                            );
                         }
                         return;
                     }
@@ -128,6 +141,7 @@ export default {
                                 entry,
                                 `${objectName}.${methodName}`,
                                 callee.property,
+                                false,
                             );
                         }
                         return;
@@ -140,7 +154,12 @@ export default {
                     const classLookup = coreNonFunctionalMethodLookup.get(objectPath.toLowerCase());
                     if (classLookup) {
                         const entry = classLookup.get(methodName.toLowerCase());
-                        checkNonFunctional(entry, `${objectPath}.${methodName}`, callee.property);
+                        checkNonFunctional(
+                            entry,
+                            `${objectPath}.${methodName}`,
+                            callee.property,
+                            false,
+                        );
                     }
                     return;
                 }
@@ -162,6 +181,7 @@ export default {
                                 entry,
                                 `${resolvedPath}.${methodName}`,
                                 callee.property,
+                                true,
                             );
                         }
                     }

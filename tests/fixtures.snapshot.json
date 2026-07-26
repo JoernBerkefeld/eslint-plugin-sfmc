@@ -460,7 +460,7 @@
     },
     {
       "ruleId": "sfmc/ssjs-no-nonfunctional-method",
-      "severity": 1,
+      "severity": 2,
       "line": 24,
       "messageId": "nonFunctional"
     },
