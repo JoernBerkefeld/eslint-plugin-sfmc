@@ -1,15 +1,17 @@
 /**
- * Suggests wrapping bare personalization-string identifiers (e.g. `FirstName`)
- * in `AttributeValue("FirstName")` to prevent send-aborting errors when the
- * attribute is missing from the subscriber context.
+ * Suggests wrapping custom personalization strings in `AttributeValue("...")`
+ * to prevent send-aborting errors when the attribute is missing from the
+ * subscriber context. Applies to both bare identifiers (e.g. `FirstName`) and
+ * bracket notation (e.g. `[First Name]`).
  *
- * Only flags Identifier nodes that appear directly in SetStatement values or
- * as standalone ExpressionStatements — contexts where a bare attribute
- * reference is likely intentional data access rather than a function name or
- * a value inside a function call.
+ * Known Marketing Cloud system personalization strings (e.g. `_subscriberkey`,
+ * `emailaddr`, `[MSG(0).NOUN(0)]`) are exempt in either form. Only flags nodes
+ * that appear directly in SetStatement values or as standalone
+ * ExpressionStatements — contexts where a bare attribute reference is likely
+ * intentional data access rather than a function name.
  */
 
-import { functionNames } from 'ampscript-data';
+import { functionNames, isSystemPersonalizationString } from 'ampscript-data';
 
 const AMPSCRIPT_KEYWORDS = new Set([
     'var',
@@ -31,15 +33,35 @@ const AMPSCRIPT_KEYWORDS = new Set([
     'false',
 ]);
 
-function isLikelyPersonalization(node) {
-    if (node.type !== 'Identifier') {
-        return false;
+/**
+ * Returns the attribute name a node refers to when it is a candidate for the
+ * AttributeValue() suggestion, or null when the node should be ignored (a
+ * function name, keyword, or known system personalization string).
+ *
+ * @param {object} node - AMPscript AST node to inspect.
+ * @returns {string | null} The attribute name to wrap, or null.
+ */
+function personalizationName(node) {
+    if (!node) {
+        return null;
     }
-    const lower = node.value.toLowerCase();
-    if (functionNames.has(lower)) {
-        return false;
+    if (node.type === 'Identifier') {
+        const lower = node.value.toLowerCase();
+        if (functionNames.has(lower) || AMPSCRIPT_KEYWORDS.has(lower)) {
+            return null;
+        }
+        if (isSystemPersonalizationString(node.value)) {
+            return null;
+        }
+        return node.value;
     }
-    return !AMPSCRIPT_KEYWORDS.has(lower);
+    if (node.type === 'PersonalizationString') {
+        if (isSystemPersonalizationString(node.value)) {
+            return null;
+        }
+        return node.value;
+    }
+    return null;
 }
 
 export default {
@@ -60,20 +82,20 @@ export default {
     },
 
     create(context) {
-        function reportWithSuggestion(identifierNode) {
+        function reportWithSuggestion(node, name) {
+            // Escape embedded double quotes so the generated
+            // AttributeValue("…") call stays syntactically valid.
+            const escaped = name.replaceAll('"', String.raw`\"`);
             context.report({
-                node: identifierNode,
+                node,
                 messageId: 'preferAttributeValue',
-                data: { name: identifierNode.value },
+                data: { name },
                 suggest: [
                     {
                         messageId: 'wrapWithAttributeValue',
-                        data: { name: identifierNode.value },
+                        data: { name },
                         fix(fixer) {
-                            return fixer.replaceText(
-                                identifierNode,
-                                `AttributeValue("${identifierNode.value}")`,
-                            );
+                            return fixer.replaceText(node, `AttributeValue("${escaped}")`);
                         },
                     },
                 ],
@@ -82,14 +104,16 @@ export default {
 
         return {
             SetStatement(node) {
-                if (node.value && isLikelyPersonalization(node.value)) {
-                    reportWithSuggestion(node.value);
+                const name = personalizationName(node.value);
+                if (name !== null) {
+                    reportWithSuggestion(node.value, name);
                 }
             },
 
             AmpExpressionStatement(node) {
-                if (isLikelyPersonalization(node.expression)) {
-                    reportWithSuggestion(node.expression);
+                const name = personalizationName(node.expression);
+                if (name !== null) {
+                    reportWithSuggestion(node.expression, name);
                 }
             },
         };

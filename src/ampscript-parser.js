@@ -39,6 +39,7 @@ export const visitorKeys = {
     FunctionCall: ['arguments'],
     Variable: [],
     Identifier: [],
+    PersonalizationString: [],
     StringLiteral: [],
     NumberLiteral: [],
     BooleanLiteral: [],

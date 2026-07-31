@@ -1,14 +1,26 @@
 %%[
 /* ── Rule: sfmc/amp-prefer-attribute-value ─────────────────────────────────────
-   Bare personalization identifiers (e.g. FirstName) should be wrapped in
+   Custom personalization strings (bare or bracketed) should be wrapped in
    AttributeValue() to avoid send-aborting errors when the attribute is absent.
+   Known system personalization strings (e.g. firstname, subscriberkey) are
+   exempt in either form.
    ─────────────────────────────────────────────────────────────────────────── */
 
 /* ✅ ACCEPTED — attribute access wrapped in AttributeValue() */
 VAR @firstName
-SET @firstName = AttributeValue("FirstName")
+SET @firstName = AttributeValue("CustomerTier")
 
-/* ❌ FAIL — bare identifier FirstName used directly as a value */
-VAR @lastName
-SET @lastName = LastName
+/* ✅ ACCEPTED — known system personalization string, bare and bracketed */
+VAR @key
+SET @key = _subscriberkey
+VAR @email
+SET @email = [emailaddr]
+
+/* ❌ FAIL — bare custom attribute used directly as a value */
+VAR @tier
+SET @tier = CustomerTier
+
+/* ❌ FAIL — bracketed custom attribute used directly as a value */
+VAR @segment
+SET @segment = [Customer Segment]
 ]%%

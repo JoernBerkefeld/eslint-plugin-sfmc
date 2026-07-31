@@ -79,8 +79,8 @@ Use the `-next` config variants when targeting **Marketing Cloud Next (MCN)**. M
 | ---------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `sfmc.configs['ampscript-next']`   | `**/*.ampscript`, `**/*.amp`         | AMPscript rules + flags functions unsupported in MCN (single config object)                 |
 | `sfmc.configs['ssjs-next']`        | `**/*.ssjs`                          | Flags all SSJS API calls as MCN-unsupported; all other SSJS quality rules disabled          |
-| `sfmc.configs['recommended-next']` | Both of the above + `**/*.hbs`       | AMPscript MCN-aware + SSJS flagged + Handlebars rules for standalone `.hbs` files            |
-| `sfmc.configs['embedded-next']`    | `**/*.html`, `**/*.hbs`              | AMPscript MCN-aware + SSJS flagged + Handlebars rules for HTML-embedded code and `.hbs`      |
+| `sfmc.configs['recommended-next']` | Both of the above + `**/*.hbs`       | AMPscript MCN-aware + SSJS flagged + Handlebars rules for standalone `.hbs` files           |
+| `sfmc.configs['embedded-next']`    | `**/*.html`, `**/*.hbs`              | AMPscript MCN-aware + SSJS flagged + Handlebars rules for HTML-embedded code and `.hbs`     |
 | `sfmc.configs['strict-next']`      | All of the above + HTML + `**/*.hbs` | All AMPscript rules at `error` severity + MCN flag; SSJS fully flagged; Handlebars rules on |
 
 Standalone `.hbs` files (VS Code's built-in **Handlebars** language) are treated as MCN by default — Handlebars only runs on Marketing Cloud Next, so a `.hbs` file is always linted with the full Handlebars rule set. This is deliberately wired **only** into the `-next` configs; the classic `recommended` / `strict` (Engagement) configs never lint `.hbs`.
@@ -122,30 +122,30 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 
 ## SSJS Rules (`ssjs-*`)
 
-| Rule                                                                                        | Default                  | Description                                                              |
-| ------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------ |
-| [`sfmc/ssjs-require-platform-load`](docs/rules/ssjs/require-platform-load.md)               | `error`                  | Require `Platform.Load("core")` before Core or requiresCoreLoad globals  |
-| [`sfmc/ssjs-no-unsupported-syntax`](docs/rules/ssjs/no-unsupported-syntax.md)               | `error`                  | Flag ES6+ syntax not supported by SFMC                                   |
-| [`sfmc/ssjs-no-unknown-function`](docs/rules/ssjs/no-unknown-function.md)                   | `error`                  | Disallow unknown methods on Platform.\*, HTTP, Core Library, and WSProxy |
-| [`sfmc/ssjs-no-mcn-unsupported`](docs/rules/ssjs/no-mcn-unsupported.md)                     | off (`error` in `-next`) | Flag all SSJS API usage as unsupported in Marketing Cloud Next           |
+| Rule                                                                                        | Default                  | Description                                                                |
+| ------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- |
+| [`sfmc/ssjs-require-platform-load`](docs/rules/ssjs/require-platform-load.md)               | `error`                  | Require `Platform.Load("core")` before Core or requiresCoreLoad globals    |
+| [`sfmc/ssjs-no-unsupported-syntax`](docs/rules/ssjs/no-unsupported-syntax.md)               | `error`                  | Flag ES6+ syntax not supported by SFMC                                     |
+| [`sfmc/ssjs-no-unknown-function`](docs/rules/ssjs/no-unknown-function.md)                   | `error`                  | Disallow unknown methods on Platform.\*, HTTP, Core Library, and WSProxy   |
+| [`sfmc/ssjs-no-mcn-unsupported`](docs/rules/ssjs/no-mcn-unsupported.md)                     | off (`error` in `-next`) | Flag all SSJS API usage as unsupported in Marketing Cloud Next             |
 | [`sfmc/ssjs-no-deprecated-function`](docs/rules/ssjs/no-deprecated-function.md)             | `error`                  | Flag use of deprecated SFMC SSJS APIs (Classic Content classes, ErrorUtil) |
-| [`sfmc/ssjs-no-nonexistent-global`](docs/rules/ssjs/no-nonexistent-global.md)               | `error`                  | Flag documented SSJS globals that throw ReferenceError at runtime        |
-| [`sfmc/ssjs-no-property-call`](docs/rules/ssjs/no-property-call.md)                         | `error`                  | Disallow calling Platform.Request/Response properties as functions       |
-| [`sfmc/ssjs-no-clr-header-access`](docs/rules/ssjs/no-clr-header-access.md)                 | `error`                  | Disallow CLR-unsafe reads of `HttpResponse.headers`; read via `for..in`  |
-| [`sfmc/ssjs-require-string-clr-content`](docs/rules/ssjs/require-string-clr-content.md)     | `error`                  | Require wrapping `HttpResponse.content` with `String()` before use       |
-| [`sfmc/ssjs-platform-function-arity`](docs/rules/ssjs/platform-function-arity.md)           | `error`                  | Enforce correct arity for `Platform.Function.*`                          |
-| [`sfmc/ssjs-require-platform-load-order`](docs/rules/ssjs/require-platform-load-order.md)   | `error`                  | Require `Platform.Load()` before Core usage in order                     |
-| [`sfmc/ssjs-no-hardcoded-credentials`](docs/rules/ssjs/no-hardcoded-credentials.md)         | `error`                  | Flag hardcoded keys in encryption calls                                  |
-| [`sfmc/ssjs-cache-loop-length`](docs/rules/ssjs/cache-loop-length.md)                       | `warn`                   | Require caching `.length` in for-loops                                   |
-| [`sfmc/ssjs-require-hasownproperty`](docs/rules/ssjs/require-hasownproperty.md)             | `warn`                   | Require `hasOwnProperty` guard in for-in loops                           |
-| [`sfmc/ssjs-prefer-platform-load-version`](docs/rules/ssjs/prefer-platform-load-version.md) | `warn`                   | Enforce a minimum `Platform.Load` version string                         |
-| [`sfmc/ssjs-no-unavailable-method`](docs/rules/ssjs/no-unavailable-method.md)               | `warn`                   | Flag Array/String methods unavailable or broken in SFMC's ES3 engine     |
-| [`sfmc/ssjs-no-nonfunctional-method`](docs/rules/ssjs/no-nonfunctional-method.md)           | `warn`                   | Flag Core Library methods that never take effect at runtime              |
-| [`sfmc/ssjs-prefer-parsejson-safe-arg`](docs/rules/ssjs/prefer-parsejson-safe-arg.md)       | `warn`                   | Require string coercion on `ParseJSON` argument                          |
-| [`sfmc/ssjs-no-switch-default`](docs/rules/ssjs/no-switch-default.md)                       | `warn`                   | Disallow `default` clause in `switch` statements                         |
-| [`sfmc/ssjs-no-treatascontent-injection`](docs/rules/ssjs/no-treatascontent-injection.md)   | `warn`                   | Flag dynamic string concatenation in `TreatAsContent` calls              |
-| [`sfmc/ssjs-core-method-arity`](docs/rules/ssjs/core-method-arity.md)                       | `warn`                   | Enforce correct argument counts for Core Library object methods          |
-| [`sfmc/ssjs-arg-types`](docs/rules/ssjs/arg-types.md)                                       | `warn`                   | Check that literal arguments match expected parameter types              |
+| [`sfmc/ssjs-no-nonexistent-global`](docs/rules/ssjs/no-nonexistent-global.md)               | `error`                  | Flag documented SSJS globals that throw ReferenceError at runtime          |
+| [`sfmc/ssjs-no-property-call`](docs/rules/ssjs/no-property-call.md)                         | `error`                  | Disallow calling Platform.Request/Response properties as functions         |
+| [`sfmc/ssjs-no-clr-header-access`](docs/rules/ssjs/no-clr-header-access.md)                 | `error`                  | Disallow CLR-unsafe reads of `HttpResponse.headers`; read via `for..in`    |
+| [`sfmc/ssjs-require-string-clr-content`](docs/rules/ssjs/require-string-clr-content.md)     | `error`                  | Require wrapping `HttpResponse.content` with `String()` before use         |
+| [`sfmc/ssjs-platform-function-arity`](docs/rules/ssjs/platform-function-arity.md)           | `error`                  | Enforce correct arity for `Platform.Function.*`                            |
+| [`sfmc/ssjs-require-platform-load-order`](docs/rules/ssjs/require-platform-load-order.md)   | `error`                  | Require `Platform.Load()` before Core usage in order                       |
+| [`sfmc/ssjs-no-hardcoded-credentials`](docs/rules/ssjs/no-hardcoded-credentials.md)         | `error`                  | Flag hardcoded keys in encryption calls                                    |
+| [`sfmc/ssjs-cache-loop-length`](docs/rules/ssjs/cache-loop-length.md)                       | `warn`                   | Require caching `.length` in for-loops                                     |
+| [`sfmc/ssjs-require-hasownproperty`](docs/rules/ssjs/require-hasownproperty.md)             | `warn`                   | Require `hasOwnProperty` guard in for-in loops                             |
+| [`sfmc/ssjs-prefer-platform-load-version`](docs/rules/ssjs/prefer-platform-load-version.md) | `warn`                   | Enforce a minimum `Platform.Load` version string                           |
+| [`sfmc/ssjs-no-unavailable-method`](docs/rules/ssjs/no-unavailable-method.md)               | `warn`                   | Flag Array/String methods unavailable or broken in SFMC's ES3 engine       |
+| [`sfmc/ssjs-no-nonfunctional-method`](docs/rules/ssjs/no-nonfunctional-method.md)           | `warn`                   | Flag Core Library methods that never take effect at runtime                |
+| [`sfmc/ssjs-prefer-parsejson-safe-arg`](docs/rules/ssjs/prefer-parsejson-safe-arg.md)       | `warn`                   | Require string coercion on `ParseJSON` argument                            |
+| [`sfmc/ssjs-no-switch-default`](docs/rules/ssjs/no-switch-default.md)                       | `warn`                   | Disallow `default` clause in `switch` statements                           |
+| [`sfmc/ssjs-no-treatascontent-injection`](docs/rules/ssjs/no-treatascontent-injection.md)   | `warn`                   | Flag dynamic string concatenation in `TreatAsContent` calls                |
+| [`sfmc/ssjs-core-method-arity`](docs/rules/ssjs/core-method-arity.md)                       | `warn`                   | Enforce correct argument counts for Core Library object methods            |
+| [`sfmc/ssjs-arg-types`](docs/rules/ssjs/arg-types.md)                                       | `warn`                   | Check that literal arguments match expected parameter types                |
 
 ## Handlebars Rules (`hbs-*`)
 
@@ -165,16 +165,16 @@ Email HTML for SFMC frequently contains **Outlook conditional comments** (`<!--[
 
 The MSO rules are **auto-included** in the HTML-embedded configs: `embedded`, `strict`, `embedded-next`, and `strict-next`. When you lint an `.html` file with any of these, the combined `sfmc/sfmc` processor also extracts MSO conditional comments and the document body and runs the MSO rules on them — no extra processor or config to wire up, and no processor conflict.
 
-| Rule (`mso/*`)                     | Default (embedded/strict) | Description                                                    |
-| ---------------------------------- | ------------------------- | ------------------------------------------------------------- |
-| [`mso/valid-mso-condition`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/valid-mso-condition.md)     | `error` | Validate the `[if …]` expression syntax of MSO comments     |
-| [`mso/matching-mso-endif`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif.md)       | `error` | Require every MSO opener to have a matching `<![endif]>`     |
-| [`mso/matching-mso-endif-type`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif-type.md) | `warn`  | Require the endif comment style to match its opener         |
-| [`mso/no-unknown-mso-property`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-mso-property.md) | `warn`  | Flag unknown `mso-*` CSS properties                         |
-| [`mso/vml-requires-namespace`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/vml-requires-namespace.md)   | `warn`  | Require the `v:` VML namespace declaration when VML is used |
-| [`mso/no-unknown-vml-tag`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-tag.md)       | `warn`  | Flag unknown `v:*` VML tags                                 |
-| [`mso/no-unknown-vml-attribute`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-attribute.md) | `warn`  | Flag unknown attributes on VML tags                         |
-| [`mso/table-presentation-role`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/table-presentation-role.md) | `warn`  | Require `role="presentation"` on layout tables              |
+| Rule (`mso/*`)                                                                                                                               | Default (embedded/strict) | Description                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------- |
+| [`mso/valid-mso-condition`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/valid-mso-condition.md)           | `error`                   | Validate the `[if …]` expression syntax of MSO comments     |
+| [`mso/matching-mso-endif`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif.md)             | `error`                   | Require every MSO opener to have a matching `<![endif]>`    |
+| [`mso/matching-mso-endif-type`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/matching-mso-endif-type.md)   | `warn`                    | Require the endif comment style to match its opener         |
+| [`mso/no-unknown-mso-property`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-mso-property.md)   | `warn`                    | Flag unknown `mso-*` CSS properties                         |
+| [`mso/vml-requires-namespace`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/vml-requires-namespace.md)     | `warn`                    | Require the `v:` VML namespace declaration when VML is used |
+| [`mso/no-unknown-vml-tag`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-tag.md)             | `warn`                    | Flag unknown `v:*` VML tags                                 |
+| [`mso/no-unknown-vml-attribute`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/no-unknown-vml-attribute.md) | `warn`                    | Flag unknown attributes on VML tags                         |
+| [`mso/table-presentation-role`](https://github.com/JoernBerkefeld/eslint-plugin-mso-email/blob/main/docs/rules/table-presentation-role.md)   | `warn`                    | Require `role="presentation"` on layout tables              |
 
 Severities above are the same in `embedded`, `strict`, `embedded-next`, and `strict-next` (MSO markup is engine-agnostic — it behaves identically for Engagement and Next). For MSO rule details and options, see the [`eslint-plugin-mso-email` docs](https://github.com/JoernBerkefeld/eslint-plugin-mso-email).
 
@@ -191,27 +191,27 @@ import sfmc from 'eslint-plugin-sfmc';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 export default [
-    eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
-    ...sfmc.configs.recommended,
-    ...sfmc.configs.embedded, // AMPscript + SSJS embedded in HTML (<script runat="server">)
-    ...sfmc.configs['unicorn-ssjs'], // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
-    ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
+  eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
+  ...sfmc.configs.recommended,
+  ...sfmc.configs.embedded, // AMPscript + SSJS embedded in HTML (<script runat="server">)
+  ...sfmc.configs['unicorn-ssjs'], // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
+  ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
 ];
 ```
 
-| Config                                | Files                | What it does                                                       |
-| ------------------------------------- | -------------------- | ----------------------------------------------------------------- |
-| `sfmc.configs['unicorn-ssjs']`        | `**/*.ssjs`          | Turns off the 46 SFMC-incompatible unicorn rules for SSJS         |
-| `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js`   | Same 46-rule override for SSJS embedded in HTML                    |
+| Config                                  | Files            | What it does                                              |
+| --------------------------------------- | ---------------- | --------------------------------------------------------- |
+| `sfmc.configs['unicorn-ssjs']`          | `**/*.ssjs`      | Turns off the 46 SFMC-incompatible unicorn rules for SSJS |
+| `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js` | Same 46-rule override for SSJS embedded in HTML           |
 
 Only **46** of unicorn's 300 recommended rules are overridden — the other **254** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v71.1.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
 
 ## Processors
 
-| Processor        | Purpose                                                       |
-| ---------------- | ------------------------------------------------------------- |
-| `sfmc/ampscript` | Extract `%%[ ]%%`, `%%= =%%`, `<script language="ampscript">` |
-| `sfmc/ssjs`      | Extract `<script runat="server">` (non-ampscript)             |
+| Processor        | Purpose                                                           |
+| ---------------- | ----------------------------------------------------------------- |
+| `sfmc/ampscript` | Extract `%%[ ]%%`, `%%= =%%`, `<script language="ampscript">`     |
+| `sfmc/ssjs`      | Extract `<script runat="server">` (non-ampscript)                 |
 | `sfmc/sfmc`      | Combined: extracts AMPscript, SSJS, Handlebars, and MSO from HTML |
 
 ## License

@@ -247,35 +247,63 @@ ampTester.run('amp-prefer-attribute-value', ampPreferAttributeValue, {
         { code: '%%[set @x = Lookup("DE", "F", "K", @v)]%%' },
         { code: '%%[set @x = 42]%%' },
         { code: '%%[set @x = "hello"]%%' },
+        // Known system personalization strings are exempt, bare or bracketed.
+        { code: '%%[set @x = firstname]%%' },
+        { code: '%%[set @x = emailaddr]%%' },
+        { code: '%%[set @x = [_subscriberkey]]%%' },
+        { code: '%%[set @x = [emailaddr]]%%' },
+        // Case-insensitive system-string exemption.
+        { code: '%%[set @x = [_SubscriberKey]]%%' },
+        // Parameterized system-string forms are exempt.
+        { code: '%%[set @x = [MSG(0).NOUN(0)]]%%' },
     ],
     invalid: [
+        // Bare custom attribute is reported.
         {
-            code: '%%[set @x = firstname]%%',
+            code: '%%[set @x = CustomerTier]%%',
             errors: [
                 {
                     messageId: 'preferAttributeValue',
-                    data: { name: 'firstname' },
+                    data: { name: 'CustomerTier' },
                     suggestions: [
                         {
                             messageId: 'wrapWithAttributeValue',
-                            data: { name: 'firstname' },
-                            output: '%%[set @x = AttributeValue("firstname")]%%',
+                            data: { name: 'CustomerTier' },
+                            output: '%%[set @x = AttributeValue("CustomerTier")]%%',
                         },
                     ],
                 },
             ],
         },
+        // Bracketed custom attribute is reported; suggestion drops the brackets.
         {
-            code: '%%[set @x = emailaddr]%%',
+            code: '%%[set @x = [First Name]]%%',
             errors: [
                 {
                     messageId: 'preferAttributeValue',
-                    data: { name: 'emailaddr' },
+                    data: { name: 'First Name' },
                     suggestions: [
                         {
                             messageId: 'wrapWithAttributeValue',
-                            data: { name: 'emailaddr' },
-                            output: '%%[set @x = AttributeValue("emailaddr")]%%',
+                            data: { name: 'First Name' },
+                            output: '%%[set @x = AttributeValue("First Name")]%%',
+                        },
+                    ],
+                },
+            ],
+        },
+        // Bracketed custom attribute as a standalone expression statement.
+        {
+            code: '%%[[Customer Tier]]%%',
+            errors: [
+                {
+                    messageId: 'preferAttributeValue',
+                    data: { name: 'Customer Tier' },
+                    suggestions: [
+                        {
+                            messageId: 'wrapWithAttributeValue',
+                            data: { name: 'Customer Tier' },
+                            output: '%%[AttributeValue("Customer Tier")]%%',
                         },
                     ],
                 },
