@@ -2332,10 +2332,12 @@ ssjsTester.run('ssjs-arg-types', ssjsArgumentTypes, {
         {
             code: 'var api = new Script.Util.WSProxy(); api.retrieve("DataExtension", ["Name"], {});',
         },
+        // Now() accepts string|boolean|number for useContextTime
+        { code: 'Platform.Function.Now(1);' },
     ],
     invalid: [
         {
-            code: 'Platform.Function.Now(123);',
+            code: 'Platform.Function.Now({});',
             errors: [{ messageId: 'typeMismatch' }],
         },
         {
