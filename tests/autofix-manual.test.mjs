@@ -15,7 +15,9 @@ const pluginRoot = path.join(__dirname, '..');
 const manualDirectory = path.join(pluginRoot, 'testFixture', 'manual-autofix');
 const configPath = path.join(manualDirectory, 'eslint.config.mjs');
 
-/** @type {{beforeName: string, expectedName: string, base: string}[]} */
+/**
+ * @type {{beforeName: string, expectedName: string, base: string}[]}
+ */
 const pairs = readdirSync(manualDirectory)
     .filter((name) => name.endsWith('.before.amp') || name.endsWith('.before.ssjs'))
     .map((beforeName) => {

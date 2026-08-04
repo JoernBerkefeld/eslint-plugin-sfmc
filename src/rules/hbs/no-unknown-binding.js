@@ -12,9 +12,13 @@ import { BINDING_PATTERN, closestMatch } from './_shared.js';
  * than walking the AST.
  */
 
-/** Proper-cased built-in binding names, used for "did you mean" suggestions. */
+/**
+ * Proper-cased built-in binding names, used for "did you mean" suggestions.
+ */
 const BINDING_NAME_LIST = BUILTIN_BINDINGS.map((b) => b.name);
-/** Map from lowercase binding name to its `{!$...}` token, for suggestion text. */
+/**
+ * Map from lowercase binding name to its `{!$...}` token, for suggestion text.
+ */
 const BINDING_TOKEN_BY_NAME = new Map(BUILTIN_BINDINGS.map((b) => [b.name.toLowerCase(), b.token]));
 
 export default {

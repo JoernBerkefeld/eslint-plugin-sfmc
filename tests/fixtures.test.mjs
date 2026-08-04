@@ -61,7 +61,9 @@ function collectFiles(directory) {
  * @returns {{ ruleId: string|null, severity: number, line: number, messageId?: string }} Normalised entry for snapshot comparison.
  */
 function normalise(message) {
-    /** @type {{ ruleId: string|null, severity: number, line: number, messageId?: string }} */
+    /**
+     * @type {{ ruleId: string|null, severity: number, line: number, messageId?: string }}
+     */
     const entry = {
         ruleId: message.ruleId ?? null,
         severity: message.severity,
@@ -74,7 +76,9 @@ function normalise(message) {
 }
 
 describe('testFixture/rules — diagnostic snapshot', () => {
-    /** @type {Record<string, ReturnType<typeof normalise>[]>} */
+    /**
+     * @type {Record<string, ReturnType<typeof normalise>[]>}
+     */
     let actual;
 
     before(async () => {

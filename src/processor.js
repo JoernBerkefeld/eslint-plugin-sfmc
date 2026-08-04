@@ -29,7 +29,9 @@ const SSJS_SCRIPT_OPEN_RE =
     /<script\b(?=[^>]*\brunat\s*=\s*['"]server['"])(?![^>]*\blanguage\s*=\s*['"]ampscript['"])[^>]*>/gi;
 const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
 
-/** AMPscript region patterns blanked before the Handlebars parser runs. */
+/**
+ * AMPscript region patterns blanked before the Handlebars parser runs.
+ */
 const AMPSCRIPT_REGION_PATTERNS = [
     /%%\[[\s\S]*?\]%%/g,
     /%%=[\s\S]*?=%%/g,

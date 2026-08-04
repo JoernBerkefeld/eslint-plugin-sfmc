@@ -11,14 +11,18 @@ import { simpleHelperName } from './_shared.js';
  * sfmc-language-lsp.
  */
 
-/** AST node types that may carry an unsupported construct. */
+/**
+ * AST node types that may carry an unsupported construct.
+ */
 const NODE_TYPES = unsupportedByNodeType.keys().toArray();
 
 // The handlebars-data messages contain literal `{{> ...}}`, `{{log}}`, etc. as
 // examples. ESLint treats `{{...}}` in a message template as an interpolation
 // placeholder, so the literal text is passed through a single `{{text}}`
 // placeholder instead of being baked into the template.
-/** messageId per construct id → passthrough template, declared statically. */
+/**
+ * messageId per construct id → passthrough template, declared statically.
+ */
 const MESSAGES = Object.fromEntries(
     unsupportedByNodeType
         .values()

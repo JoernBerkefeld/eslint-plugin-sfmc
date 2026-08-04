@@ -19,7 +19,9 @@
  * and rewrites the access to `getHeaderMap(resp)["name"]`.
  */
 
-/** Canonical helper inserted by the quick-fix, mirrored from ssjs.guide. */
+/**
+ * Canonical helper inserted by the quick-fix, mirrored from ssjs.guide.
+ */
 const HEADER_MAP_HELPER = `/**
  * Build a plain { name: value } header map from an HttpResponse.
  * Reads only the for..in enumeration keys (shaped "[Name, Value]") so it never

@@ -323,7 +323,9 @@ const hbsOffRules = {
     'sfmc/hbs-no-mcn-unsupported': 'off',
 };
 
-/** Shared languageOptions for linting virtual `.hbs` files. */
+/**
+ * Shared languageOptions for linting virtual `.hbs` files.
+ */
 const hbsLanguageOptions = { parser: handlebarsParser };
 
 /**

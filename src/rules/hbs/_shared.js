@@ -5,7 +5,9 @@
  * that ESLint diagnostics and editor diagnostics stay consistent.
  */
 
-/** Matches a `{!$namespace.Field}` built-in data binding token. */
+/**
+ * Matches a `{!$namespace.Field}` built-in data binding token.
+ */
 export const BINDING_PATTERN = /\{!\$([A-Za-z0-9_.]+)\}/g;
 
 /**
