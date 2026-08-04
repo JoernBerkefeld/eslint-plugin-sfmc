@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { RuleTester, ESLint } from 'eslint';
 import * as parser from '../src/ampscript-parser.js';
 import sfmcPlugin from '../src/index.js';
@@ -2880,6 +2881,36 @@ describe('unicorn-ssjs override configs', () => {
             Object.keys(sfmcPlugin.configs['unicorn-ssjs-embedded'].rules).toSorted((a, b) =>
                 a.localeCompare(b),
             ),
+        );
+    });
+
+    it('overrides only rules that unicorn still recommends, and classifies every recommended rule', async () => {
+        const unicorn = (await import('eslint-plugin-unicorn')).default;
+        const recommended = Object.entries(unicorn.configs.recommended.rules ?? {})
+            .filter(([name, level]) => name.startsWith('unicorn/') && level !== 'off')
+            .map(([name]) => name);
+
+        const overridden = Object.keys(sfmcPlugin.configs['unicorn-ssjs'].rules);
+        const stale = overridden.filter((name) => !recommended.includes(name));
+        assert.deepEqual(
+            stale,
+            [],
+            `Override list contains rules unicorn no longer recommends: ${stale.join(', ')}`,
+        );
+
+        // docs/unicorn-compatibility.md must classify every recommended rule, so a
+        // newly added unicorn rule cannot silently reach SSJS unaudited.
+        const document = readFileSync(
+            new URL('../docs/unicorn-compatibility.md', import.meta.url),
+            'utf8',
+        );
+        const unclassified = recommended
+            .map((name) => name.slice('unicorn/'.length))
+            .filter((name) => !document.includes(name));
+        assert.deepEqual(
+            unclassified,
+            [],
+            `docs/unicorn-compatibility.md does not classify: ${unclassified.join(', ')}`,
         );
     });
 });

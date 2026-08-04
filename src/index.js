@@ -355,7 +355,7 @@ function standaloneHandlebarsConfigs(configName) {
 
 /**
  * The 46 `eslint-plugin-unicorn` recommended rules (analysed against
- * unicorn v71.1.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
+ * unicorn v73.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
  * engine — they either autofix code to a missing built-in or forbid a required
  * SFMC workaround, or enforce ES-module / async / ES6-only syntax that the
  * engine cannot run. Each is mapped to `'off'`.

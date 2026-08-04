@@ -182,7 +182,7 @@ Severities above are the same in `embedded`, `strict`, `embedded-next`, and `str
 
 [`eslint-plugin-unicorn`](https://github.com/sindresorhus/eslint-plugin-unicorn) is a high-quality, widely used plugin that we **strongly recommend** — but it is built for modern JavaScript, not SFMC's **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that lacks many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Object.fromEntries`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …).
 
-If you enable unicorn's `recommended` set on SSJS, about **46** of its 300 recommended rules would either **autofix your code to a missing built-in** (breaking it at runtime) or **forbid a required SFMC workaround**. `eslint-plugin-sfmc` offers an **optional** override config that turns off exactly those 46 rules for SSJS.
+If you enable unicorn's `recommended` set on SSJS, about **46** of its 308 recommended rules would either **autofix your code to a missing built-in** (breaking it at runtime) or **forbid a required SFMC workaround**. `eslint-plugin-sfmc` offers an **optional** override config that turns off exactly those 46 rules for SSJS.
 
 **Important — this is optional and only needed if you use unicorn.** `eslint-plugin-sfmc` does **not** depend on or load unicorn. The override configs are plain rules objects with **no** `plugins` key, so they only resolve when your own unicorn config (which registers the `unicorn` plugin) is loaded **earlier** in the flat-config array. Spread the sfmc override **after** it:
 
@@ -204,7 +204,7 @@ export default [
 | `sfmc.configs['unicorn-ssjs']`          | `**/*.ssjs`      | Turns off the 46 SFMC-incompatible unicorn rules for SSJS |
 | `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js` | Same 46-rule override for SSJS embedded in HTML           |
 
-Only **46** of unicorn's 300 recommended rules are overridden — the other **254** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v71.1.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
+Only **46** of unicorn's 308 recommended rules are overridden — the other **262** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v73.0.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
 
 ## Processors
 

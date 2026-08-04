@@ -1,15 +1,15 @@
 # `eslint-plugin-unicorn` compatibility with SFMC SSJS
 
-> **Compatibility analysis for [`eslint-plugin-unicorn@71.1.0`](https://github.com/sindresorhus/eslint-plugin-unicorn).**
+> **Compatibility analysis for [`eslint-plugin-unicorn@73.0.0`](https://github.com/sindresorhus/eslint-plugin-unicorn).**
 >
-> ⚠️ **Version warning:** This classification was done against `eslint-plugin-unicorn` **v71.1.0** (300 recommended rules). Newer versions of unicorn may add, rename, or change rules that are **not** yet classified here. Re-audit this page whenever you upgrade unicorn — a rule added in a later version could autofix SSJS into runtime-breaking code without being in the override list below.
+> ⚠️ **Version warning:** This classification was done against `eslint-plugin-unicorn` **v73.0.0** (308 recommended rules). Newer versions of unicorn may add, rename, or change rules that are **not** yet classified here. Re-audit this page whenever you upgrade unicorn — a rule added in a later version could autofix SSJS into runtime-breaking code without being in the override list below.
 
 `eslint-plugin-unicorn` is an excellent, actively maintained plugin that we **strongly recommend** — but it targets modern JavaScript engines, not the Salesforce Marketing Cloud **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that is missing many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Object.fromEntries`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …). See the SFMC evidence pages:
 
 - **ECMAScript built-ins support** — <https://ssjs.guide/ecmascript-builtins/>
 - **Engine limitations** — <https://ssjs.guide/engine-limitations/>
 
-Of unicorn's **300** recommended rules (v71.1.0), **254** are safe to keep on for SSJS and **46** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 46 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
+Of unicorn's **308** recommended rules (v73.0.0), **262** are safe to keep on for SSJS and **46** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 46 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
 
 ---
 
@@ -41,7 +41,7 @@ If you don't use unicorn, omit these configs entirely — nothing else in `eslin
 
 ## Section 2 — Rules to override for SSJS (46)
 
-These 46 recommended rules either **autofix code to a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 46 are confirmed `recommended` in unicorn v71.1.0.
+These 46 recommended rules either **autofix code to a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 46 are confirmed `recommended` in unicorn v73.0.0.
 
 ### Group A — autofix to a missing built-in / forbid a SFMC workaround (41)
 
@@ -103,11 +103,11 @@ These 46 recommended rules either **autofix code to a missing built-in**, **forb
 
 ---
 
-## Section 3 — Rules OK as-is (254)
+## Section 3 — Rules OK as-is (262)
 
 These recommended rules are **not** disabled by the override config. They are either genuinely SFMC-safe (readability / best-practice rules that work on the ES3/ES5 engine) or **inert** on SSJS — many target the DOM, Node.js, Promises, TypeScript, or ES modules and therefore never fire on server-side SFMC code. Each links to its official unicorn documentation.
 
-<!-- BEGIN 254-OK-LIST -->
+<!-- BEGIN 262-OK-LIST -->
 - [better-dom-traversing](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/better-dom-traversing.md)
 - [catch-error-name](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/catch-error-name.md)
 - [class-reference-in-static-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/class-reference-in-static-methods.md)
@@ -150,8 +150,8 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-array-from-fill](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-from-fill.md)
 - [no-array-method-this-argument](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-method-this-argument.md)
 - [no-array-reduce](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reduce.md)
-- [no-array-sort](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md)
 - [no-array-sort-for-min-max](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort-for-min-max.md)
+- [no-array-sort](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md)
 - [no-array-splice](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-splice.md)
 - [no-async-promise-finally](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-async-promise-finally.md)
 - [no-await-expression-member](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-await-expression-member.md)
@@ -195,6 +195,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-magic-array-flat-depth](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-magic-array-flat-depth.md)
 - [no-mismatched-map-key](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-mismatched-map-key.md)
 - [no-misrefactored-assignment](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-misrefactored-assignment.md)
+- [no-multiple-promise-resolver-calls](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-multiple-promise-resolver-calls.md)
 - [no-named-default](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-named-default.md)
 - [no-negated-array-predicate](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-negated-array-predicate.md)
 - [no-negated-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-negated-comparison.md)
@@ -213,6 +214,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-redundant-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-redundant-comparison.md)
 - [no-return-array-push](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-return-array-push.md)
 - [no-selector-as-dom-name](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-selector-as-dom-name.md)
+- [no-shorthand-property-overrides](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-shorthand-property-overrides.md)
 - [no-single-promise-in-promise-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-single-promise-in-promise-methods.md)
 - [no-static-only-class](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-static-only-class.md)
 - [no-subtraction-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-subtraction-comparison.md)
@@ -221,6 +223,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-this-outside-of-class](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-this-outside-of-class.md)
 - [no-top-level-assignment-in-function](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-top-level-assignment-in-function.md)
 - [no-top-level-side-effects](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-top-level-side-effects.md)
+- [no-transition-all](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-transition-all.md)
 - [no-typeof-undefined](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-typeof-undefined.md)
 - [no-uncalled-method](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-uncalled-method.md)
 - [no-undeclared-class-members](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-undeclared-class-members.md)
@@ -243,6 +246,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-unsafe-buffer-conversion](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-buffer-conversion.md)
 - [no-unsafe-promise-all-settled-values](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-promise-all-settled-values.md)
 - [no-unsafe-property-key](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-property-key.md)
+- [no-unsafe-sqlite-interpolation](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-sqlite-interpolation.md)
 - [no-unsafe-string-replacement](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-string-replacement.md)
 - [no-unused-array-method-return](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unused-array-method-return.md)
 - [no-useless-boolean-cast](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-boolean-cast.md)
@@ -260,6 +264,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-useless-logical-operand](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-logical-operand.md)
 - [no-useless-override](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-override.md)
 - [no-useless-promise-resolve-reject](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-promise-resolve-reject.md)
+- [no-useless-re-export](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-re-export.md)
 - [no-useless-recursion](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-recursion.md)
 - [no-useless-spread](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-spread.md)
 - [no-useless-switch-case](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-switch-case.md)
@@ -272,8 +277,8 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [operator-assignment](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/operator-assignment.md)
 - [prefer-abort-signal-any](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-abort-signal-any.md)
 - [prefer-abort-signal-timeout](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-abort-signal-timeout.md)
-- [prefer-add-event-listener](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-add-event-listener.md)
 - [prefer-add-event-listener-options](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-add-event-listener-options.md)
+- [prefer-add-event-listener](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-add-event-listener.md)
 - [prefer-aggregate-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-aggregate-error.md)
 - [prefer-array-from-map](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-map.md)
 - [prefer-array-from-range](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-range.md)
@@ -290,6 +295,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-default-parameters](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-default-parameters.md)
 - [prefer-direct-iteration](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-direct-iteration.md)
 - [prefer-dom-node-append](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-append.md)
+- [prefer-dom-node-html-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-html-methods.md)
 - [prefer-dom-node-remove](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-remove.md)
 - [prefer-dom-node-replace-children](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-replace-children.md)
 - [prefer-dom-node-text-content](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-text-content.md)
@@ -305,8 +311,8 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-identifier-import-export-specifiers](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-identifier-import-export-specifiers.md)
 - [prefer-includes-over-repeated-comparisons](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes-over-repeated-comparisons.md)
 - [prefer-iterable-in-constructor](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterable-in-constructor.md)
-- [prefer-iterator-to-array](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-to-array.md)
 - [prefer-iterator-to-array-at-end](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-to-array-at-end.md)
+- [prefer-iterator-to-array](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-to-array.md)
 - [prefer-keyboard-event-key](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-keyboard-event-key.md)
 - [prefer-location-assign](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-location-assign.md)
 - [prefer-logical-operator-over-ternary](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-logical-operator-over-ternary.md)
@@ -340,6 +346,7 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-split-limit](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-split-limit.md)
 - [prefer-switch](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-switch.md)
 - [prefer-ternary](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-ternary.md)
+- [prefer-then-catch](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-then-catch.md)
 - [prefer-toggle-attribute](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-toggle-attribute.md)
 - [prefer-type-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-type-error.md)
 - [prefer-type-literal-last](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-type-literal-last.md)
@@ -357,10 +364,11 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [require-number-to-fixed-digits-argument](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-number-to-fixed-digits-argument.md)
 - [require-passive-events](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-passive-events.md)
 - [require-proxy-trap-boolean-return](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-proxy-trap-boolean-return.md)
+- [single-line-block-comment-style](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/single-line-block-comment-style.md)
 - [switch-case-braces](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/switch-case-braces.md)
 - [switch-case-break-position](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/switch-case-break-position.md)
 - [template-indent](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/template-indent.md)
 - [text-encoding-identifier-case](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/text-encoding-identifier-case.md)
 - [throw-new-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/throw-new-error.md)
-<!-- END 254-OK-LIST -->
+<!-- END 262-OK-LIST -->
 
