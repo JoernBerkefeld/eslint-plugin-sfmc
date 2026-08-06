@@ -995,6 +995,14 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
             // HTTPGet discontinuous overload: the full 6-argument form is valid
             code: 'Platform.Function.HTTPGet("https://example.com", false, 0, null, null, []);',
         },
+        {
+            // HTTPPost discontinuous overload: the 3-argument form is valid
+            code: 'Platform.Function.HTTPPost("https://example.com", "application/json", "{}");',
+        },
+        {
+            // HTTPPost discontinuous overload: the full 6-argument form is valid
+            code: 'Platform.Function.HTTPPost("https://example.com", "application/json", "{}", null, null, []);',
+        },
     ],
     invalid: [
         {
@@ -1028,6 +1036,26 @@ ssjsTester.run('ssjs-platform-function-arity', ssjsPlatformFunctionArity, {
                 {
                     messageId: 'invalidArity',
                     data: { name: 'HTTPGet', arities: '1 or 6', actual: '4' },
+                },
+            ],
+        },
+        {
+            // HTTPPost with 4 args is inside [3,6] but not a valid arity ({3,6})
+            code: 'Platform.Function.HTTPPost("https://example.com", "application/json", "{}", null);',
+            errors: [
+                {
+                    messageId: 'invalidArity',
+                    data: { name: 'HTTPPost', arities: '3 or 6', actual: '4' },
+                },
+            ],
+        },
+        {
+            // HTTPPost with 5 args is inside [3,6] but not a valid arity ({3,6})
+            code: 'Platform.Function.HTTPPost("https://example.com", "application/json", "{}", null, null);',
+            errors: [
+                {
+                    messageId: 'invalidArity',
+                    data: { name: 'HTTPPost', arities: '3 or 6', actual: '5' },
                 },
             ],
         },
