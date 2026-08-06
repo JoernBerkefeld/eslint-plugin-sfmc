@@ -51,6 +51,14 @@ What the fix does:
 - When the version argument is present but wrong: replaces the version string literal with the required version.
 - When the version argument is missing entirely: inserts `, "1.1.5"` after the `"core"` argument.
 
+### Files using `ErrorUtil` are reported but not fixed
+
+`ErrorUtil` is provided only by `Platform.Load("Core", "1")` — under any newer version it is
+`undefined` and calling it throws a `TypeError`. When the file contains an `ErrorUtil` usage,
+the version is still reported but **no fix is attached**, so `eslint --fix` cannot silently
+break working code. Migrate off `ErrorUtil` first (see
+[`sfmc/ssjs-no-deprecated-function`](./no-deprecated-function.md)), then bump the version.
+
 ## Configuration Example
 
 ```js

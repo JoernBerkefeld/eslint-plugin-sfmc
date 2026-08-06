@@ -12,7 +12,9 @@
  *     both static (`Portfolio.Retrieve(...)`) and instance
  *     (`var p = Portfolio.Init(...); p.Update(...)`) call styles, including
  *     multi-part static/instance paths (`Send.Definition.Add(...)`).
- *   - ErrorUtil.ThrowWSProxyError(...) — deprecated; only exists under Platform.Load("Core", "1")
+ *   - ErrorUtil.ThrowWSProxyError(...) — deprecated; only exists under Platform.Load("Core", "1").
+ *     When the file loads a Core version above the entry's `maxCoreVersion` the call is
+ *     undefined at runtime, so the stronger `unavailableInCoreVersion` message is used.
  */
 
 import {
@@ -21,6 +23,7 @@ import {
     coreObjectNames,
     coreDeprecatedMethodLookup,
     ERROR_UTIL_METHODS,
+    maxCoreVersionLookup,
 } from 'ssjs-data';
 
 // Lookup Map: lowercase name → entry, for SSJS_GLOBALS entries that are deprecated.
@@ -94,6 +97,77 @@ function getCoreInitType(node) {
 }
 
 /**
+ * Detect `Platform.Load("core", …)` and return the version literal it loads.
+ *
+ * @param {object} node - a CallExpression node
+ * @returns {string|null} the version string, '' when the version argument is
+ * missing or not a string literal, or null when this is not a core load
+ */
+function getCoreLoadVersion(node) {
+    const callee = node.callee;
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.object.type !== 'Identifier' ||
+        callee.object.name !== 'Platform' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Load'
+    ) {
+        return null;
+    }
+    const arguments_ = node.arguments;
+    if (
+        arguments_.length === 0 ||
+        arguments_[0].type !== 'Literal' ||
+        typeof arguments_[0].value !== 'string' ||
+        arguments_[0].value.toLowerCase() !== 'core'
+    ) {
+        return null;
+    }
+    const versionArgument = arguments_[1];
+    if (
+        versionArgument &&
+        versionArgument.type === 'Literal' &&
+        typeof versionArgument.value === 'string'
+    ) {
+        return versionArgument.value;
+    }
+    return '';
+}
+
+/**
+ * Split a Core version string into three numeric segments, padding missing
+ * ones with 0 so "1" and "1.0.0" are equivalent.
+ *
+ * @param {string} version - version string, e.g. "1" or "1.1.5"
+ * @returns {number[]} three numeric segments
+ */
+function parseCoreVersion(version) {
+    const parts = version.split('.').map((p) => Number(p) || 0);
+    while (parts.length < 3) {
+        parts.push(0);
+    }
+    return parts;
+}
+
+/**
+ * Compare two Core version strings ("1", "1.1.5", …) numerically.
+ *
+ * @param {string} a - left version
+ * @param {string} b - right version
+ * @returns {number} negative when a < b, 0 when equal, positive when a > b
+ */
+function compareCoreVersions(a, b) {
+    const left = parseCoreVersion(a);
+    const right = parseCoreVersion(b);
+    for (const [index, element] of left.entries()) {
+        if (element !== right[index]) {
+            return element - right[index];
+        }
+    }
+    return 0;
+}
+
+/**
  * Extract the trailing "Deprecated — ..." sentence from a deprecated
  * method's `description` so the message surfaces each class's specific
  * reasoning (falls back to a generic note when none is present).
@@ -121,6 +195,8 @@ export default {
                 "'{{method}}' called on a {{className}} variable is deprecated. {{note}}",
             deprecatedErrorUtil:
                 "'ErrorUtil.{{name}}' is deprecated — it only exists under Platform.Load(\"Core\", \"1\") and is undefined in newer Core versions. Check 'result.Status' and 'throw new Error(...)' instead.",
+            unavailableInCoreVersion:
+                '\'ErrorUtil.{{name}}\' is undefined under Platform.Load("Core", "{{version}}") — it only exists in Core version "{{max}}", so this call throws a TypeError at runtime. Check \'result.Status\' and \'throw new Error(...)\' instead.',
         },
         schema: [],
     },
@@ -129,6 +205,11 @@ export default {
         // Track variable names assigned via <CoreClass>.Init(...) → resolved class name,
         // e.g. `var p = Portfolio.Init(...)` → coreVariables.set('p', 'Portfolio').
         const coreVariables = new Map();
+        // Every Platform.Load("core", <version>) in the file, as { line, version }.
+        const coreLoads = [];
+        // ErrorUtil call sites, resolved to the applicable Core version on Program:exit
+        // (a load may appear after the usage in source order).
+        const errorUtilityUsages = [];
 
         return {
             VariableDeclaration(node) {
@@ -159,6 +240,13 @@ export default {
 
             CallExpression(node) {
                 const callee = node.callee;
+
+                // ── Platform.Load("core", <version>) — remember for ErrorUtil ──
+                const loadedVersion = getCoreLoadVersion(node);
+                if (loadedVersion !== null) {
+                    coreLoads.push({ line: node.loc.start.line, version: loadedVersion });
+                    return;
+                }
 
                 // ── Bare globals: ContentArea(…) and ContentAreaByName(…) ──────
                 if (callee.type === 'Identifier') {
@@ -203,16 +291,14 @@ export default {
                 }
 
                 // ── ErrorUtil.ThrowWSProxyError(…) — deprecated ───────────────
+                // Reported on Program:exit: the wording depends on the loaded Core
+                // version, which may be declared after this call site.
                 if (
                     callee.object.type === 'Identifier' &&
                     callee.object.name === 'ErrorUtil' &&
                     ERRORUTIL_DEPRECATED.has(methodName.toLowerCase())
                 ) {
-                    context.report({
-                        node: property,
-                        messageId: 'deprecatedErrorUtil',
-                        data: { name: methodName },
-                    });
+                    errorUtilityUsages.push({ node: property, name: methodName });
                     return;
                 }
 
@@ -268,6 +354,44 @@ export default {
                             className: resolvedClass,
                             note: deprecationNote(entry),
                         },
+                    });
+                }
+            },
+
+            'Program:exit'() {
+                const maxCoreVersion = maxCoreVersionLookup.get('errorutil')?.maxCoreVersion;
+                for (const usage of errorUtilityUsages) {
+                    // The applicable load is the nearest preceding one; when the file
+                    // only loads Core after the usage, that load still governs at
+                    // runtime, so fall back to the first load in the file.
+                    const usageLine = usage.node.loc.start.line;
+                    const preceding = coreLoads.filter((l) => l.line <= usageLine);
+                    const applicable = preceding.length > 0 ? preceding.at(-1) : coreLoads[0];
+
+                    if (
+                        maxCoreVersion &&
+                        applicable &&
+                        applicable.version &&
+                        compareCoreVersions(applicable.version, maxCoreVersion) > 0
+                    ) {
+                        context.report({
+                            node: usage.node,
+                            messageId: 'unavailableInCoreVersion',
+                            data: {
+                                name: usage.name,
+                                version: applicable.version,
+                                max: maxCoreVersion,
+                            },
+                        });
+                        continue;
+                    }
+
+                    // No core load at all, no version argument, or a version within the
+                    // supported range — ssjs-require-platform-load owns the missing-load case.
+                    context.report({
+                        node: usage.node,
+                        messageId: 'deprecatedErrorUtil',
+                        data: { name: usage.name },
                     });
                 }
             },

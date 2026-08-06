@@ -4,6 +4,10 @@
  * Warns when Platform.Load("Core", version) uses a version string other
  * than the recommended "1.1.5". Older versions like "1" or "1.1.1" miss
  * bug-fixes and features available in the latest Core library release.
+ *
+ * The autofix is withheld for files that use `ErrorUtil`, which only exists
+ * under Core "1" — bumping the version there would turn working code into a
+ * runtime TypeError. Such files must migrate off ErrorUtil first.
  */
 
 const DEFAULT_VERSION = '1.1.5';
@@ -36,8 +40,18 @@ export default {
     create(context) {
         const options = context.options[0] || {};
         const expectedVersion = options.version || DEFAULT_VERSION;
+        // Pending reports — resolved on Program:exit so the ErrorUtil scan is
+        // complete before deciding whether to attach a fixer.
+        const pendingReports = [];
+        let isUsesErrorUtility = false;
 
         return {
+            MemberExpression(node) {
+                if (node.object.type === 'Identifier' && node.object.name === 'ErrorUtil') {
+                    isUsesErrorUtility = true;
+                }
+            },
+
             CallExpression(node) {
                 const callee = node.callee;
                 if (
@@ -61,13 +75,11 @@ export default {
                 }
 
                 if (arguments_.length < 2) {
-                    context.report({
+                    pendingReports.push({
                         node,
-                        messageId: 'outdatedVersion',
-                        data: { actual: '(none)', expected: expectedVersion },
-                        fix(fixer) {
-                            return fixer.insertTextAfter(arguments_[0], `, "${expectedVersion}"`);
-                        },
+                        actual: '(none)',
+                        fix: (fixer) =>
+                            fixer.insertTextAfter(arguments_[0], `, "${expectedVersion}"`),
                     });
                     return;
                 }
@@ -78,13 +90,23 @@ export default {
                     typeof versionArgument.value === 'string' &&
                     versionArgument.value !== expectedVersion
                 ) {
-                    context.report({
+                    pendingReports.push({
                         node: versionArgument,
+                        actual: versionArgument.value,
+                        fix: (fixer) => fixer.replaceText(versionArgument, `"${expectedVersion}"`),
+                    });
+                }
+            },
+
+            'Program:exit'() {
+                for (const report of pendingReports) {
+                    context.report({
+                        node: report.node,
                         messageId: 'outdatedVersion',
-                        data: { actual: versionArgument.value, expected: expectedVersion },
-                        fix(fixer) {
-                            return fixer.replaceText(versionArgument, `"${expectedVersion}"`);
-                        },
+                        data: { actual: report.actual, expected: expectedVersion },
+                        // Bumping the Core version would make ErrorUtil undefined at
+                        // runtime, so the fix is withheld and only the report remains.
+                        ...(!isUsesErrorUtility && { fix: report.fix }),
                     });
                 }
             },

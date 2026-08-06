@@ -1115,6 +1115,34 @@ ssjsTester.run('ssjs-no-deprecated-function', ssjsNoDeprecatedFunction, {
             code: 'ErrorUtil.ThrowWSProxyError(result);',
             errors: [{ messageId: 'deprecatedErrorUtil' }],
         },
+        // Core "1" explicitly loaded — ErrorUtil exists, so only deprecated
+        {
+            code: 'Platform.Load("Core", "1");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'deprecatedErrorUtil' }],
+        },
+        // Version argument omitted — cannot tell which version loads, stay generic
+        {
+            code: 'Platform.Load("Core");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'deprecatedErrorUtil' }],
+        },
+        // Core versions above "1" — ErrorUtil is undefined at runtime
+        {
+            code: 'Platform.Load("Core", "1.1.1");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'unavailableInCoreVersion' }],
+        },
+        {
+            code: 'Platform.Load("Core", "1.1.5");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'unavailableInCoreVersion' }],
+        },
+        {
+            code: 'Platform.Load("Core", "2");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'unavailableInCoreVersion' }],
+        },
+        // Load after use — the load still governs at runtime
+        {
+            code: 'ErrorUtil.ThrowWSProxyError(result);\nPlatform.Load("Core", "1.1.5");',
+            errors: [{ messageId: 'unavailableInCoreVersion' }],
+        },
         // Portfolio static method — deprecated (legacy Classic Content)
         {
             code: 'var results = Portfolio.Retrieve("Name", "MyPortfolio");',
@@ -1429,6 +1457,18 @@ ssjsTester.run('ssjs-prefer-platform-load-version', ssjsPreferPlatformLoadVersio
                 { messageId: 'outdatedVersion', data: { actual: '(none)', expected: '1.1.5' } },
             ],
             output: 'Platform.Load("core", "1.1.5");',
+        },
+        {
+            // ErrorUtil only exists under Core "1" — report, but do not autofix
+            code: 'Platform.Load("core", "1");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'outdatedVersion' }],
+            output: null,
+        },
+        {
+            // Missing version argument + ErrorUtil — also unfixable
+            code: 'Platform.Load("core");\nErrorUtil.ThrowWSProxyError(result);',
+            errors: [{ messageId: 'outdatedVersion' }],
+            output: null,
         },
     ],
 });

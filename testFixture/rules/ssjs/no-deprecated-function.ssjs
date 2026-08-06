@@ -13,7 +13,9 @@ var content = ContentArea("MyContentAreaKey");
 /* ❌ FAIL — ContentAreaByName is deprecated; use ContentBlockByName */
 var content2 = ContentAreaByName("My Content Area");
 
-/* ❌ FAIL — ErrorUtil.ThrowWSProxyError is deprecated; check result.Status and throw new Error(...) */
+/* ❌ FAIL — ErrorUtil is undefined under Core "1.1.5" (loaded above), so this throws
+   a TypeError at runtime; check result.Status and throw new Error(...) instead.
+   The plain "deprecated" variant needs Core "1" — see no-deprecated-function-core1.ssjs. */
 ErrorUtil.ThrowWSProxyError(content);
 
 /* ❌ FAIL — Portfolio is a deprecated legacy Classic Content class */
