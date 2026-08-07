@@ -9,6 +9,11 @@ The rule is fixable:
 - **Single-arg calls on `Platform.Response.*`** (`ContentType("text/html")`) → rewrites to an assignment (`= value`), including when the call appears in a comma (`SequenceExpression`) expression.
 - **Any-arg calls on `Platform.Request.*`** → reported as an error with no auto-fix, because `Request` properties are read-only.
 
+This rule only sees the **call** form. The assignment form of the same mistake
+(`Platform.Request.Method = "POST"`), and reads that return nothing useful
+(`var ct = Platform.Response.ContentType`), are handled by
+[`sfmc/ssjs-no-invalid-property-access`](no-invalid-property-access.md).
+
 ## Properties affected
 
 ### `Platform.Request` — read-only
@@ -25,7 +30,7 @@ The rule is fixable:
 | `RequestURL` |
 | `UserAgent` |
 
-### `Platform.Response` — read/write
+### `Platform.Response` — writable (reads return an opaque value)
 
 | Property |
 |---|
@@ -82,7 +87,6 @@ Platform.Request.Method("POST"); // ← read-only, cannot be set
 // Reading properties — no parentheses
 var method = Platform.Request.Method;
 var ip     = Platform.Request.ClientIP;
-var ct     = Platform.Response.ContentType;
 
 // Setting writable Response properties — use assignment
 Platform.Response.ContentType = "application/json";

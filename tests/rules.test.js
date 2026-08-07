@@ -52,6 +52,7 @@ import ssjsNoNonfunctionalMethod from '../src/rules/ssjs/ssjs-no-nonfunctional-m
 import ssjsNoClrHeaderAccess from '../src/rules/ssjs/no-clr-header-access.js';
 import ssjsRequireStringClrContent from '../src/rules/ssjs/require-string-clr-content.js';
 import ssjsHttpPropertyValue from '../src/rules/ssjs/http-property-value.js';
+import ssjsNoInvalidPropertyAccess from '../src/rules/ssjs/no-invalid-property-access.js';
 
 // ── Handlebars (MCN) rule imports ─────────────────────────────────────────────
 
@@ -2171,6 +2172,70 @@ ssjsTester.run('ssjs-http-property-value', ssjsHttpPropertyValue, {
                     ],
                 },
             ],
+        },
+    ],
+});
+
+// ─── 25. ssjs-no-invalid-property-access ──────────────────────────────────────
+
+ssjsTester.run('ssjs-no-invalid-property-access', ssjsNoInvalidPropertyAccess, {
+    valid: [
+        // Assigning a write-only property is the supported direction.
+        { code: 'var req = new Script.Util.HttpRequest("u"); req.postData = body;' },
+        // Reading a property without an access restriction.
+        { code: 'var req = new Script.Util.HttpRequest("u"); var t = req.timeout;' },
+        // Reading a read-only Platform.Request property.
+        { code: 'var m = String(Platform.Request.Method);' },
+        // Assigning a write-only-opaque Platform.Response property.
+        { code: 'Platform.Response.ContentType = "application/json";' },
+        // Same property name on an untracked variable — ignored.
+        { code: 'var config = { postData: "x" }; Write(config.postData);' },
+        // The call form belongs to ssjs-no-property-call, not this rule.
+        { code: 'var ct = Platform.Response.ContentType();' },
+    ],
+    invalid: [
+        // Reading a write-only property throws at runtime.
+        {
+            code: 'var req = new Script.Util.HttpRequest("u"); Write(req.postData);',
+            errors: [
+                {
+                    messageId: 'writeOnlyRead',
+                    data: { owner: 'Script.Util.HttpRequest', name: 'postData' },
+                },
+            ],
+        },
+        // Same on an HttpGet instance variable.
+        {
+            code: 'var greq = Script.Util.HttpGet("u"); Write(greq.postData);',
+            errors: [{ messageId: 'writeOnlyRead' }],
+        },
+        // Reading a write-only-opaque Platform.Response property.
+        {
+            code: 'var ct = Platform.Response.ContentType;',
+            errors: [
+                {
+                    messageId: 'opaqueRead',
+                    data: { owner: 'Platform.Response', name: 'ContentType' },
+                },
+            ],
+        },
+        {
+            code: 'var cs = Platform.Response.CharacterSet;',
+            errors: [{ messageId: 'opaqueRead' }],
+        },
+        // Assigning a read-only Platform.Request property.
+        {
+            code: 'Platform.Request.Method = "POST";',
+            errors: [
+                {
+                    messageId: 'readOnlyWrite',
+                    data: { owner: 'Platform.Request', name: 'Method' },
+                },
+            ],
+        },
+        {
+            code: 'Platform.Request.ClientIP = "127.0.0.1";',
+            errors: [{ messageId: 'readOnlyWrite' }],
         },
     ],
 });

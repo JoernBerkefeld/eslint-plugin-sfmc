@@ -61,6 +61,7 @@ import ssjsNoNonfunctionalMethod from './rules/ssjs/ssjs-no-nonfunctional-method
 import ssjsNoClrHeaderAccess from './rules/ssjs/no-clr-header-access.js';
 import ssjsRequireStringClrContent from './rules/ssjs/require-string-clr-content.js';
 import ssjsHttpPropertyValue from './rules/ssjs/http-property-value.js';
+import ssjsNoInvalidPropertyAccess from './rules/ssjs/no-invalid-property-access.js';
 
 // ── Handlebars (MCN) rules ──────────────────────────────────────────────────────
 
@@ -145,6 +146,7 @@ const plugin = {
         'ssjs-no-clr-header-access': ssjsNoClrHeaderAccess,
         'ssjs-require-string-clr-content': ssjsRequireStringClrContent,
         'ssjs-http-property-value': ssjsHttpPropertyValue,
+        'ssjs-no-invalid-property-access': ssjsNoInvalidPropertyAccess,
 
         // Handlebars (MCN) rules (hbs- prefix)
         'hbs-no-unknown-helper': hbsNoUnknownHelper,
@@ -193,6 +195,7 @@ const ssjsMcnRules = {
     'sfmc/ssjs-no-clr-header-access': 'off',
     'sfmc/ssjs-require-string-clr-content': 'off',
     'sfmc/ssjs-http-property-value': 'off',
+    'sfmc/ssjs-no-invalid-property-access': 'off',
     'no-cond-assign': 'off',
 };
 
@@ -266,6 +269,7 @@ const ssjsRecommendedRules = {
     'sfmc/ssjs-no-clr-header-access': 'error',
     'sfmc/ssjs-require-string-clr-content': 'error',
     'sfmc/ssjs-http-property-value': 'error',
+    'sfmc/ssjs-no-invalid-property-access': 'error',
     'no-cond-assign': 'error',
 };
 
@@ -292,6 +296,7 @@ const ssjsStrictRules = {
     'sfmc/ssjs-no-clr-header-access': 'error',
     'sfmc/ssjs-require-string-clr-content': 'error',
     'sfmc/ssjs-http-property-value': 'error',
+    'sfmc/ssjs-no-invalid-property-access': 'error',
     'no-cond-assign': 'error',
 };
 

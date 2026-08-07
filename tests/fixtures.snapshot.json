@@ -565,6 +565,46 @@
       "messageId": "hardcodedCredential"
     }
   ],
+  "testFixture/rules/ssjs/no-invalid-property-access.html": [
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 21,
+      "messageId": "writeOnlyRead"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 28,
+      "messageId": "opaqueRead"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 34,
+      "messageId": "readOnlyWrite"
+    }
+  ],
+  "testFixture/rules/ssjs/no-invalid-property-access.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 28,
+      "messageId": "writeOnlyRead"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 31,
+      "messageId": "opaqueRead"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-invalid-property-access",
+      "severity": 2,
+      "line": 34,
+      "messageId": "readOnlyWrite"
+    }
+  ],
   "testFixture/rules/ssjs/no-property-call.ssjs": [
     {
       "ruleId": "sfmc/ssjs-no-property-call",
