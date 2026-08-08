@@ -390,6 +390,8 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
         { code: '%%= Concat("a", "b", "c") =%%' },
         // single repeating group (Concat: groupSize 1) — any count >= 2 is complete
         { code: '%%= Concat("a", "b") =%%' },
+        // Concat accepts a single argument (minArgs 1, repeat.minGroups 1)
+        { code: '%%= Concat("a") =%%' },
         // single repeating group (ReplaceList: 1 fixed + N searchStrings, groupSize 1)
         { code: '%%= ReplaceList("text", "a", "b", "c") =%%' },
         // two repeating groups (UpdateData): columnValuePairs=1 -> 1 search pair + 1 update pair
@@ -435,6 +437,16 @@ ampTester.run('amp-function-arity', ampFunctionArity, {
             ],
         },
         {
+            // Concat still requires at least one argument (minArgs 1)
+            code: '%%= Concat() =%%',
+            errors: [
+                {
+                    messageId: 'tooFewArgs',
+                    data: { name: 'Concat', min: '1', actual: '0' },
+                },
+            ],
+        },
+        {
             // UpdateData: columnValuePairs=1 (1 search pair), then 3 update args —
             // the second repeating group (size 2) is incomplete (odd count).
             code: '%%[UpdateData("DE", 1, "Key", @k, "Col", @v, "Orphan")]%%',
@@ -461,6 +473,13 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
         { code: '%%= DatePart(@d, @part) =%%' },
         // function with no enum params — never flagged
         { code: '%%= Add(1, 2) =%%' },
+        // ampscript-data widened the math params to string|number: numeric strings are accepted
+        { code: '%%= Add("15", 27) =%%' },
+        { code: '%%= Divide(100, "4") =%%' },
+        { code: '%%= Random("1", "100") =%%' },
+        // Length/Lowercase/Uppercase widened to string|number|date
+        { code: '%%= Uppercase(42) =%%' },
+        { code: '%%= Length(42) =%%' },
     ],
     invalid: [
         {

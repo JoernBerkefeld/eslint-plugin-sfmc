@@ -15,8 +15,14 @@
     {
       "ruleId": "sfmc/amp-function-arity",
       "severity": 2,
-      "line": 26,
+      "line": 30,
       "messageId": "incompleteGroup"
+    },
+    {
+      "ruleId": "sfmc/amp-function-arity",
+      "severity": 2,
+      "line": 34,
+      "messageId": "tooFewArgs"
     }
   ],
   "testFixture/rules/amp/naming-convention.amp": [
