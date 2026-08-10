@@ -14,7 +14,6 @@ Only a subset of AMPscript functions are available in Marketing Cloud Next (MCN)
 
 - Functions that **Marketing Cloud Next never supported** — they only work in classic Marketing Cloud Engagement.
 - Functions that were **added in a later MCN release** than the one you target (see the `apiVersion` option below).
-- Functions that work in MCN AMPscript but have **no Handlebars equivalent**, so they cannot be carried over if you later migrate the content to Handlebars.
 
 Unknown function names are handled separately by [`sfmc/amp-no-unknown-function`](no-unknown-function.md); this rule only checks functions that actually exist in AMPscript.
 

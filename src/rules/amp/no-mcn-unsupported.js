@@ -1,9 +1,8 @@
-import { functionNames, functionLookup, getMcnApiVersion } from 'ampscript-data';
+import { functionNames, getMcnApiVersion } from 'ampscript-data';
 
 /**
  * Flags AMPscript functions that cannot be used when targeting Marketing Cloud
- * Next, and functions that work in MCN AMPscript but have no Handlebars
- * equivalent (so they block a Handlebars migration).
+ * Next.
  *
  * Each function carries an `mcnSince` value = the MCN API version it first
  * became available in, or `null`/unset when it was never supported in MCN.
@@ -30,8 +29,6 @@ export default {
             notSupportedInMcn: "'{{name}}' is not supported in Marketing Cloud Next.",
             tooNewForTarget:
                 "'{{name}}' was introduced in Marketing Cloud Next API version {{since}}, which is newer than the targeted version {{target}}.",
-            noHandlebarsEquivalent:
-                "'{{name}}' is supported by Marketing Cloud Next AMPscript but has no Handlebars for Marketing Cloud Next equivalent. It cannot be migrated to a Handlebars helper.",
         },
         schema: [
             {
@@ -83,17 +80,6 @@ export default {
                             since: String(since),
                             target: String(apiVersion),
                         },
-                    });
-                    return;
-                }
-
-                // Works in MCN AMPscript but has no Handlebars counterpart, so it
-                // cannot be migrated to a Handlebars helper.
-                if (functionLookup.get(lower)?.mcnHandlebarsGap === true) {
-                    context.report({
-                        node,
-                        messageId: 'noHandlebarsEquivalent',
-                        data: { name: node.name },
                     });
                 }
             },

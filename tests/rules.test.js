@@ -109,21 +109,15 @@ ampTester.run('amp-no-mcn-unsupported', ampNoMcnUnsupported, {
         { code: '%%[set @x = FooBar(@v)]%%' },
         // apiVersion 67 → a function introduced in 67 passes (mcnSince <= target).
         { code: '%%[set @d = Now()]%%', options: [{ apiVersion: 67 }] },
+        // MCN-supported functions pass regardless of Handlebars availability.
+        { code: '%%= ContentBlockByID(123) =%%' },
+        { code: '%%= ContentBlockByName("Public/MyBlock") =%%' },
     ],
     invalid: [
         // Never supported in MCN → always flagged (no apiVersion).
         {
             code: '%%[InsertDE("MyDE", "Col", "Val")]%%',
             errors: [{ messageId: 'notSupportedInMcn', data: { name: 'InsertDE' } }],
-        },
-        // MCN-supported AMPscript function with no Handlebars equivalent.
-        {
-            code: '%%= ContentBlockByID(123) =%%',
-            errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByID' } }],
-        },
-        {
-            code: '%%= ContentBlockByName("Public/MyBlock") =%%',
-            errors: [{ messageId: 'noHandlebarsEquivalent', data: { name: 'ContentBlockByName' } }],
         },
         // apiVersion 65 → a function introduced in 67 is too new for the target.
         {
