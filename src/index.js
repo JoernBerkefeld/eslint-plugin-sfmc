@@ -28,6 +28,7 @@ import ampFunctionArity from './rules/amp/function-arity.js';
 import ampArgumentTypes from './rules/amp/argument-types.js';
 import ampNoEmailExcludedFunction from './rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from './rules/amp/no-deprecated-function.js';
+import ampNoNonfunctionalFunction from './rules/amp/no-nonfunctional-function.js';
 import ampNamingConvention from './rules/amp/naming-convention.js';
 import ampNoEmptyThen from './rules/amp/no-empty-then.js';
 import ampRequireRowcountCheck from './rules/amp/require-rowcount-check.js';
@@ -114,6 +115,7 @@ const plugin = {
         'amp-arg-types': ampArgumentTypes,
         'amp-no-email-excluded-function': ampNoEmailExcludedFunction,
         'amp-no-deprecated-function': ampNoDeprecatedFunction,
+        'amp-no-nonfunctional-function': ampNoNonfunctionalFunction,
         'amp-naming-convention': ampNamingConvention,
         'amp-no-empty-then': ampNoEmptyThen,
         'amp-require-rowcount-check': ampRequireRowcountCheck,
@@ -212,6 +214,7 @@ const ampRecommendedRules = {
     'sfmc/amp-function-arity': 'error',
     'sfmc/amp-arg-types': 'error',
     'sfmc/amp-no-deprecated-function': 'warn',
+    'sfmc/amp-no-nonfunctional-function': 'error',
     'sfmc/amp-naming-convention': 'warn',
     'sfmc/amp-no-empty-then': 'warn',
     'sfmc/amp-require-rowcount-check': 'warn',
@@ -235,6 +238,7 @@ const ampStrictRules = {
     'sfmc/amp-arg-types': 'error',
     'sfmc/amp-no-email-excluded-function': 'off',
     'sfmc/amp-no-deprecated-function': 'warn',
+    'sfmc/amp-no-nonfunctional-function': 'error',
     'sfmc/amp-naming-convention': ['error', { format: 'camelCase' }],
     'sfmc/amp-no-empty-then': 'error',
     'sfmc/amp-require-rowcount-check': 'error',
@@ -639,6 +643,9 @@ plugin.configs = {
         rules: {
             ...ampRecommendedRules,
             'sfmc/amp-no-mcn-unsupported': 'error',
+            // Already covered by amp-no-mcn-unsupported in MCN (these functions
+            // are mcnSince:null); disabled here to avoid double-reporting.
+            'sfmc/amp-no-nonfunctional-function': 'off',
         },
     },
 
@@ -670,6 +677,9 @@ plugin.configs = {
             rules: {
                 ...ampRecommendedRules,
                 'sfmc/amp-no-mcn-unsupported': 'error',
+                // Already covered by amp-no-mcn-unsupported in MCN (these
+                // functions are mcnSince:null); disabled to avoid double-reporting.
+                'sfmc/amp-no-nonfunctional-function': 'off',
             },
         },
         {
@@ -705,6 +715,9 @@ plugin.configs = {
             rules: {
                 ...ampRecommendedRules,
                 'sfmc/amp-no-mcn-unsupported': 'error',
+                // Already covered by amp-no-mcn-unsupported in MCN (these
+                // functions are mcnSince:null); disabled to avoid double-reporting.
+                'sfmc/amp-no-nonfunctional-function': 'off',
             },
         },
         {
@@ -744,6 +757,9 @@ plugin.configs = {
             rules: {
                 ...ampStrictRules,
                 'sfmc/amp-no-mcn-unsupported': 'error',
+                // Already covered by amp-no-mcn-unsupported in MCN (these
+                // functions are mcnSince:null); disabled to avoid double-reporting.
+                'sfmc/amp-no-nonfunctional-function': 'off',
             },
         },
         {
@@ -771,6 +787,9 @@ plugin.configs = {
             rules: {
                 ...ampStrictRules,
                 'sfmc/amp-no-mcn-unsupported': 'error',
+                // Already covered by amp-no-mcn-unsupported in MCN (these
+                // functions are mcnSince:null); disabled to avoid double-reporting.
+                'sfmc/amp-no-nonfunctional-function': 'off',
             },
         },
         {

@@ -23,6 +23,7 @@ import ampFunctionArity from '../src/rules/amp/function-arity.js';
 import ampArgumentTypes from '../src/rules/amp/argument-types.js';
 import ampNoEmailExcludedFunction from '../src/rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from '../src/rules/amp/no-deprecated-function.js';
+import ampNoNonfunctionalFunction from '../src/rules/amp/no-nonfunctional-function.js';
 import ampNamingConvention from '../src/rules/amp/naming-convention.js';
 import ampNoEmptyThen from '../src/rules/amp/no-empty-then.js';
 import ampRequireRowcountCheck from '../src/rules/amp/require-rowcount-check.js';
@@ -614,6 +615,28 @@ ampTester.run('amp-no-deprecated-function', ampNoDeprecatedFunction, {
                     },
                 },
             ],
+        },
+    ],
+});
+
+// ── 12b. amp-no-nonfunctional-function ────────────────────────────────────────
+
+ampTester.run('amp-no-nonfunctional-function', ampNoNonfunctionalFunction, {
+    valid: [
+        // Working functions are never flagged
+        { code: '%%[set @x = Add(1, 2)]%%' },
+        { code: '%%[ContentBlockByID(123)]%%' },
+        // Deprecated-but-not-nonfunctional functions are handled by a different rule
+        { code: '%%[ContentArea(123)]%%' },
+    ],
+    invalid: [
+        {
+            code: "%%[set @x = GetPortfolioItem('key')]%%",
+            errors: [{ messageId: 'nonFunctional' }],
+        },
+        {
+            code: "%%=GetPublishedSocialContent('id')=%%",
+            errors: [{ messageId: 'nonFunctional' }],
         },
     ],
 });

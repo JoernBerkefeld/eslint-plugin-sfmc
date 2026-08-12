@@ -225,6 +225,20 @@
       "messageId": "preferAttributeValue"
     }
   ],
+  "testFixture/rules/amp/no-nonfunctional-function.amp": [
+    {
+      "ruleId": "sfmc/amp-no-nonfunctional-function",
+      "severity": 2,
+      "line": 17,
+      "messageId": "nonFunctional"
+    },
+    {
+      "ruleId": "sfmc/amp-no-nonfunctional-function",
+      "severity": 2,
+      "line": 21,
+      "messageId": "nonFunctional"
+    }
+  ],
   "testFixture/rules/amp/no-smart-quotes.amp": [
     {
       "ruleId": "sfmc/amp-no-smart-quotes",

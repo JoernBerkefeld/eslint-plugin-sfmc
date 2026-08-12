@@ -1,0 +1,22 @@
+%%[
+/* ── Rule: sfmc/amp-no-nonfunctional-function ──────────────────────────────────
+   Flags AMPscript functions that resolve at runtime but have no known working
+   invocation (the underlying Classic feature is retired), so every reached call
+   aborts the page.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ✅ ACCEPTED — UpperCase and Lookup have working runtime invocations */
+VAR @upper
+SET @upper = UpperCase("hello world")
+
+VAR @val
+SET @val = Lookup("MyDE", "Field", "Email", "test@example.com")
+
+/* ❌ FAIL — GetPortfolioItem is non-functional at runtime (Classic Portfolio retired) */
+VAR @portfolio
+SET @portfolio = GetPortfolioItem("my-portfolio-key")
+
+/* ❌ FAIL — GetPublishedSocialContent is non-functional at runtime (Classic Content retired) */
+VAR @social
+SET @social = GetPublishedSocialContent("socialContentId")
+]%%

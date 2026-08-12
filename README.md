@@ -109,6 +109,7 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 | [`sfmc/amp-no-loop-counter-assign`](docs/rules/amp/no-loop-counter-assign.md)               | `warn`                   | Disallow assigning to the `for` loop counter                                        |
 | [`sfmc/amp-no-inline-statement`](docs/rules/amp/no-inline-statement.md)                     | `warn`                   | Disallow statements inside inline expressions                                       |
 | [`sfmc/amp-no-deprecated-function`](docs/rules/amp/no-deprecated-function.md)               | `warn`                   | Flag deprecated functions and suggest replacements                                  |
+| [`sfmc/amp-no-nonfunctional-function`](docs/rules/amp/no-nonfunctional-function.md)         | `error`                  | Flag functions that resolve but have no working runtime invocation                  |
 | [`sfmc/amp-naming-convention`](docs/rules/amp/naming-convention.md)                         | `warn`                   | Enforce variable naming convention                                                  |
 | [`sfmc/amp-no-empty-then`](docs/rules/amp/no-empty-then.md)                                 | `warn`                   | Disallow IF with empty THEN branch                                                  |
 | [`sfmc/amp-require-rowcount-check`](docs/rules/amp/require-rowcount-check.md)               | `warn`                   | Require RowCount check before FOR on LookupRows                                     |
