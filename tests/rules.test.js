@@ -46,6 +46,7 @@ import ssjsPreferPlatformLoadVersion from '../src/rules/ssjs/prefer-platform-loa
 import ssjsNoUnavailableMethod from '../src/rules/ssjs/no-unavailable-method.js';
 import ssjsPreferParsejsonSafeArgument from '../src/rules/ssjs/prefer-parsejson-safe-argument.js';
 import ssjsNoSwitchDefault from '../src/rules/ssjs/no-switch-default.js';
+import ssjsNoSwitchFallthrough from '../src/rules/ssjs/no-switch-fallthrough.js';
 import ssjsNoTreatAsContentInjection from '../src/rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgumentTypes from '../src/rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from '../src/rules/ssjs/ssjs-core-method-arity.js';
@@ -1925,6 +1926,41 @@ ssjsTester.run('ssjs-no-switch-default', ssjsNoSwitchDefault, {
         {
             code: 'switch(x) { case 1: break; default: break; }',
             errors: [{ messageId: 'noDefault' }],
+        },
+    ],
+});
+
+// ─── 20b. ssjs-no-switch-fallthrough ─────────────────────────────────────────
+
+ssjsTester.run('ssjs-no-switch-fallthrough', ssjsNoSwitchFallthrough, {
+    valid: [
+        // Every case has its own break-terminated body.
+        { code: 'switch(x) { case 1: y = "a"; break; case 2: y = "b"; break; }' },
+        // return / throw also terminate a case body.
+        {
+            code: 'function f(x) { switch(x) { case 1: return 1; case 2: throw new Error("x"); default: y = 0; } }',
+        },
+        // The LAST empty case has nothing to fall into — fine.
+        { code: 'switch(x) { case 1: y = "a"; break; case 2: }' },
+        // A single self-contained matched case with a break.
+        { code: 'switch(x) { case 1: y = "a"; break; }' },
+        { code: 'var x = 1;' },
+    ],
+    invalid: [
+        // Stacked empty leading label relying on shared-body fall-through.
+        {
+            code: 'switch(x) { case 1: case 2: y = "full"; break; }',
+            errors: [{ messageId: 'emptyLabelFallthrough' }],
+        },
+        // Break-less non-empty body cascading into the next case.
+        {
+            code: 'switch(x) { case 1: y = "a"; case 2: y = "b"; break; }',
+            errors: [{ messageId: 'bodyFallthrough' }],
+        },
+        // Empty case falling through into default.
+        {
+            code: 'switch(x) { case 1: default: y = "d"; }',
+            errors: [{ messageId: 'emptyLabelFallthrough' }],
         },
     ],
 });

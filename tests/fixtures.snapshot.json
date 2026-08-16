@@ -653,6 +653,20 @@
       "messageId": "noDefault"
     }
   ],
+  "testFixture/rules/ssjs/no-switch-fallthrough.ssjs": [
+    {
+      "ruleId": "sfmc/ssjs-no-switch-fallthrough",
+      "severity": 2,
+      "line": 24,
+      "messageId": "emptyLabelFallthrough"
+    },
+    {
+      "ruleId": "sfmc/ssjs-no-switch-fallthrough",
+      "severity": 2,
+      "line": 32,
+      "messageId": "bodyFallthrough"
+    }
+  ],
   "testFixture/rules/ssjs/no-treatascontent-injection.ssjs": [
     {
       "ruleId": "sfmc/ssjs-no-treatascontent-injection",

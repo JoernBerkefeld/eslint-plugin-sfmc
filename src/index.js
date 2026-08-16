@@ -55,6 +55,7 @@ import ssjsPreferPlatformLoadVersion from './rules/ssjs/prefer-platform-load-ver
 import ssjsNoUnavailableMethod from './rules/ssjs/no-unavailable-method.js';
 import ssjsPreferParsejsonSafeArgument from './rules/ssjs/prefer-parsejson-safe-argument.js';
 import ssjsNoSwitchDefault from './rules/ssjs/no-switch-default.js';
+import ssjsNoSwitchFallthrough from './rules/ssjs/no-switch-fallthrough.js';
 import ssjsNoTreatAsContentInjection from './rules/ssjs/no-treatascontent-injection.js';
 import ssjsArgumentTypes from './rules/ssjs/ssjs-argument-types.js';
 import ssjsCoreMethodArity from './rules/ssjs/ssjs-core-method-arity.js';
@@ -141,6 +142,7 @@ const plugin = {
         'ssjs-no-unavailable-method': ssjsNoUnavailableMethod,
         'ssjs-prefer-parsejson-safe-arg': ssjsPreferParsejsonSafeArgument,
         'ssjs-no-switch-default': ssjsNoSwitchDefault,
+        'ssjs-no-switch-fallthrough': ssjsNoSwitchFallthrough,
         'ssjs-no-treatascontent-injection': ssjsNoTreatAsContentInjection,
         'ssjs-arg-types': ssjsArgumentTypes,
         'ssjs-core-method-arity': ssjsCoreMethodArity,
@@ -190,6 +192,7 @@ const ssjsMcnRules = {
     'sfmc/ssjs-no-unavailable-method': 'off',
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'off',
     'sfmc/ssjs-no-switch-default': 'off',
+    'sfmc/ssjs-no-switch-fallthrough': 'off',
     'sfmc/ssjs-no-treatascontent-injection': 'off',
     'sfmc/ssjs-arg-types': 'off',
     'sfmc/ssjs-core-method-arity': 'off',
@@ -266,6 +269,7 @@ const ssjsRecommendedRules = {
     'sfmc/ssjs-no-unavailable-method': 'warn',
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'warn',
     'sfmc/ssjs-no-switch-default': 'warn',
+    'sfmc/ssjs-no-switch-fallthrough': 'warn',
     'sfmc/ssjs-no-treatascontent-injection': 'warn',
     'sfmc/ssjs-arg-types': 'warn',
     'sfmc/ssjs-core-method-arity': 'warn',
@@ -293,6 +297,7 @@ const ssjsStrictRules = {
     'sfmc/ssjs-no-unavailable-method': 'warn',
     'sfmc/ssjs-prefer-parsejson-safe-arg': 'error',
     'sfmc/ssjs-no-switch-default': 'error',
+    'sfmc/ssjs-no-switch-fallthrough': 'error',
     'sfmc/ssjs-no-treatascontent-injection': 'error',
     'sfmc/ssjs-arg-types': 'warn',
     'sfmc/ssjs-core-method-arity': 'error',
