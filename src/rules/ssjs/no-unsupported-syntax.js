@@ -7,7 +7,6 @@
  * Auto-fix:
  *   - let/const declarations → var
  *   - nullish coalescing (??) → || (semantics differ for 0, '', false)
- *   - direct object literal return → extract to variable
  */
 
 import { unsupportedByNodeType } from 'ssjs-data';
@@ -29,14 +28,6 @@ function nullishCoalescingFix(context, node) {
         }
         const start = node.left.range[1] + offset;
         return fixer.replaceTextRange([start, start + 2], '||');
-    };
-}
-
-function directObjectReturnFix(context, node) {
-    return (fixer) => {
-        const objectText = context.sourceCode.getText(node.argument);
-        const indent = ' '.repeat(node.loc.start.column);
-        return fixer.replaceText(node, `var _result = ${objectText};\n${indent}return _result;`);
     };
 }
 
@@ -96,8 +87,6 @@ export default {
                         report.fix = AUTO_FIX[entry.feature](node);
                     } else if (entry.feature === 'NullishCoalescing') {
                         report.fix = nullishCoalescingFix(context, node);
-                    } else if (entry.feature === 'DirectObjectReturn') {
-                        report.fix = directObjectReturnFix(context, node);
                     }
 
                     context.report(report);

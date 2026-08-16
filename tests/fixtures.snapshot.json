@@ -649,7 +649,7 @@
     {
       "ruleId": "sfmc/ssjs-no-switch-default",
       "severity": 2,
-      "line": 28,
+      "line": 30,
       "messageId": "noDefault"
     }
   ],
@@ -701,7 +701,7 @@
     {
       "ruleId": null,
       "severity": 2,
-      "line": 20
+      "line": 14
     }
   ],
   "testFixture/rules/ssjs/platform-function-arity.ssjs": [

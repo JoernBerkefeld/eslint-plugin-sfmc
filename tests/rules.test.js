@@ -1837,23 +1837,7 @@ ssjsTester.run('ssjs-no-unavailable-method', ssjsNoUnavailableMethod, {
     ],
 });
 
-// ─── 17. ssjs-no-unsupported-syntax: DirectObjectReturn + NewExpression ──────
-
-ssjsTester.run('ssjs-no-unsupported-syntax (DirectObjectReturn)', ssjsNoUnsupportedSyntax, {
-    valid: [
-        { code: 'function foo() { var r = { a: 1 }; return r; }' },
-        { code: 'function foo() { return 42; }' },
-        { code: 'function foo() { return "hello"; }' },
-        { code: 'function foo() { return null; }' },
-    ],
-    invalid: [
-        {
-            code: 'function foo() { return { a: 1 }; }',
-            output: 'function foo() { var _result = { a: 1 };\n                 return _result; }',
-            errors: [{ messageId: 'unsupported' }],
-        },
-    ],
-});
+// ─── 17. ssjs-no-unsupported-syntax: NewExpression ──────
 
 ssjsTester.run('ssjs-no-unsupported-syntax (NewExpression)', ssjsNoUnsupportedSyntax, {
     valid: [

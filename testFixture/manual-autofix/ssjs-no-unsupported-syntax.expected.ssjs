@@ -4,6 +4,5 @@ var label = "Guest";
 var value = label || "Anonymous";
 
 function payload() {
-    var _result = { label: label, value: value };
-    return _result;
+    return { label: label, value: value };
 }
