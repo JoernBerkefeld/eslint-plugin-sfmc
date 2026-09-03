@@ -1,7 +1,7 @@
 /**
  * ESLint-compatible parser for Marketing Cloud Next Handlebars.
  *
- * Wraps the `@handlebars/parser` package and adds the metadata ESLint needs:
+ * Wraps the `sfmc-handlebars-parser` package and adds the metadata ESLint needs:
  *   - `range: [start, end]` on every node (derived from the parser's
  *     1-based-line / 0-based-column `loc` via a line-start table)
  *   - `loc: { start: {line,column}, end: {line,column} }` (kept from the parser,
@@ -13,7 +13,7 @@
  * runs (the processor does this) so Handlebars never sees `%%[ ... ]%%` syntax.
  */
 
-import { parse as hbsParse } from '@handlebars/parser';
+import { parse as hbsParse } from 'sfmc-handlebars-parser';
 
 // ── Node renaming for ESTree collisions ───────────────────────────────────
 //
@@ -97,7 +97,7 @@ function annotateNode(node, lineStarts, textLength, fallback) {
     }
 
     // ESLint requires every traversed node to expose a numeric `range` and a
-    // matching `loc`. `@handlebars/parser` attaches `loc` to most nodes but a
+    // matching `loc`. `sfmc-handlebars-parser` attaches `loc` to most nodes but a
     // few (e.g. Hash, HashPair) can omit it — inherit the parent's span so the
     // traverser never sees an undefined range.
     let span = fallback;

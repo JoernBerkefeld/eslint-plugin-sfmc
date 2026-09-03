@@ -36,12 +36,12 @@
         "mcn"
     ],
     "dependencies": {
-        "@handlebars/parser": "^2.2.2",
         "ampscript-data": "^4.0.0",
         "ampscript-parser": "^0.3.1",
         "eslint-plugin-mso-email": "^2.0.0",
         "handlebars-data": "^0.4.0",
         "mso-conditional-parser": "^2.0.1",
+        "sfmc-handlebars-parser": "^0.1.0",
         "ssjs-data": "^2.0.0"
     },
     "peerDependencies": {
