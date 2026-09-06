@@ -8,7 +8,7 @@ Unified ESLint plugin for **Salesforce Marketing Cloud** — linting rules for b
 npm install eslint-plugin-sfmc --save-dev
 ```
 
-Requires ESLint 9+ (flat config).
+Requires ESLint **10.4.0+** (flat config) and Node.js **22+**. The ESLint minimum is a breaking requirement change; all 12 public configuration shapes remain unchanged (six objects and six multi-config arrays).
 
 ## Quick Start
 
@@ -182,31 +182,37 @@ Severities above are the same in `embedded`, `strict`, `embedded-next`, and `str
 
 ## Using `eslint-plugin-unicorn` with SFMC
 
-[`eslint-plugin-unicorn`](https://github.com/sindresorhus/eslint-plugin-unicorn) is a high-quality, widely used plugin that we **strongly recommend** — but it is built for modern JavaScript, not SFMC's **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that lacks many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Object.fromEntries`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …).
+[`eslint-plugin-unicorn`](https://github.com/sindresorhus/eslint-plugin-unicorn) is a high-quality, widely used plugin that we **strongly recommend** — but it is built for modern JavaScript, not SFMC's **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that lacks many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …). CloudPage probes found zero-argument string `slice()` throwing after a working `"Hello".substring()` call. Native `Object.fromEntries`, `toReversed`, `toSorted`, `toSpliced`, `replaceAll`, `matchAll` and `structuredClone` were unavailable: `typeof` returned `undefined` and direct calls threw, both without Core and with Core 1.1.1 or 1.1.5.
 
-If you enable unicorn's `recommended` set on SSJS, about **48** of its 308 recommended rules would either **autofix or suggest code using a missing built-in** (breaking it at runtime) or **forbid a required SFMC workaround**. `eslint-plugin-sfmc` offers an **optional** override config that turns off exactly those 48 rules for SSJS.
+For Unicorn **74.0.0**, the SSJS compatibility overrides disable **58** of its **308** enabled recommended rules: API/syntax incompatibilities, recorded runtime-semantic hazards, and diagnostic-only pressure toward unsafe changes. Some paths are conditionally inert under strict ES5 parsing. The other **250** remain active; this classification is not a blanket runtime-safety guarantee or new live SFMC verification.
 
-**Important — this is optional and only needed if you use unicorn.** `eslint-plugin-sfmc` does **not** depend on or load unicorn. The override configs are plain rules objects with **no** `plugins` key, so they only resolve when your own unicorn config (which registers the `unicorn` plugin) is loaded **earlier** in the flat-config array. Insert each sfmc override **object** directly **after** it; only the `recommended` and `embedded` arrays are spread:
+**Unicorn is optional; the matching SSJS protections are required when you enable it.** Include `unicorn-ssjs` when Unicorn covers standalone SSJS and `unicorn-ssjs-embedded` when it covers embedded SSJS. The example below covers both scopes, so both overrides are required. `eslint-plugin-sfmc` does **not** depend on or load unicorn. The override configs are plain rules objects with **no** `plugins` key, so they only resolve when your own unicorn config (which registers the `unicorn` plugin) is loaded **earlier** in the flat-config array. Insert each sfmc override **object** directly **after** it; only the `recommended` and `embedded` arrays are spread:
 
 ```js
 import sfmc from 'eslint-plugin-sfmc';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 export default [
-  eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
+  {
+    ...eslintPluginUnicorn.configs.recommended,
+    files: ['**/*.{js,mjs,cjs,ssjs}'],
+    languageOptions: { ...eslintPluginUnicorn.configs.recommended.languageOptions, globals: {} },
+  },
   ...sfmc.configs.recommended,
   ...sfmc.configs.embedded, // AMPscript + SSJS embedded in HTML (<script runat="server">)
-  sfmc.configs['unicorn-ssjs'], // OPTIONAL: off the 48 SFMC-incompatible unicorn rules for SSJS
-  sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
+  sfmc.configs['unicorn-ssjs'], // REQUIRED: protect standalone SSJS from the 58 incompatible rules
+  sfmc.configs['unicorn-ssjs-embedded'], // REQUIRED: protect SSJS embedded in HTML
 ];
 ```
 
 | Config                                  | Files            | What it does                                              |
 | --------------------------------------- | ---------------- | --------------------------------------------------------- |
-| `sfmc.configs['unicorn-ssjs']`          | `**/*.ssjs`      | Turns off the 48 SFMC-incompatible unicorn rules for SSJS |
-| `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js` | Same 48-rule override for SSJS embedded in HTML           |
+| `sfmc.configs['unicorn-ssjs']`          | `**/*.ssjs`      | Turns off the 58 SFMC-incompatible unicorn rules for SSJS |
+| `sfmc.configs['unicorn-ssjs-embedded']` | `**/*.html/*.js` | Same 58-rule override for SSJS embedded in HTML           |
 
-Only **48** of unicorn's 308 recommended rules are overridden — the other **260** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v73.0.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
+Scope the complete Unicorn preset to JavaScript/SSJS, not custom AMPscript, Handlebars or MSO ASTs. Clearing its builtin map prevents modern globals leaking into SSJS; other matching configs can still supply globals. The SFMC presets do not enable general `no-undef` checking, and extracted HTML server blocks are linted independently.
+
+Only **58** of unicorn's 308 recommended rules are overridden — the other **250** stay active. If you don't use unicorn, omit these configs entirely. For the full rule-by-rule breakdown (with rationale and SFMC evidence links, pinned to unicorn v74.0.0), see [docs/unicorn-compatibility.md](docs/unicorn-compatibility.md).
 
 ## Processors
 

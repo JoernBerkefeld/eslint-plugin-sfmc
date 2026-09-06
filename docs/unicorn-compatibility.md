@@ -1,34 +1,42 @@
 # `eslint-plugin-unicorn` compatibility with SFMC SSJS
 
-> **Compatibility analysis for [`eslint-plugin-unicorn@73.0.0`](https://github.com/sindresorhus/eslint-plugin-unicorn).**
+> **Compatibility analysis for [`eslint-plugin-unicorn@74.0.0`](https://github.com/sindresorhus/eslint-plugin-unicorn).**
 >
-> ⚠️ **Version warning:** This classification was done against `eslint-plugin-unicorn` **v73.0.0** (308 recommended rules). Newer versions of unicorn may add, rename, or change rules that are **not** yet classified here. Re-audit this page whenever you upgrade unicorn — a rule added in a later version could autofix SSJS into runtime-breaking code without being in the override list below.
+> ⚠️ **Version warning:** This classification was done against `eslint-plugin-unicorn` **v74.0.0** (308 recommended rules). Newer versions of unicorn may add, rename, or change rules that are **not** yet classified here. Re-audit this page whenever you upgrade unicorn — a rule added in a later version could autofix SSJS into runtime-breaking code without being in the override list below.
 
-`eslint-plugin-unicorn` is an excellent, actively maintained plugin that we **strongly recommend** — but it targets modern JavaScript engines, not the Salesforce Marketing Cloud **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that is missing many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Object.fromEntries`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …). See the SFMC evidence pages:
+`eslint-plugin-unicorn` is an excellent, actively maintained plugin that we **strongly recommend** — but it targets modern JavaScript engines, not the Salesforce Marketing Cloud **SSJS** runtime. SFMC SSJS runs on a JINT-based ES3/ES5-era engine that is missing many built-ins (`Array#includes`, `String#startsWith`, `Set`, `Map`, `Math.trunc`, spread `...`, ES modules, `async`/`await`, …). CloudPage probes also found native `Object.fromEntries`, `matchAll` and `structuredClone` unavailable, both without Core and with Core 1.1.1 or 1.1.5. See the SFMC evidence pages:
 
 - **ECMAScript built-ins support** — <https://ssjs.guide/ecmascript-builtins/>
 - **Engine limitations** — <https://ssjs.guide/engine-limitations/>
 
-Of unicorn's **308** recommended rules (v73.0.0), **260** are safe to keep on for SSJS and **48** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 48 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
+Of unicorn's **308** recommended rules (v74.0.0), **250** remain active (including conditional and inert cases; not a blanket runtime-safety guarantee) and **58** should be turned off. `eslint-plugin-sfmc` ships a scope-specific override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 58 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
 
 ---
 
 ## Section 1 — How to apply
 
-The override is **optional** and **SSJS-scoped**. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Insert each sfmc override **object** directly **after** it; only the `recommended` and `embedded` arrays are spread:
+Requires ESLint **10.4.0+** and Node.js **22+**. Raising the ESLint peer minimum is a breaking requirement change, independent of preserving all 12 public preset shapes.
+
+Unicorn itself is **optional**. When you enable it for standalone SSJS, `unicorn-ssjs` is **required**; when you enable it for embedded SSJS, `unicorn-ssjs-embedded` is **required**. The example below covers both scopes, so it requires both overrides. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Insert each sfmc override **object** directly **after** it; only the `recommended` and `embedded` arrays are spread:
 
 ```js
 import sfmc from 'eslint-plugin-sfmc';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 export default [
-    eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
+    {
+        ...eslintPluginUnicorn.configs.recommended,
+        files: ['**/*.{js,mjs,cjs,ssjs}'],
+        languageOptions: { ...eslintPluginUnicorn.configs.recommended.languageOptions, globals: {} },
+    },
     ...sfmc.configs.recommended,
     ...sfmc.configs.embedded,                 // AMPscript + SSJS embedded in HTML (<script runat="server">)
-    sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 48 SFMC-incompatible unicorn rules for SSJS
-    sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
+    sfmc.configs['unicorn-ssjs'],          // REQUIRED: protect standalone SSJS from the 58 incompatible rules
+    sfmc.configs['unicorn-ssjs-embedded'], // REQUIRED: protect SSJS embedded in HTML
 ];
 ```
+
+Keep the full recommended rule set, but scope it to JavaScript and SSJS (including extracted HTML JavaScript). AMPscript, Handlebars and MSO use custom ASTs that JavaScript-only Unicorn visitors cannot traverse safely. Replace Unicorn's builtin globals within this copied preset with an empty map so the language/runtime configs own globals; this does not remove globals from other matching config entries. The SFMC presets do not enable general `no-undef` checking, and separate HTML server blocks are linted independently.
 
 | Config | Applies to |
 |---|---|
@@ -37,47 +45,68 @@ export default [
 
 If you don't use unicorn, omit these configs entirely — nothing else in `eslint-plugin-sfmc` references them.
 
+All 12 public shapes remain unchanged: six objects (`ampscript`, `ssjs`, `ampscript-next`, `ssjs-next`, `unicorn-ssjs`, `unicorn-ssjs-embedded`) and six arrays (`recommended`, `embedded`, `strict`, `recommended-next`, `embedded-next`, `strict-next`). Raw arrays require spreading the multi-config presets as above, not the single override objects.
+
+Alternatively, ESLint's `defineConfig` flattens nested configuration arrays. This no-spread-array form is verified at exactly ESLint **10.4.0** and at **10.8.0**; it is documented for the declared **10.4.0+** range, not as a claim about older ESLint versions:
+
+```js
+import { defineConfig } from 'eslint/config';
+import sfmc from 'eslint-plugin-sfmc';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+
+export default defineConfig(
+    {
+        ...eslintPluginUnicorn.configs.recommended,
+        files: ['**/*.{js,mjs,cjs,ssjs}'],
+        languageOptions: { ...eslintPluginUnicorn.configs.recommended.languageOptions, globals: {} },
+    },
+    sfmc.configs.recommended,
+    sfmc.configs.embedded,
+    sfmc.configs['unicorn-ssjs'],
+    sfmc.configs['unicorn-ssjs-embedded'],
+);
+```
+
 ---
 
-## Section 2 — Rules to override for SSJS (48)
+## Section 2 — Rules to override for SSJS (58)
 
-These 48 recommended rules either **autofix or suggest code using a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 48 are confirmed `recommended` in unicorn v73.0.0.
+These 58 recommended rules introduce unavailable or unresolved APIs, conflict with recorded runtime semantics, pressure users toward unsafe changes through diagnostics, or introduce unsupported syntax. Some paths are conditionally inert under strict ES5 parsing. The override config sets each to `'off'` for SSJS. All 58 are confirmed `recommended` in unicorn v74.0.0.
 
-### Group A — fixes/suggestions using a missing built-in / forbid a SFMC workaround (43)
+### Group A — API, runtime-semantic and diagnostic protections (50)
 
 | Rule | Why it breaks SSJS | SFMC evidence |
 |---|---|---|
 | [`prefer-includes`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes.md) | Pushes `Array/String#includes()` — missing in SSJS | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-string-starts-ends-with`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-starts-ends-with.md) | Pushes `String#startsWith/endsWith` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-string-trim-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-trim-start-end.md) | Pushes `trimStart/trimEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-slice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-slice.md) | Forbids `substring`, the SFMC-safe choice | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-replace-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-replace-all.md) | Pushes `String#replaceAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-slice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-slice.md) | Zero-argument autofix changes working `"Hello".substring()` into throwing `"Hello".slice()` in CloudPage probes; explicit-index slice remains a separate supported contract | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-replace-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-replace-all.md) | Regex-replace and split/join autofixes emit native `replaceAll`, unavailable in CloudPage probes | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-string-repeat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-repeat.md) | Pushes `String#repeat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-string-pad-start-end`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-pad-start-end.md) | Pushes `padStart/padEnd` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-string-match-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-match-all.md) | Pushes `String#matchAll` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-string-match-all`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-match-all.md) | Pushes native `String#matchAll`, unavailable in CloudPage probes: `typeof` was `undefined` and direct calls threw without Core and with Core 1.1.1 or 1.1.5 | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-string-raw`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-string-raw.md) | Pushes `String.raw` tag — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-code-point`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-code-point.md) | Pushes `codePointAt/fromCodePoint` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-code-point`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-code-point.md) | Editor suggestions introduce `codePointAt/fromCodePoint`; not automatic fixes, and method availability is still required | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-find`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-find.md) | Pushes `Array#find/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-some`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-some.md) | Pushes `Array#some` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-index-of`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-index-of.md) | Pushes `findIndex/findLastIndex` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-index-of`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-index-of.md) | Replaces find-index patterns with `indexOf`/`lastIndexOf` (not the reverse); generated branches require supported native methods or an actually supplied polyfill | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-flat`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat.md) | Pushes `Array#flat` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-flat-map`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat-map.md) | Pushes `Array#flatMap` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-last-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-last-methods.md) | Pushes `.at()/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-array-from-async`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-async.md) | Pushes `Array.fromAsync` — missing + async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Suggests `Array#toReversed()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`no-array-sort`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md) | Editor suggestion replaces `sort()` with missing `toSorted()`; ES5 parsing does not prevent method-call suggestions | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`no-array-splice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-splice.md) | Editor suggestion replaces local array mutation with reassignment using missing `toSpliced()` | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-array-from-async`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-async.md) | Pushes `Array.fromAsync` without established target-runtime support; conservative output protection, with async syntax independently unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Suggests native `Array#toReversed()`, unavailable in CloudPage probes | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-array-sort`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md) | Editor suggestion emits native `toSorted()`, unavailable in CloudPage probes; ES5 parsing does not prevent suggestions | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-array-splice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-splice.md) | Eligible fresh-local-array suggestion reassigns using native `toSpliced()`, unavailable in CloudPage probes; escaping aliases and used return values suppress this suggestion | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-at`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-at.md) | Pushes `.at()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-negative-index`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-negative-index.md) | Pushes `.at()` — missing; forbids the `.length - i` workaround | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-spread`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-spread.md) | Pushes spread `...` — ES6 syntax, throws on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-date-now`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-date-now.md) | Pushes `Date.now()` — missing static | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-object-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-from-entries.md) | Pushes `Object.fromEntries` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-date-now`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-date-now.md) | Replaces numeric timestamp expressions with `Date.now()`, which returns a Date object in recorded SSJS rather than the expected number | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-object-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-from-entries.md) | Reduce/configured-function autofixes emit native `Object.fromEntries`, unavailable in CloudPage probes | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-reflect-apply`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-reflect-apply.md) | Pushes `Reflect.apply` — `Reflect` missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-number-properties`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-properties.md) | Pushes `Number.parseInt/parseFloat/isNaN/isFinite` statics — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-number-is-safe-integer`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-is-safe-integer.md) | Pushes `Number.isSafeInteger` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-number-coercion`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-number-coercion.md) | Number-static patterns unsafe on the ES3 engine | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-global-number-constants`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-global-number-constants.md) | Pushes `Number.NaN/Number.POSITIVE_INFINITY` etc. — missing statics | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`prefer-native-coercion-functions`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-native-coercion-functions.md) | Native coercion refs that are missing/unsafe | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-native-coercion-functions`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-native-coercion-functions.md) | Replacing a wrapper with native coercion changes zero-argument behavior: recorded SSJS `String()` differs from a wrapper called without its parameter | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-math-trunc`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-math-trunc.md) | Pushes `Math.trunc` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-modern-math-apis`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-modern-math-apis.md) | Pushes `Math.log10/log2/hypot` — missing; forbids `Math.log(x)/Math.LN10` and `Math.sqrt(a*a+b*b)` workarounds | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`no-instanceof-builtins`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-instanceof-builtins.md) | Autofixes `instanceof Array` to `Array.isArray` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
@@ -85,31 +114,42 @@ These 48 recommended rules either **autofix or suggest code using a missing buil
 | [`prefer-set-has`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-set-size`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-size.md) | Pushes `Set` — ES6, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-set-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-methods.md) | Pushes `Set` methods — ES2024, unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-map-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-map-from-entries.md) | Pushes `Map` + `Object.fromEntries` — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-group-by`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-group-by.md) | Pushes `Object.groupBy/Map.groupBy` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-map-from-entries`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-map-from-entries.md) | Pushes unsupported `Map`; native `Object.fromEntries` is also unavailable in CloudPage probes | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-group-by`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-group-by.md) | Pushes `Object.groupBy` without established target-runtime support; conservative output protection, with `Map.groupBy` independently requiring unsupported `Map` | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-iterator-helpers`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-helpers.md) | Pushes the iterator-helper protocol — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`prefer-structured-clone`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-structured-clone.md) | Pushes `structuredClone` global — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
-| [`require-array-join-separator`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-join-separator.md) | Safe alone, but grouped here to avoid pushing modern array idioms under the strict set | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-structured-clone`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-structured-clone.md) | Pushes native `structuredClone`, unavailable in CloudPage probes: `typeof` was `undefined` and direct calls threw without Core and with Core 1.1.1 or 1.1.5 | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-includes-over-repeated-comparisons`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes-over-repeated-comparisons.md) | Diagnostic-only pressure toward unavailable `.includes()`; no fix or editor suggestion | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-object-define-properties`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-define-properties.md) | Autofix combines singular calls into unavailable plural `Object.defineProperties`; singular support does not establish plural support or descriptor equivalence | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-new-array`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-new-array.md) | Autofix emits `Array.from`; v74 string-method inference newly reaches `new Array("abc".indexOf(value))` with an unknown parameter | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-unnecessary-array-splice-count`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-array-splice-count.md) | Autofix omits `deleteCount`; recorded native one-argument SSJS `splice` throws | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`prefer-regexp-test`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-regexp-test.md) | Recorded no-match `match()` returns truthy `[]`, and missed `search()` returns `0`; conversion to `.test()` changes truthiness and affected inequality predicates | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-unnecessary-splice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-splice.md) | One-argument splice throws, unlike `.length = 0`; replacement branches also change recorded insertion/overwrite semantics. The used-return `shift()` branch is diagnostic-only, not an autofix | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-redundant-comparison`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-redundant-comparison.md) | With the numeric equality gate `x === y && x > Number.MIN_VALUE && y > 0`, an editor suggestion removes `y > 0`; recorded negative `MIN_VALUE` invalidates the host-derived implication | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-impossible-length-comparison`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-impossible-length-comparison.md) | Diagnostic-only length comparison reasoning assumes the host's positive `Number.MIN_VALUE`, contrary to the recorded negative SSJS value | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-useless-coercion`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-coercion.md) | Autofix removes required coercion from `Number(Number.MIN_VALUE > 0 ? 1 : 'x')`; host evaluation selects a number, while recorded SSJS selects a string | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 
-### Group B — forbid ES6+ syntax / ES-module / async constructs (5)
+### Group B — introduce or require ES6+ syntax / ES-module / async constructs (8)
 
 | Rule | Why it breaks SSJS | SFMC evidence |
 |---|---|---|
+| [`no-for-loop`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-for-loop.md) | Autofix introduces `for...of` and `const`. The v74 visitor is inert under strict ES5 parsing because it needs block scopes; the same ES5 source becomes reachable with ES2015 parsing | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`prefer-default-parameters`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-default-parameters.md) | Editor suggestion replaces parameter reassignment with ES6 default-parameter syntax; reachable under ES5 input parsing | [Engine limitations](https://ssjs.guide/engine-limitations/) |
+| [`require-array-sort-compare`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-sort-compare.md) | Both numeric and string comparator suggestions introduce arrow functions even under ES5 parsing | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-optional-catch-binding`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-optional-catch-binding.md) | Pushes `catch {}` (ES2019) — may not parse on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-module`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-module.md) | Pushes ES modules — unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-node-protocol`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-node-protocol.md) | Pushes `node:` imports — no module system | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-top-level-await`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-top-level-await.md) | Pushes top-level `await` — async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 | [`prefer-export-from`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-export-from.md) | Pushes `export … from` — ES modules | [Engine limitations](https://ssjs.guide/engine-limitations/) |
 
-> **Note:** [`prefer-regexp-test`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-regexp-test.md) stays **active** — `RegExp#test` exists in SFMC SSJS, so it is intentionally **not** in the override list.
+> **Regex caution:** Availability of `RegExp#test` does not establish equivalence with `.match()` or `.search()`. Recorded SSJS no-match arrays, zero-result search behavior and conflicting global-regex state evidence must be checked against the actual transformation predicate.
 
 ---
 
-## Section 3 — Rules OK as-is (260)
+## Section 3 — Active rules, including conditional cases (250)
 
-These recommended rules are **not** disabled by the override config. They are either genuinely SFMC-safe (readability / best-practice rules that work on the ES3/ES5 engine) or **inert** on SSJS — many target the DOM, Node.js, Promises, TypeScript, or ES modules and therefore never fire on server-side SFMC code. Each links to its official unicorn documentation.
+These recommended rules are **not** disabled by the override config. Active is a policy classification, not proof that every transformation is safe in SFMC. Modern-syntax-gated paths may be inert under strict ES5 parsing; DOM, Node.js, TypeScript and custom/polyfilled-object paths require their own environment contracts. Each links to its official Unicorn documentation. See the evidence qualifications below before accepting generated changes.
 
-<!-- BEGIN 260-OK-LIST -->
+<!-- BEGIN 250-OK-LIST -->
 - [better-dom-traversing](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/better-dom-traversing.md)
 - [catch-error-name](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/catch-error-name.md)
 - [class-reference-in-static-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/class-reference-in-static-methods.md)
@@ -177,10 +217,8 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-empty-file](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-empty-file.md)
 - [no-error-property-assignment](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-error-property-assignment.md)
 - [no-exports-in-scripts](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-exports-in-scripts.md)
-- [no-for-loop](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-for-loop.md)
 - [no-global-object-property-assignment](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-global-object-property-assignment.md)
 - [no-immediate-mutation](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-immediate-mutation.md)
-- [no-impossible-length-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-impossible-length-comparison.md)
 - [no-incorrect-query-selector](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-incorrect-query-selector.md)
 - [no-incorrect-template-string-interpolation](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-incorrect-template-string-interpolation.md)
 - [no-invalid-argument-count](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-invalid-argument-count.md)
@@ -202,7 +240,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-negated-condition](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-negated-condition.md)
 - [no-negation-in-equality-check](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-negation-in-equality-check.md)
 - [no-nested-ternary](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-nested-ternary.md)
-- [no-new-array](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-new-array.md)
 - [no-new-buffer](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-new-buffer.md)
 - [no-non-function-verb-prefix](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-non-function-verb-prefix.md)
 - [no-nonstandard-builtin-properties](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-nonstandard-builtin-properties.md)
@@ -211,7 +248,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-object-methods-with-collections](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-object-methods-with-collections.md)
 - [no-optional-chaining-on-undeclared-variable](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-optional-chaining-on-undeclared-variable.md)
 - [no-process-exit](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-process-exit.md)
-- [no-redundant-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-redundant-comparison.md)
 - [no-return-array-push](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-return-array-push.md)
 - [no-selector-as-dom-name](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-selector-as-dom-name.md)
 - [no-shorthand-property-overrides](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-shorthand-property-overrides.md)
@@ -229,7 +265,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-undeclared-class-members](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-undeclared-class-members.md)
 - [no-unnecessary-array-flat-depth](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-array-flat-depth.md)
 - [no-unnecessary-array-flat-map](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-array-flat-map.md)
-- [no-unnecessary-array-splice-count](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-array-splice-count.md)
 - [no-unnecessary-await](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-await.md)
 - [no-unnecessary-boolean-comparison](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-boolean-comparison.md)
 - [no-unnecessary-fetch-options](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-fetch-options.md)
@@ -237,7 +272,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-unnecessary-nested-ternary](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-nested-ternary.md)
 - [no-unnecessary-polyfills](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-polyfills.md)
 - [no-unnecessary-slice-end](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-slice-end.md)
-- [no-unnecessary-splice](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-splice.md)
 - [no-unnecessary-string-trim](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unnecessary-string-trim.md)
 - [no-unreadable-array-destructuring](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unreadable-array-destructuring.md)
 - [no-unreadable-for-of-expression](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unreadable-for-of-expression.md)
@@ -250,7 +284,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-unsafe-string-replacement](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unsafe-string-replacement.md)
 - [no-unused-array-method-return](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-unused-array-method-return.md)
 - [no-useless-boolean-cast](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-boolean-cast.md)
-- [no-useless-coercion](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-coercion.md)
 - [no-useless-collection-argument](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-collection-argument.md)
 - [no-useless-compound-assignment](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-compound-assignment.md)
 - [no-useless-concat](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-useless-concat.md)
@@ -292,7 +325,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-class-fields](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-class-fields.md)
 - [prefer-classlist-toggle](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-classlist-toggle.md)
 - [prefer-continue](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-continue.md)
-- [prefer-default-parameters](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-default-parameters.md)
 - [prefer-direct-iteration](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-direct-iteration.md)
 - [prefer-dom-node-append](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-append.md)
 - [prefer-dom-node-html-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-dom-node-html-methods.md)
@@ -304,12 +336,12 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-event-target](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-event-target.md)
 - [prefer-flat-math-min-max](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-flat-math-min-max.md)
 - [prefer-get-or-insert-computed](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-get-or-insert-computed.md)
+- [prefer-global-number-constants](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-global-number-constants.md)
 - [prefer-global-this](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-global-this.md)
 - [prefer-has-check](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-has-check.md)
 - [prefer-hoisting-branch-code](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-hoisting-branch-code.md)
 - [prefer-https](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-https.md)
 - [prefer-identifier-import-export-specifiers](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-identifier-import-export-specifiers.md)
-- [prefer-includes-over-repeated-comparisons](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-includes-over-repeated-comparisons.md)
 - [prefer-iterable-in-constructor](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterable-in-constructor.md)
 - [prefer-iterator-to-array-at-end](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-to-array-at-end.md)
 - [prefer-iterator-to-array](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-iterator-to-array.md)
@@ -321,7 +353,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-math-min-max](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-math-min-max.md)
 - [prefer-minimal-ternary](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-minimal-ternary.md)
 - [prefer-modern-dom-apis](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-modern-dom-apis.md)
-- [prefer-object-define-properties](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-define-properties.md)
 - [prefer-object-destructuring-defaults](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-destructuring-defaults.md)
 - [prefer-object-iterable-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-object-iterable-methods.md)
 - [prefer-observer-apis](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-observer-apis.md)
@@ -332,7 +363,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-prototype-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-prototype-methods.md)
 - [prefer-query-selector](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-query-selector.md)
 - [prefer-queue-microtask](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-queue-microtask.md)
-- [prefer-regexp-test](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-regexp-test.md)
 - [prefer-response-static-json](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-response-static-json.md)
 - [prefer-scoped-selector](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-scoped-selector.md)
 - [prefer-simple-condition-first](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-simple-condition-first.md)
@@ -357,7 +387,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [prefer-url-search-parameters](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-url-search-parameters.md)
 - [prefer-while-loop-condition](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-while-loop-condition.md)
 - [relative-url-style](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/relative-url-style.md)
-- [require-array-sort-compare](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-sort-compare.md)
 - [require-css-escape](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-css-escape.md)
 - [require-module-attributes](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-module-attributes.md)
 - [require-module-specifiers](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-module-specifiers.md)
@@ -370,5 +399,10 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [template-indent](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/template-indent.md)
 - [text-encoding-identifier-case](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/text-encoding-identifier-case.md)
 - [throw-new-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/throw-new-error.md)
-<!-- END 260-OK-LIST -->
+- [require-array-join-separator](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/require-array-join-separator.md)
+<!-- END 250-OK-LIST -->
+
+**Reactivated, with bounded evidence:** `require-array-join-separator` adds an explicit comma separator, which recorded SSJS supports. `prefer-global-number-constants` replaces Number properties with globals: positive-infinity and NaN fixes have focused coverage, including shadowing guards. Its negative-infinity property branch is diagnostic-only; recorded sign differences mean accepting that diagnostic remains conditional, not a blanket constant-equivalence clearance.
+
+The HTML processor has `supportsAutofix: false`: diagnostics remain, while fixes and editor suggestions are stripped. Standalone upstream tests establish the generated outputs; suppression tests cover both public overrides and ordinary `.js`/`.mjs` non-leakage.
 

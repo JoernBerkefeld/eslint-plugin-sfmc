@@ -368,8 +368,8 @@ function standaloneHandlebarsConfigs(configName) {
 // ── Optional eslint-plugin-unicorn override for SSJS ──────────────────────────
 
 /**
- * The 48 `eslint-plugin-unicorn` recommended rules (analysed against
- * unicorn v73.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
+ * The 58 `eslint-plugin-unicorn` recommended rules (analysed against
+ * unicorn v74.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
  * engine — they either fix/suggest code using a missing built-in or forbid a required
  * SFMC workaround, or enforce ES-module / async / ES6-only syntax that the
  * engine cannot run. Each is mapped to `'off'`.
@@ -385,7 +385,10 @@ const unicornSsjsOffRules = {
     'unicorn/prefer-includes': 'off',
     'unicorn/prefer-string-starts-ends-with': 'off',
     'unicorn/prefer-string-trim-start-end': 'off',
+    // CloudPage probes: working "Hello".substring()
+    // becomes throwing slice(); explicit-index string slice is a separate contract.
     'unicorn/prefer-string-slice': 'off',
+    // Same measured contexts: replaceAll is undefined and its direct call throws.
     'unicorn/prefer-string-replace-all': 'off',
     'unicorn/prefer-string-repeat': 'off',
     'unicorn/prefer-string-pad-start-end': 'off',
@@ -399,20 +402,25 @@ const unicornSsjsOffRules = {
     'unicorn/prefer-array-flat-map': 'off',
     'unicorn/prefer-array-last-methods': 'off',
     'unicorn/prefer-array-from-async': 'off',
+    // CloudPage probes: toReversed/toSorted/toSpliced are undefined; direct calls
+    // throw. Editor suggestions can introduce these methods under ES5 parsing.
     'unicorn/no-array-reverse': 'off',
-    // Editor suggestions introduce ES2023 methods unavailable in SSJS, even under ES5 parsing.
     'unicorn/no-array-sort': 'off',
     'unicorn/no-array-splice': 'off',
     'unicorn/prefer-at': 'off',
     'unicorn/prefer-negative-index': 'off',
     'unicorn/prefer-spread': 'off',
     'unicorn/prefer-date-now': 'off',
+    // CloudPage probes: Object.fromEntries is undefined and pair-array calls throw.
     'unicorn/prefer-object-from-entries': 'off',
     'unicorn/prefer-reflect-apply': 'off',
     'unicorn/prefer-number-properties': 'off',
     'unicorn/prefer-number-is-safe-integer': 'off',
     'unicorn/prefer-number-coercion': 'off',
-    'unicorn/prefer-global-number-constants': 'off',
+    // Host constant inference differs from recorded SFMC numeric constants.
+    'unicorn/no-redundant-comparison': 'off',
+    'unicorn/no-impossible-length-comparison': 'off',
+    'unicorn/no-useless-coercion': 'off',
     'unicorn/prefer-native-coercion-functions': 'off',
     'unicorn/prefer-math-trunc': 'off',
     'unicorn/prefer-modern-math-apis': 'off',
@@ -425,8 +433,19 @@ const unicornSsjsOffRules = {
     'unicorn/prefer-group-by': 'off',
     'unicorn/prefer-iterator-helpers': 'off',
     'unicorn/prefer-structured-clone': 'off',
-    'unicorn/require-array-join-separator': 'off',
+    // Native match/search miss results and splice behavior are not standard JS.
+    'unicorn/prefer-regexp-test': 'off',
+    'unicorn/no-unnecessary-splice': 'off',
+    'unicorn/prefer-includes-over-repeated-comparisons': 'off',
+    'unicorn/prefer-object-define-properties': 'off',
+    'unicorn/no-new-array': 'off',
+    'unicorn/no-unnecessary-array-splice-count': 'off',
     // Group B — forbid ES6+ syntax / ES-module / async constructs
+    // Inert with strict ES5 parsing, but introduces for-of when block scopes are enabled.
+    'unicorn/no-for-loop': 'off',
+    'unicorn/prefer-default-parameters': 'off',
+    // Both comparator suggestions use arrow functions, even when parsing ES5.
+    'unicorn/require-array-sort-compare': 'off',
     'unicorn/prefer-optional-catch-binding': 'off',
     'unicorn/prefer-module': 'off',
     'unicorn/prefer-node-protocol': 'off',
@@ -825,15 +844,15 @@ plugin.configs = {
         ...msoRuleConfigs(),
     ],
 
-    // ── Optional eslint-plugin-unicorn override configs ───────────────────────
+    // ── Required overrides when eslint-plugin-unicorn covers SSJS ────────────
 
     /**
-     * OPTIONAL: turns off the 48 unicorn recommended rules incompatible with
-     * SFMC SSJS, for standalone `.ssjs` files. Plain rules object with NO
+     * REQUIRED when unicorn covers standalone `.ssjs` files: turns off the 58
+     * unicorn recommended rules incompatible with SFMC SSJS. Plain rules object with NO
      * `plugins` key — eslint-plugin-sfmc does not load unicorn. Insert this object
      * AFTER your own unicorn config (which registers the `unicorn` plugin);
-     * otherwise ESLint cannot resolve the `unicorn/*` keys. If you don't use
-     * unicorn, omit this config entirely.
+     * otherwise ESLint cannot resolve the `unicorn/*` keys. Omit this config
+     * if unicorn is not enabled for standalone SSJS.
      */
     'unicorn-ssjs': {
         name: 'sfmc/unicorn-ssjs',
@@ -842,8 +861,9 @@ plugin.configs = {
     },
 
     /**
-     * OPTIONAL: same 48-rule override for SSJS embedded in HTML
-     * (virtual `**\/*.html/*.js` files). Insert the object AFTER your unicorn config.
+     * REQUIRED when unicorn covers SSJS embedded in HTML: same 58-rule override
+     * for virtual `**\/*.html/*.js` files. Insert AFTER your unicorn config.
+     * Omit this config if unicorn is not enabled for embedded SSJS.
      */
     'unicorn-ssjs-embedded': {
         name: 'sfmc/unicorn-ssjs-embedded',
