@@ -9,13 +9,13 @@
 - **ECMAScript built-ins support** — <https://ssjs.guide/ecmascript-builtins/>
 - **Engine limitations** — <https://ssjs.guide/engine-limitations/>
 
-Of unicorn's **308** recommended rules (v73.0.0), **262** are safe to keep on for SSJS and **46** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 46 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
+Of unicorn's **308** recommended rules (v73.0.0), **260** are safe to keep on for SSJS and **48** should be turned off. `eslint-plugin-sfmc` ships an **optional** override config (`unicorn-ssjs` / `unicorn-ssjs-embedded`) that turns off exactly those 48 for SSJS files. `eslint-plugin-sfmc` does **not** depend on or load unicorn — the override only takes effect when you have loaded unicorn yourself. See [Section 1](#section-1--how-to-apply).
 
 ---
 
 ## Section 1 — How to apply
 
-The override is **optional** and **SSJS-scoped**. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Spread the sfmc override **after** it:
+The override is **optional** and **SSJS-scoped**. `eslint-plugin-sfmc` never loads unicorn; the override is a plain rules object that only resolves when you have loaded your own unicorn config **earlier** in the flat-config array (that config registers the `unicorn` plugin). Insert each sfmc override **object** directly **after** it; only the `recommended` and `embedded` arrays are spread:
 
 ```js
 import sfmc from 'eslint-plugin-sfmc';
@@ -25,8 +25,8 @@ export default [
     eslintPluginUnicorn.configs.recommended, // you opt in — registers the `unicorn` plugin
     ...sfmc.configs.recommended,
     ...sfmc.configs.embedded,                 // AMPscript + SSJS embedded in HTML (<script runat="server">)
-    ...sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 46 SFMC-incompatible unicorn rules for SSJS
-    ...sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
+    sfmc.configs['unicorn-ssjs'],          // OPTIONAL: off the 48 SFMC-incompatible unicorn rules for SSJS
+    sfmc.configs['unicorn-ssjs-embedded'], // OPTIONAL: same override for SSJS embedded in HTML (<script runat="server">)
 ];
 ```
 
@@ -39,11 +39,11 @@ If you don't use unicorn, omit these configs entirely — nothing else in `eslin
 
 ---
 
-## Section 2 — Rules to override for SSJS (46)
+## Section 2 — Rules to override for SSJS (48)
 
-These 46 recommended rules either **autofix code to a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 46 are confirmed `recommended` in unicorn v73.0.0.
+These 48 recommended rules either **autofix or suggest code using a missing built-in**, **forbid a documented SFMC workaround**, or **enforce ES-module / async / ES6-only syntax** the engine cannot run. The override config sets each to `'off'` for SSJS. All 48 are confirmed `recommended` in unicorn v73.0.0.
 
-### Group A — autofix to a missing built-in / forbid a SFMC workaround (41)
+### Group A — fixes/suggestions using a missing built-in / forbid a SFMC workaround (43)
 
 | Rule | Why it breaks SSJS | SFMC evidence |
 |---|---|---|
@@ -64,7 +64,9 @@ These 46 recommended rules either **autofix code to a missing built-in**, **forb
 | [`prefer-array-flat-map`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-flat-map.md) | Pushes `Array#flatMap` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-last-methods`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-last-methods.md) | Pushes `.at()/findLast` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-array-from-async`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-array-from-async.md) | Pushes `Array.fromAsync` — missing + async unsupported | [Engine limitations](https://ssjs.guide/engine-limitations/) |
-| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Autofixes to `Array#toReversed()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-array-reverse`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reverse.md) | Suggests `Array#toReversed()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-array-sort`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md) | Editor suggestion replaces `sort()` with missing `toSorted()`; ES5 parsing does not prevent method-call suggestions | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
+| [`no-array-splice`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-splice.md) | Editor suggestion replaces local array mutation with reassignment using missing `toSpliced()` | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-at`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-at.md) | Pushes `.at()` — missing | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-negative-index`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-negative-index.md) | Pushes `.at()` — missing; forbids the `.length - i` workaround | [ECMAScript built-ins](https://ssjs.guide/ecmascript-builtins/) |
 | [`prefer-spread`](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-spread.md) | Pushes spread `...` — ES6 syntax, throws on ES3 | [Engine limitations](https://ssjs.guide/engine-limitations/) |
@@ -103,11 +105,11 @@ These 46 recommended rules either **autofix code to a missing built-in**, **forb
 
 ---
 
-## Section 3 — Rules OK as-is (262)
+## Section 3 — Rules OK as-is (260)
 
 These recommended rules are **not** disabled by the override config. They are either genuinely SFMC-safe (readability / best-practice rules that work on the ES3/ES5 engine) or **inert** on SSJS — many target the DOM, Node.js, Promises, TypeScript, or ES modules and therefore never fire on server-side SFMC code. Each links to its official unicorn documentation.
 
-<!-- BEGIN 262-OK-LIST -->
+<!-- BEGIN 260-OK-LIST -->
 - [better-dom-traversing](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/better-dom-traversing.md)
 - [catch-error-name](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/catch-error-name.md)
 - [class-reference-in-static-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/class-reference-in-static-methods.md)
@@ -151,8 +153,6 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [no-array-method-this-argument](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-method-this-argument.md)
 - [no-array-reduce](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-reduce.md)
 - [no-array-sort-for-min-max](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort-for-min-max.md)
-- [no-array-sort](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-sort.md)
-- [no-array-splice](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-array-splice.md)
 - [no-async-promise-finally](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-async-promise-finally.md)
 - [no-await-expression-member](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-await-expression-member.md)
 - [no-await-in-promise-methods](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/no-await-in-promise-methods.md)
@@ -370,5 +370,5 @@ These recommended rules are **not** disabled by the override config. They are ei
 - [template-indent](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/template-indent.md)
 - [text-encoding-identifier-case](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/text-encoding-identifier-case.md)
 - [throw-new-error](https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/throw-new-error.md)
-<!-- END 262-OK-LIST -->
+<!-- END 260-OK-LIST -->
 

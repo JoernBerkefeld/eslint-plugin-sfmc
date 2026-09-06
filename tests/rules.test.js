@@ -3052,7 +3052,9 @@ describe('unicorn-ssjs override configs', () => {
     it('turns every override rule OFF and only touches unicorn/* rules', () => {
         const rules = sfmcPlugin.configs['unicorn-ssjs'].rules;
         const ruleNames = Object.keys(rules);
-        assert.ok(ruleNames.length > 0, 'Expected at least one overridden rule');
+        assert.equal(ruleNames.length, 48, 'Unicorn 73 has 48 SSJS-incompatible rules');
+        assert.equal(Array.isArray(sfmcPlugin.configs['unicorn-ssjs']), false);
+        assert.equal(Array.isArray(sfmcPlugin.configs['unicorn-ssjs-embedded']), false);
         for (const name of ruleNames) {
             assert.ok(
                 name.startsWith('unicorn/'),
@@ -3093,14 +3095,126 @@ describe('unicorn-ssjs override configs', () => {
             new URL('../docs/unicorn-compatibility.md', import.meta.url),
             'utf8',
         );
-        const unclassified = recommended
-            .map((name) => name.slice('unicorn/'.length))
-            .filter((name) => !document.includes(name));
+        const disabledSection = document.split('## Section 2', 2)[1].split('## Section 3', 1)[0];
+        const activeSection = document
+            .split('<!-- BEGIN 260-OK-LIST -->', 2)[1]
+            .split('<!-- END 260-OK-LIST -->', 1)[0];
+        const documentedDisabled = Array.from(
+            disabledSection.matchAll(/^\| \[`([^`]+)`\]/gm),
+            (match) => `unicorn/${match[1]}`,
+        );
+        const documentedActive = Array.from(
+            activeSection.matchAll(/^- \[([^\]]+)\]/gm),
+            (match) => `unicorn/${match[1]}`,
+        );
+        assert.deepEqual(
+            documentedDisabled.toSorted((a, b) => a.localeCompare(b)),
+            overridden.toSorted((a, b) => a.localeCompare(b)),
+        );
+        assert.equal(documentedActive.length, 260);
+        assert.equal(recommended.length, 308);
+        const unclassified = recommended.filter(
+            (name) => !documentedDisabled.includes(name) && !documentedActive.includes(name),
+        );
         assert.deepEqual(
             unclassified,
             [],
             `docs/unicorn-compatibility.md does not classify: ${unclassified.join(', ')}`,
         );
+    });
+});
+
+describe('Unicorn array mutation compatibility integration', () => {
+    const code =
+        'function reorder() { var values = [3, 1, 2]; var sorted = [2, 1].sort(); values.splice(1, 1, 4); return values.length + sorted.length; } reorder();';
+    const targets = ['unicorn/no-array-sort', 'unicorn/no-array-splice'];
+
+    for (const embedded of [false, true]) {
+        const filePath = embedded ? 'mutation.html' : 'mutation.ssjs';
+        const source = embedded ? '<script runat="server">' + code + '</script>' : code;
+
+        it(`blocks unavailable suggestions and fixes in ${filePath}`, async () => {
+            const unicorn = (await import('eslint-plugin-unicorn')).default;
+            const base = [
+                unicorn.configs.recommended,
+                ...sfmcPlugin.configs.recommended,
+                ...sfmcPlugin.configs.embedded,
+            ];
+            const unsafe = new ESLint({ overrideConfigFile: true, overrideConfig: base });
+            const [before] = await unsafe.lintText(source, { filePath });
+            assert.equal(before.fatalErrorCount, 0);
+            for (const ruleId of targets) {
+                const diagnostic = before.messages.find((message) => message.ruleId === ruleId);
+                assert.ok(diagnostic, `${ruleId} must reproduce under ES5 parsing`);
+                assert.equal(
+                    diagnostic.fix,
+                    undefined,
+                    'Unicorn 73 uses suggestions, not automatic fixes',
+                );
+                const replacement = ruleId.endsWith('sort') ? 'toSorted' : 'toSpliced';
+                // ESLint strips suggestions for the HTML processor (supportsAutofix: false).
+                // Standalone coverage above proves the underlying ES5 rule suggestions.
+                if (embedded) {
+                    assert.equal(diagnostic.suggestions, undefined);
+                } else {
+                    assert.ok(
+                        diagnostic.suggestions.some(({ fix }) => fix.text.includes(replacement)),
+                    );
+                }
+                const suggestions = diagnostic.suggestions ?? [];
+                for (const { fix } of suggestions) {
+                    const suggested =
+                        source.slice(0, fix.range[0]) + fix.text + source.slice(fix.range[1]);
+                    assert.ok(suggested.includes(replacement));
+                    if (embedded) {
+                        assert.ok(suggested.startsWith('<script runat="server">'));
+                        assert.ok(suggested.endsWith('</script>'));
+                    }
+                }
+            }
+            const safeConfig = [
+                ...base,
+                sfmcPlugin.configs['unicorn-ssjs'],
+                sfmcPlugin.configs['unicorn-ssjs-embedded'],
+            ];
+            for (const fix of [false, true]) {
+                const safe = new ESLint({
+                    overrideConfigFile: true,
+                    overrideConfig: safeConfig,
+                    fix,
+                });
+                const [after] = await safe.lintText(source, { filePath });
+                assert.equal(after.fatalErrorCount, 0);
+                assert.ok(after.messages.every((message) => !targets.includes(message.ruleId)));
+                assert.doesNotMatch(after.output ?? source, /toSorted|toSpliced/);
+                assert.match(after.output ?? source, /\.sort\(/);
+                assert.match(after.output ?? source, /\.splice\(/);
+            }
+        });
+    }
+
+    it('preserves both suggestions for modern JavaScript', async () => {
+        const unicorn = (await import('eslint-plugin-unicorn')).default;
+        const eslint = new ESLint({
+            overrideConfigFile: true,
+            overrideConfig: [
+                unicorn.configs.recommended,
+                ...sfmcPlugin.configs.recommended,
+                ...sfmcPlugin.configs.embedded,
+                sfmcPlugin.configs['unicorn-ssjs'],
+                sfmcPlugin.configs['unicorn-ssjs-embedded'],
+            ],
+        });
+        for (const filePath of ['browser.js', 'hook.mjs']) {
+            const [result] = await eslint.lintText(code, { filePath });
+            assert.equal(result.fatalErrorCount, 0);
+            for (const ruleId of targets) {
+                assert.ok(
+                    result.messages.find((message) => message.ruleId === ruleId)?.suggestions
+                        .length,
+                );
+            }
+        }
     });
 });
 

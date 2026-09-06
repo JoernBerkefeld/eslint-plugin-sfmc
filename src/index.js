@@ -368,9 +368,9 @@ function standaloneHandlebarsConfigs(configName) {
 // ── Optional eslint-plugin-unicorn override for SSJS ──────────────────────────
 
 /**
- * The 46 `eslint-plugin-unicorn` recommended rules (analysed against
+ * The 48 `eslint-plugin-unicorn` recommended rules (analysed against
  * unicorn v73.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
- * engine — they either autofix code to a missing built-in or forbid a required
+ * engine — they either fix/suggest code using a missing built-in or forbid a required
  * SFMC workaround, or enforce ES-module / async / ES6-only syntax that the
  * engine cannot run. Each is mapped to `'off'`.
  *
@@ -400,6 +400,9 @@ const unicornSsjsOffRules = {
     'unicorn/prefer-array-last-methods': 'off',
     'unicorn/prefer-array-from-async': 'off',
     'unicorn/no-array-reverse': 'off',
+    // Editor suggestions introduce ES2023 methods unavailable in SSJS, even under ES5 parsing.
+    'unicorn/no-array-sort': 'off',
+    'unicorn/no-array-splice': 'off',
     'unicorn/prefer-at': 'off',
     'unicorn/prefer-negative-index': 'off',
     'unicorn/prefer-spread': 'off',
@@ -825,9 +828,9 @@ plugin.configs = {
     // ── Optional eslint-plugin-unicorn override configs ───────────────────────
 
     /**
-     * OPTIONAL: turns off the 46 unicorn recommended rules incompatible with
+     * OPTIONAL: turns off the 48 unicorn recommended rules incompatible with
      * SFMC SSJS, for standalone `.ssjs` files. Plain rules object with NO
-     * `plugins` key — eslint-plugin-sfmc does not load unicorn. Spread this
+     * `plugins` key — eslint-plugin-sfmc does not load unicorn. Insert this object
      * AFTER your own unicorn config (which registers the `unicorn` plugin);
      * otherwise ESLint cannot resolve the `unicorn/*` keys. If you don't use
      * unicorn, omit this config entirely.
@@ -839,8 +842,8 @@ plugin.configs = {
     },
 
     /**
-     * OPTIONAL: same 46-rule override for SSJS embedded in HTML
-     * (virtual `**\/*.html/*.js` files). Spread AFTER your unicorn config.
+     * OPTIONAL: same 48-rule override for SSJS embedded in HTML
+     * (virtual `**\/*.html/*.js` files). Insert the object AFTER your unicorn config.
      */
     'unicorn-ssjs-embedded': {
         name: 'sfmc/unicorn-ssjs-embedded',
