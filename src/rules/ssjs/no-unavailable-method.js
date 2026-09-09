@@ -8,7 +8,7 @@
  *
  * 1. POLYFILLABLE_METHODS — a shipped ES3-safe polyfill exists. The report
  *    carries a suggestion that inserts the polyfill at the top of the file.
- * 2. KNOWN_UNSUPPORTED — no polyfill is feasible. The report has no fix; the
+ * 2. KNOWN_UNSUPPORTED — no verified polyfill is bundled. The report has no fix; the
  *    message carries the ssjs-data `suggestion` (e.g. use Platform.Function.X).
  *
  * - category 'unavailable': method does not exist; calling it throws a runtime error.
@@ -250,7 +250,7 @@ export default {
                     const ownerDisplay = entry.owner.replace(/\.prototype$/, '');
 
                     if (noPolyfill) {
-                        // No polyfill is feasible — report with the ssjs-data suggestion
+                        // No verified polyfill is bundled — report with the ssjs-data suggestion
                         // and no auto-insert fix.
                         context.report({
                             node,

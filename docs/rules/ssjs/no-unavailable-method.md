@@ -2,11 +2,11 @@
 
 > Flag Array methods that are unavailable or broken in SFMC SSJS and suggest inserting a polyfill.
 
-| | |
-|---|---|
-| **Type** | `problem` |
-| **Default severity** | `warn` in `recommended` and `strict` |
-| **Fixable** | **Suggestion** only (lightbulb / `Ctrl+.` in VS Code) |
+|                      |                                                       |
+| -------------------- | ----------------------------------------------------- |
+| **Type**             | `problem`                                             |
+| **Default severity** | `warn` in `recommended` and `strict`                  |
+| **Fixable**          | **Suggestion** only (lightbulb / `Ctrl+.` in VS Code) |
 
 ## Why This Rule Exists
 
@@ -26,32 +26,46 @@ the language-server quick-fix so both tools place polyfills consistently.
 
 ## Covered methods
 
-| Method | Category | Notes |
-|--------|----------|-------|
-| `Array.prototype.copyWithin` | unavailable | |
-| `Array.prototype.entries` | unavailable | Returns a minimal iterator; `for...of` is also unsupported |
-| `Array.prototype.fill` | unavailable | |
-| `Array.prototype.filter` | unavailable | |
-| `Array.prototype.find` | unavailable | |
-| `Array.prototype.findIndex` | unavailable | |
-| `Array.prototype.forEach` | unavailable | |
-| `Array.prototype.includes` | unavailable | |
-| `Array.prototype.indexOf` | unavailable | Only flagged on array literals; string `.indexOf()` still works |
-| `Array.prototype.lastIndexOf` | broken | Natively always returns `-1` |
-| `Array.prototype.map` | unavailable | |
-| `Array.prototype.reduce` | unavailable | |
-| `Array.prototype.reduceRight` | unavailable | |
-| `Array.prototype.some` | unavailable | |
-| `Array.prototype.splice` | broken | Natively ignores `startIndex` and `deleteCount` |
-| `Array.isArray` | unavailable | |
-| `Array.of` | unavailable | |
+| Method                        | Category    | Notes                                                           |
+| ----------------------------- | ----------- | --------------------------------------------------------------- |
+| `Array.prototype.copyWithin`  | unavailable |                                                                 |
+| `Array.prototype.entries`     | unavailable | Returns a minimal iterator; `for...of` is also unsupported      |
+| `Array.prototype.fill`        | unavailable |                                                                 |
+| `Array.prototype.filter`      | unavailable |                                                                 |
+| `Array.prototype.find`        | unavailable |                                                                 |
+| `Array.prototype.findIndex`   | unavailable |                                                                 |
+| `Array.prototype.forEach`     | unavailable |                                                                 |
+| `Array.prototype.includes`    | unavailable |                                                                 |
+| `Array.prototype.indexOf`     | unavailable | Only flagged on array literals; string `.indexOf()` still works |
+| `Array.prototype.lastIndexOf` | broken      | Natively always returns `-1`                                    |
+| `Array.prototype.map`         | unavailable |                                                                 |
+| `Array.prototype.reduce`      | unavailable |                                                                 |
+| `Array.prototype.reduceRight` | unavailable |                                                                 |
+| `Array.prototype.some`        | unavailable |                                                                 |
+| `Array.prototype.splice`      | broken      | Natively ignores `startIndex` and `deleteCount`                 |
+| `Array.isArray`               | unavailable |                                                                 |
+| `Array.of`                    | unavailable |                                                                 |
+
+## Catalog entries without bundled polyfills
+
+The rule also reads `KNOWN_UNSUPPORTED` from `ssjs-data`. These reports carry the
+catalog's guidance but no automatic fix or polyfill insertion suggestion. Absence
+of a bundled verified polyfill does not mean a polyfill is impossible.
+
+With `ssjs-data` 2.1.0, this includes `Object.fromEntries`, `Object.groupBy`,
+`Array.prototype.toReversed`, `toSorted`, `toSpliced`, `findLastIndex`, and
+`String.prototype.replaceAll` and `matchAll`. Their absence was checked in
+Engagement CloudPages before Core loading and with Core 1.1.1 and 1.1.5; email and
+other contexts were not tested. The catalog also records global `structuredClone`,
+but this rule examines member calls, not bare global calls, so it does not report
+`structuredClone()`.
 
 ## Settings
 
-| Setting | Values | Default |
-|---------|--------|---------|
-| severity | `"error"` \| `"warn"` \| `"off"` | `"warn"` |
-| `ignore` | Array of method names to suppress | `[]` |
+| Setting  | Values                            | Default  |
+| -------- | --------------------------------- | -------- |
+| severity | `"error"` \| `"warn"` \| `"off"`  | `"warn"` |
+| `ignore` | Array of method names to suppress | `[]`     |
 
 Use `ignore` when polyfills are loaded externally via a Content Block or Code Resource
 that runs before your script.
@@ -69,9 +83,11 @@ rules: {
 
 ```js
 var nums = [1, 2, 3];
-var doubled = nums.map(function (n) { return n * 2; });   // unavailable
+var doubled = nums.map(function (n) {
+  return n * 2;
+}); // unavailable
 
-var pos = nums.lastIndexOf(2);   // broken — always returns -1 natively
+var pos = nums.lastIndexOf(2); // broken — always returns -1 natively
 
 var found = Array.isArray(nums); // unavailable
 ```
@@ -80,9 +96,13 @@ var found = Array.isArray(nums); // unavailable
 
 ```js
 // Polyfill defined in the same file — rule is suppressed
-Array.prototype.map = function (callback) { /* ... */ };
+Array.prototype.map = function (callback) {
+  /* ... */
+};
 
-var doubled = nums.map(function (n) { return n * 2; }); // ok
+var doubled = nums.map(function (n) {
+  return n * 2;
+}); // ok
 
 // Native methods that work correctly are never flagged
 nums.push(4);
@@ -102,14 +122,18 @@ rules: {
 
 ```js
 // No warning — 'map' and 'filter' are in the ignore list
-var doubled = nums.map(function (n) { return n * 2; });
-var evens   = nums.filter(function (n) { return n % 2 === 0; });
+var doubled = nums.map(function (n) {
+  return n * 2;
+});
+var evens = nums.filter(function (n) {
+  return n % 2 === 0;
+});
 ```
 
 ## Suggestion (lightbulb)
 
-When a violation is reported, a suggestion is available to insert the individual
-polyfill at the **end of the file**. Apply it via:
+When a bundled verified polyfill exists, a suggestion is available to insert it
+at the **top of the file**, after a leading global directive if present. Apply it via:
 
 - Click the **lightbulb** or press `Ctrl+.` in VS Code (requires the ESLint extension)
 - `eslint --fix` does **not** apply suggestions

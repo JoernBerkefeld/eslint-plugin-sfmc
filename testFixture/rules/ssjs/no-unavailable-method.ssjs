@@ -1,6 +1,7 @@
 /* ── Rule: sfmc/ssjs-no-unavailable-method ──────────────────────────────────────
    Flags Array (and String) methods that are unavailable or broken in SFMC's
-   legacy ECMAScript 3 engine. Suggests polyfills.
+   legacy ECMAScript 3 engine. Suggests only bundled verified polyfills;
+   catalog entries without one report guidance without an insertion fix.
    ─────────────────────────────────────────────────────────────────────────── */
 
 Platform.Load("Core", "1.1.5");

@@ -9,6 +9,7 @@
  *   - vscode-sfmc-language (IntelliSense, diagnostics)
  */
 
+import { createRequire } from 'node:module';
 import * as ampscriptParser from './ampscript-parser.js';
 import * as handlebarsParser from './handlebars-parser.js';
 
@@ -94,10 +95,12 @@ import { SSJS_GLOBALS_MAP } from 'ssjs-data';
 
 // ── Plugin definition ─────────────────────────────────────────────────────────
 
+const { version } = createRequire(import.meta.url)('../package.json');
+
 const plugin = {
     meta: {
         name: 'eslint-plugin-sfmc',
-        version: '0.1.0',
+        version,
     },
 
     rules: {
@@ -166,6 +169,21 @@ const plugin = {
         sfmc: combinedProcessor,
     },
 };
+
+// Derive paths from public IDs, not source filenames or the configured namespace.
+for (const [ruleId, rule] of Object.entries(plugin.rules)) {
+    const documentationPath = ruleId.replace('-', '/');
+    plugin.rules[ruleId] = {
+        ...rule,
+        meta: {
+            ...rule.meta,
+            docs: {
+                ...rule.meta.docs,
+                url: `https://github.com/JoernBerkefeld/eslint-plugin-sfmc/blob/v${version}/docs/rules/${documentationPath}.md`,
+            },
+        },
+    };
+}
 
 // ── MCN SSJS rule set (all SSJS rules off except ssjs-no-unknown-function) ────
 

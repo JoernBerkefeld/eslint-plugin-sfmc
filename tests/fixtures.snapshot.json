@@ -679,19 +679,19 @@
     {
       "ruleId": "sfmc/ssjs-no-unavailable-method",
       "severity": 1,
-      "line": 17,
+      "line": 18,
       "messageId": "unavailable"
     },
     {
       "ruleId": "sfmc/ssjs-no-unavailable-method",
       "severity": 1,
-      "line": 20,
+      "line": 21,
       "messageId": "unavailable"
     },
     {
       "ruleId": "sfmc/ssjs-no-unavailable-method",
       "severity": 1,
-      "line": 23,
+      "line": 24,
       "messageId": "unavailable"
     }
   ],

@@ -57,6 +57,18 @@ Add the following to your `.vscode/settings.json`:
 
 > **Why `eslint.validate` and not `eslint.probe`?** `eslint.probe` silently skips files for language IDs that the ESLint extension does not natively recognise. `eslint.validate` forces the extension to process those files regardless of language ID.
 
+## Diagnostic documentation links
+
+SFMC rule metadata links to the owning plugin version's documentation under `blob/v<package-version>/docs/rules/`. These links also work with custom plugin namespaces. Local development uses the package version deterministically; links for a prospective release may not resolve until that version and its documentation are tagged and published. ESLint parser failures (`ruleId: null`) have no rule metadata link. Core and third-party rules retain their own documentation metadata.
+
+### 5.1.0 release notes
+
+- All 52 exported SFMC rules now expose version-pinned documentation metadata; the plugin metadata version comes from its own package rather than a hardcoded constant.
+- Added the missing [SSJS switch fallthrough reference](docs/rules/ssjs/no-switch-fallthrough.md). Existing rule IDs, configurations, severities, and fixes are unchanged.
+- Release checks verify the producer's tagged documentation and metadata in the packed npm artifact.
+
+Version **5.1.0** adds these links without changing rule IDs or configuration shapes. It also adopts `ssjs-data@^2.1.0`: eight additional static/prototype methods receive unavailable-method guidance without a polyfill suggestion. The catalog's ninth addition, bare `structuredClone()`, remains outside this member-call rule's coverage. The evidence comes from tested Engagement CloudPages, not email or every execution context. No verified polyfill is bundled for these additions.
+
 ## Configs
 
 ### Marketing Cloud Engagement (default)
@@ -145,9 +157,12 @@ export default [...sfmc.configs['recommended-next'], ...sfmc.configs['embedded-n
 | [`sfmc/ssjs-no-nonfunctional-method`](docs/rules/ssjs/no-nonfunctional-method.md)           | `warn`                   | Flag Core Library methods that never take effect at runtime                                                                                                                    |
 | [`sfmc/ssjs-prefer-parsejson-safe-arg`](docs/rules/ssjs/prefer-parsejson-safe-arg.md)       | `warn`                   | Require string coercion on `ParseJSON` argument                                                                                                                                |
 | [`sfmc/ssjs-no-switch-default`](docs/rules/ssjs/no-switch-default.md)                       | `warn`                   | Disallow `default` clause in `switch` statements                                                                                                                               |
+| [`sfmc/ssjs-no-switch-fallthrough`](docs/rules/ssjs/no-switch-fallthrough.md)               | `warn`                   | Flag stacked labels and unterminated clauses that rely on switch fall-through                                                                                                  |
 | [`sfmc/ssjs-no-treatascontent-injection`](docs/rules/ssjs/no-treatascontent-injection.md)   | `warn`                   | Flag dynamic string concatenation in `TreatAsContent` calls                                                                                                                    |
 | [`sfmc/ssjs-core-method-arity`](docs/rules/ssjs/core-method-arity.md)                       | `warn`                   | Enforce correct argument counts for Core Library object methods                                                                                                                |
 | [`sfmc/ssjs-arg-types`](docs/rules/ssjs/arg-types.md)                                       | `warn`                   | Check that literal arguments match expected parameter types                                                                                                                    |
+| [`sfmc/ssjs-http-property-value`](docs/rules/ssjs/http-property-value.md)                   | `error`                  | Validate literal HTTP request property values                                                                                                                                  |
+| [`sfmc/ssjs-no-invalid-property-access`](docs/rules/ssjs/no-invalid-property-access.md)     | `error`                  | Flag reads of write-only properties and writes to read-only properties                                                                                                         |
 
 ## Handlebars Rules (`hbs-*`)
 
