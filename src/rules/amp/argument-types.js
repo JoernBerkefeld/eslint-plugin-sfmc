@@ -4,9 +4,10 @@
  * Validates literal arguments passed to AMPscript functions against the
  * constraints declared in the ampscript-data catalog. Currently it checks
  * parameters that declare an `enum` of allowed values: a static literal
- * argument (string, number, or boolean) must be one of those values
- * (case-insensitive). Variables and expressions are skipped because their
- * value cannot be determined statically.
+ * argument (string, number, or boolean) must be one of those values. Primitive
+ * types are preserved; string values compare case-insensitively only with other
+ * strings. Variables and expressions are skipped because their value cannot be
+ * determined statically.
  *
  * This rule is the AMPscript counterpart of `ssjs-arg-types` and may be
  * expanded later to cover additional argument-type checks.
@@ -20,19 +21,54 @@ import { functionLookup } from 'ampscript-data';
 const STATIC_LITERAL_TYPES = new Set(['StringLiteral', 'NumberLiteral', 'BooleanLiteral']);
 
 /**
- * Returns the comparable string value of a static AMPscript literal node
- * (string, number, or boolean), or null when the argument is not a static
- * literal (e.g. a variable or expression) and cannot be validated against an
- * enum.
+ * Returns the primitive value of a static AMPscript literal node, or null when
+ * the argument is not a static literal (e.g. a variable or expression) and
+ * cannot be validated against an enum.
  *
  * @param {object} argument - AMPscript argument AST node.
- * @returns {string | null} The literal value as a string, or null.
+ * @returns {string | number | boolean | null} The type-preserved literal value, or null.
  */
 function staticLiteralValue(argument) {
     if (!argument || !STATIC_LITERAL_TYPES.has(argument.type)) {
         return null;
     }
+    if (argument.type === 'NumberLiteral') {
+        return Number(argument.value);
+    }
+    if (argument.type === 'BooleanLiteral') {
+        return String(argument.value).toLowerCase() === 'true';
+    }
     return String(argument.value);
+}
+
+/**
+ * Compare a static literal with one catalog enum member without collapsing
+ * strings, numbers, and booleans into the same textual value. String matching
+ * remains case-insensitive.
+ *
+ * @param {string | number | boolean} allowed - Catalog enum member.
+ * @param {string | number | boolean} actual - Static AMPscript literal value.
+ * @returns {boolean} Whether the values match with type-sensitive semantics.
+ */
+function enumValueMatches(allowed, actual) {
+    if (typeof allowed !== typeof actual) {
+        return false;
+    }
+    if (typeof allowed === 'string' && typeof actual === 'string') {
+        return allowed.toLowerCase() === actual.toLowerCase();
+    }
+    return allowed === actual;
+}
+
+/**
+ * Format a catalog enum member as an AMPscript literal so string members are
+ * visibly distinct from number and boolean members in diagnostics.
+ *
+ * @param {string | number | boolean} value - Catalog enum member.
+ * @returns {string} AMPscript literal text.
+ */
+function formatEnumLiteral(value) {
+    return typeof value === 'string' ? `"${value}"` : String(value);
 }
 
 export default {
@@ -73,8 +109,8 @@ export default {
                     if (actual === null) {
                         continue;
                     }
-                    const isAllowed = parameter.enum.some(
-                        (v) => String(v).toLowerCase() === actual.toLowerCase(),
+                    const isAllowed = parameter.enum.some((value) =>
+                        enumValueMatches(value, actual),
                     );
                     if (!isAllowed) {
                         context.report({
@@ -83,7 +119,9 @@ export default {
                             data: {
                                 name: entry.name,
                                 param: parameter.name,
-                                allowed: parameter.enum.join(', '),
+                                allowed: parameter.enum
+                                    .map((value) => formatEnumLiteral(value))
+                                    .join(', '),
                                 actual,
                             },
                         });

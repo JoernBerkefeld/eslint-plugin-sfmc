@@ -1,4 +1,44 @@
 {
+  "testFixture/rules/amp/arg-types.amp": [
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 23,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 24,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 27,
+      "messageId": "invalidEnumValue"
+    }
+  ],
+  "testFixture/rules/amp/arg-types.html": [
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 17,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 18,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 19,
+      "messageId": "invalidEnumValue"
+    }
+  ],
   "testFixture/rules/amp/function-arity.amp": [
     {
       "ruleId": "sfmc/amp-function-arity",

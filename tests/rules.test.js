@@ -465,6 +465,17 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
         // valid enum literal (different case — matching is case-insensitive)
         { code: "%%= DatePart('2026-01-15', 'year') =%%" },
         { code: "%%= DatePart('2026-01-15', 'MONTHNAME') =%%" },
+        // RaiseError preserveDataExt accepts each catalogued primitive literal.
+        { code: "%%= RaiseError('stop', false, '', 0, true) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, false) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 1) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 0) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 'true') =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 'FALSE') =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, '1') =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, '0') =%%" },
+        // Number-only enums remain type-sensitive.
+        { code: "%%= BarcodeURL('123', 'code128auto', 150, 50, '', false, '', 90) =%%" },
         // variable argument — not statically checkable, skipped
         { code: '%%= DatePart(@d, @part) =%%' },
         // function with no enum params — never flagged
@@ -486,7 +497,8 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
                     data: {
                         name: 'DatePart',
                         param: 'datePart',
-                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        allowed:
+                            '"year", "Y", "month", "M", "monthName", "day", "D", "hour", "H", "minute", "MI"',
                         actual: 'decade',
                     },
                 },
@@ -501,14 +513,15 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
                     data: {
                         name: 'DatePart',
                         param: 'datePart',
-                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        allowed:
+                            '"year", "Y", "month", "M", "monthName", "day", "D", "hour", "H", "minute", "MI"',
                         actual: '5',
                     },
                 },
             ],
         },
         {
-            // boolean literal in an enum slot is also invalid
+            // boolean literal in a string-only enum slot is invalid
             code: "%%= DatePart('2026-01-15', true) =%%",
             errors: [
                 {
@@ -516,8 +529,38 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
                     data: {
                         name: 'DatePart',
                         param: 'datePart',
-                        allowed: 'year, Y, month, M, monthName, day, D, hour, H, minute, MI',
+                        allowed:
+                            '"year", "Y", "month", "M", "monthName", "day", "D", "hour", "H", "minute", "MI"',
                         actual: 'true',
+                    },
+                },
+            ],
+        },
+        ...[2, 'yes'].map((value) => ({
+            code: `%%= RaiseError('stop', false, '', 0, ${typeof value === 'string' ? `'${value}'` : value}) =%%`,
+            errors: [
+                {
+                    messageId: 'invalidEnumValue',
+                    data: {
+                        name: 'RaiseError',
+                        param: 'preserveDataExt',
+                        allowed: 'true, false, 1, 0, "true", "false", "1", "0"',
+                        actual: String(value),
+                    },
+                },
+            ],
+        })),
+        {
+            // A quoted number must not match a number-only enum member.
+            code: "%%= BarcodeURL('123', 'code128auto', 150, 50, '', false, '', '90') =%%",
+            errors: [
+                {
+                    messageId: 'invalidEnumValue',
+                    data: {
+                        name: 'BarcodeURL',
+                        param: 'rotation',
+                        allowed: '0, 90, 180, 270',
+                        actual: '90',
                     },
                 },
             ],

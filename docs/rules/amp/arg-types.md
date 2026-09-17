@@ -12,7 +12,7 @@
 
 Some AMPscript function parameters only accept a fixed set of keyword values. For example, the second argument of `DatePart` must be one of `year`, `Y`, `month`, `M`, `monthName`, `day`, `D`, `hour`, `H`, `minute`, or `MI`. Passing any other value is a bug that surfaces only at send/render time.
 
-The Salesforce catalog records these allowed values as an `enum` on the parameter. This rule checks every static literal argument — strings, numbers, and booleans — against the parameter's `enum` (case-insensitive) and reports a mismatch. Variables and expressions are skipped because their value cannot be determined statically.
+The Salesforce catalog records these allowed values as an `enum` on the parameter. This rule checks every static literal argument — strings, numbers, and booleans — against the parameter's `enum` and reports a mismatch. Literal primitive types remain distinct: `1` does not match `"1"`, and `true` does not match `"true"` unless both forms are explicitly present in the enum. String-to-string comparisons are case-insensitive. Variables and expressions are skipped because their value cannot be determined statically.
 
 This rule is the AMPscript counterpart of [`sfmc/ssjs-arg-types`](../ssjs/arg-types.md) and may be expanded later to cover additional argument-type checks.
 
@@ -35,6 +35,10 @@ This rule has no configuration options.
 
   /* a number is not a valid datePart either */
   set @y = DatePart('2026-01-15', 5)
+
+  /* unsupported boolean-like values are rejected */
+  RaiseError('stop', false, '', 0, 2)
+  RaiseError('stop', false, '', 0, 'yes')
 ]%%
 ```
 
@@ -45,8 +49,15 @@ This rule has no configuration options.
   /* exact-case enum value */
   set @x = DatePart('2026-01-15', 'Y')
 
-  /* case-insensitive match */
+  /* case-insensitive string match */
   set @y = DatePart('2026-01-15', 'year')
+
+  /* mixed enums can explicitly allow several primitive forms */
+  RaiseError('stop', false, '', 0, true)
+  RaiseError('stop', false, '', 0, 1)
+  RaiseError('stop', false, '', 0, 'TRUE')
+  RaiseError('stop', false, '', 0, '1')
+  RaiseError('stop', false, '', 0, '0')
 
   /* variable argument — not statically checkable, skipped */
   set @z = DatePart(@d, @part)

@@ -81,12 +81,14 @@ export default {
             },
 
             AmpForStatement(node) {
-                if (!(
-                    node.endExpr &&
-                    isRowCountCall(node.endExpr) &&
-                    node.endExpr.arguments &&
-                    node.endExpr.arguments.length > 0
-                )) {
+                if (
+                    !(
+                        node.endExpr &&
+                        isRowCountCall(node.endExpr) &&
+                        node.endExpr.arguments &&
+                        node.endExpr.arguments.length > 0
+                    )
+                ) {
                     return;
                 }
 

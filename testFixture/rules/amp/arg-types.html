@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<body>
+%%[
+VAR @part, @barcode, @invalidBarcode
+
+/* ACCEPTED — embedded AMPscript uses the same type-sensitive matching */
+RaiseError("stop", false, "", 0, true)
+RaiseError("stop", false, "", 0, 1)
+RaiseError("stop", false, "", 0, "false")
+RaiseError("stop", false, "", 0, "1")
+RaiseError("stop", false, "", 0, "0")
+SET @part = DatePart(Now(), "YEAR")
+SET @barcode = BarcodeURL("123", "code128auto", 150, 50, "", false, "", 180)
+
+/* FAIL — invalid mixed and number-only enum values */
+RaiseError("stop", false, "", 0, 2)
+RaiseError("stop", false, "", 0, "yes")
+SET @invalidBarcode = BarcodeURL("123", "code128auto", 150, 50, "", false, "", "180")
+]%%
+</body>
+</html>

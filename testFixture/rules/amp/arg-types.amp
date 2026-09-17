@@ -1,0 +1,28 @@
+%%[
+/* Rule: sfmc/amp-arg-types */
+
+VAR @part, @barcode, @invalidBarcode
+
+/* ACCEPTED — mixed enum preserves boolean, number, and string literal types */
+RaiseError("stop", false, "", 0, true)
+RaiseError("stop", false, "", 0, false)
+RaiseError("stop", false, "", 0, 1)
+RaiseError("stop", false, "", 0, 0)
+RaiseError("stop", false, "", 0, "true")
+RaiseError("stop", false, "", 0, "FALSE")
+RaiseError("stop", false, "", 0, "1")
+RaiseError("stop", false, "", 0, "0")
+
+/* ACCEPTED — string-only enums remain case-insensitive */
+SET @part = DatePart(Now(), "MONTHNAME")
+
+/* ACCEPTED — number-only enums accept numeric literals */
+SET @barcode = BarcodeURL("123", "code128auto", 150, 50, "", false, "", 90)
+
+/* FAIL — unsupported numeric and string values */
+RaiseError("stop", false, "", 0, 2)
+RaiseError("stop", false, "", 0, "yes")
+
+/* FAIL — quoted numeric value does not match a number-only enum */
+SET @invalidBarcode = BarcodeURL("123", "code128auto", 150, 50, "", false, "", "90")
+]%%

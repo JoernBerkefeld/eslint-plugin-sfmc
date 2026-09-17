@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -102,11 +102,11 @@ test('real npm artifact loads its own identity and docs outside the source tree 
         execFileSync('tar', ['-xzf', packed.filename], { cwd: temporary });
         const extracted = path.join(temporary, 'package');
         // Only dependencies are shared: the plugin entry and its package.json come from the tarball.
-        symlinkSync(
-            path.join(root, 'node_modules'),
-            path.join(extracted, 'node_modules'),
-            'junction',
-        );
+        const localModules = path.join(root, 'node_modules');
+        const dependencyModules = existsSync(path.join(localModules, 'ampscript-parser'))
+            ? localModules
+            : path.join(root, '..', 'node_modules');
+        symlinkSync(dependencyModules, path.join(extracted, 'node_modules'), 'junction');
         const entry = pathToFileURL(path.join(extracted, 'src/index.js')).href;
         const probe = `import plugin from ${JSON.stringify(entry)}; process.stdout.write(JSON.stringify({ meta: plugin.meta, rules: Object.fromEntries(Object.entries(plugin.rules).map(([id, rule]) => [id, { meta: { docs: rule.meta.docs } }])) }));`;
         const load = () =>
