@@ -6,7 +6,9 @@ import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { ESLint } from 'eslint';
 import mso from 'eslint-plugin-mso-email';
+import { FUNCTIONS } from 'ampscript-data';
 import sfmc from '../src/index.js';
+import { isBooleanLikeParameter } from '../src/rules/amp/prefer-boolean-literal.js';
 
 const require = createRequire(import.meta.url);
 const metadata = require('../package.json');
@@ -95,6 +97,33 @@ for (const [name, config, filePath, code, id] of cases) {
         assert.equal(rules[id].docs.url, sfmc.rules[id.slice('sfmc/'.length)].meta.docs.url);
     });
 }
+
+test('boolean-like classifier requires the complete eight-value enum', () => {
+    assert.equal(
+        isBooleanLikeParameter({ enum: [true, false, 1, 0, 'true', 'false', '1', '0'] }),
+        true,
+    );
+    assert.equal(isBooleanLikeParameter({ enum: [true, false, 1, 0] }), false);
+    assert.equal(
+        isBooleanLikeParameter({ enum: [true, false, 1, 0, 'true', 'false', '1'] }),
+        false,
+    );
+    assert.equal(
+        isBooleanLikeParameter({ enum: [true, false, 1, 0, 'true', 'false', '1', '0', 'yes'] }),
+        false,
+    );
+});
+
+test('all 24 catalogued boolean-like parameters use the complete enum', () => {
+    const parameters = FUNCTIONS.flatMap((entry) => entry.params ?? []).filter(
+        (parameter) =>
+            Array.isArray(parameter.enum) &&
+            parameter.enum.includes(true) &&
+            parameter.enum.includes(false),
+    );
+    assert.equal(parameters.length, 24);
+    assert.ok(parameters.every((parameter) => isBooleanLikeParameter(parameter)));
+});
 
 test('boolean literal recommendation is warn in recommended and strict configs', () => {
     const recommendedAmp = sfmc.configs.recommended.find(

@@ -7,6 +7,8 @@
 
 import { functionLookup } from 'ampscript-data';
 
+const BOOLEAN_LIKE_ENUM = [true, false, 1, 0, 'true', 'false', '1', '0'];
+
 /**
  * Return the preferred boolean for an accepted alternative literal.
  *
@@ -34,18 +36,13 @@ function preferredBoolean(argument) {
  * Check whether catalog metadata marks a parameter as boolean-like.
  *
  * @param {object} parameter - AMPscript catalog parameter.
- * @returns {boolean} Whether the enum supports bare booleans and alternatives.
+ * @returns {boolean} Whether the enum contains exactly the complete eight-value set.
  */
-function isBooleanLikeParameter(parameter) {
-    if (!Array.isArray(parameter?.enum)) {
+export function isBooleanLikeParameter(parameter) {
+    if (!Array.isArray(parameter?.enum) || parameter.enum.length !== BOOLEAN_LIKE_ENUM.length) {
         return false;
     }
-    const values = parameter.enum;
-    return (
-        values.includes(true) &&
-        values.includes(false) &&
-        values.some((value) => typeof value === 'number' || typeof value === 'string')
-    );
+    return BOOLEAN_LIKE_ENUM.every((value) => parameter.enum.includes(value));
 }
 
 export default {
