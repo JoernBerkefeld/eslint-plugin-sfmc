@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<body>
+%%[
+/* ACCEPTED — bare booleans are already preferred */
+RaiseError("stop", true)
+RaiseError("stop", false, "", 0, false)
+
+/* ACCEPTED — invalid alternatives remain amp-arg-types errors only */
+RaiseError("stop", false, "", 0, 2)
+RaiseError("stop", false, "", 0, "yes")
+
+/* FAIL — accepted alternatives receive recommendation warnings */
+RaiseError("stop", 1)
+RaiseError("stop", "false")
+RaiseError("stop", false, "", 0, "TRUE")
+RaiseError("stop", false, "", 0, "0")
+]%%
+</body>
+</html>

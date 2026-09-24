@@ -1,0 +1,19 @@
+%%[
+/* Rule: sfmc/amp-prefer-boolean-literal */
+
+/* ACCEPTED — bare booleans are already preferred */
+RaiseError("stop", true)
+RaiseError("stop", false, "", 0, false)
+
+/* ACCEPTED — invalid alternatives belong to amp-arg-types, not this rule */
+RaiseError("stop", false, "", 0, 2)
+RaiseError("stop", false, "", 0, "yes")
+
+/* FAIL — accepted alternatives receive one recommendation warning each */
+RaiseError("stop", 1)
+RaiseError("stop", 0)
+RaiseError("stop", "true")
+RaiseError("stop", "FALSE")
+RaiseError("stop", false, "", 0, "1")
+RaiseError("stop", false, "", 0, "0")
+]%%

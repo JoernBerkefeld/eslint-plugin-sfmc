@@ -27,6 +27,7 @@ import ampNoInlineStatement from './rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from './rules/amp/require-variable-declaration.js';
 import ampFunctionArity from './rules/amp/function-arity.js';
 import ampArgumentTypes from './rules/amp/argument-types.js';
+import ampPreferBooleanLiteral from './rules/amp/prefer-boolean-literal.js';
 import ampNoEmailExcludedFunction from './rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from './rules/amp/no-deprecated-function.js';
 import ampNoNonfunctionalFunction from './rules/amp/no-nonfunctional-function.js';
@@ -117,6 +118,7 @@ const plugin = {
         'amp-require-variable-declaration': ampRequireVariableDeclaration,
         'amp-function-arity': ampFunctionArity,
         'amp-arg-types': ampArgumentTypes,
+        'amp-prefer-boolean-literal': ampPreferBooleanLiteral,
         'amp-no-email-excluded-function': ampNoEmailExcludedFunction,
         'amp-no-deprecated-function': ampNoDeprecatedFunction,
         'amp-no-nonfunctional-function': ampNoNonfunctionalFunction,
@@ -234,6 +236,7 @@ const ampRecommendedRules = {
     'sfmc/amp-no-inline-statement': 'warn',
     'sfmc/amp-function-arity': 'error',
     'sfmc/amp-arg-types': 'error',
+    'sfmc/amp-prefer-boolean-literal': 'warn',
     'sfmc/amp-no-deprecated-function': 'warn',
     'sfmc/amp-no-nonfunctional-function': 'error',
     'sfmc/amp-naming-convention': 'warn',
@@ -257,6 +260,7 @@ const ampStrictRules = {
     'sfmc/amp-require-variable-declaration': 'warn',
     'sfmc/amp-function-arity': 'error',
     'sfmc/amp-arg-types': 'error',
+    'sfmc/amp-prefer-boolean-literal': 'warn',
     'sfmc/amp-no-email-excluded-function': 'off',
     'sfmc/amp-no-deprecated-function': 'warn',
     'sfmc/amp-no-nonfunctional-function': 'error',

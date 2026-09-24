@@ -1,6 +1,42 @@
 {
   "testFixture/rules/amp/arg-types.amp": [
     {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 9,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 10,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 11,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 13,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 14,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
       "ruleId": "sfmc/amp-arg-types",
       "severity": 2,
       "line": 23,
@@ -20,6 +56,30 @@
     }
   ],
   "testFixture/rules/amp/arg-types.html": [
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 9,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 10,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 11,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 12,
+      "messageId": "preferBooleanLiteral"
+    },
     {
       "ruleId": "sfmc/amp-arg-types",
       "severity": 2,
@@ -341,6 +401,94 @@
       "severity": 1,
       "line": 25,
       "messageId": "preferAttributeValue"
+    }
+  ],
+  "testFixture/rules/amp/prefer-boolean-literal.amp": [
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 9,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 10,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 13,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 14,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 15,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 16,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 17,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 18,
+      "messageId": "preferBooleanLiteral"
+    }
+  ],
+  "testFixture/rules/amp/prefer-boolean-literal.html": [
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 10,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-arg-types",
+      "severity": 2,
+      "line": 11,
+      "messageId": "invalidEnumValue"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 14,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 15,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 16,
+      "messageId": "preferBooleanLiteral"
+    },
+    {
+      "ruleId": "sfmc/amp-prefer-boolean-literal",
+      "severity": 1,
+      "line": 17,
+      "messageId": "preferBooleanLiteral"
     }
   ],
   "testFixture/rules/amp/require-rowcount-check.amp": [

@@ -16,7 +16,7 @@ const base = `https://github.com/JoernBerkefeld/eslint-plugin-sfmc/blob/v${metad
 test('all public rules retain metadata and link to existing release-owned documentation', async () => {
     assert.equal(sfmc.meta.version, metadata.version);
     assert.equal(sfmc.meta.name, metadata.name);
-    assert.equal(Object.keys(sfmc.rules).length, 52);
+    assert.equal(Object.keys(sfmc.rules).length, 53);
     const readme = readFileSync(new URL('README.md', root), 'utf8');
     for (const [id, rule] of Object.entries(sfmc.rules)) {
         const path = `docs/rules/${id.replace(/-/, '/')}.md`;
@@ -95,6 +95,16 @@ for (const [name, config, filePath, code, id] of cases) {
         assert.equal(rules[id].docs.url, sfmc.rules[id.slice('sfmc/'.length)].meta.docs.url);
     });
 }
+
+test('boolean literal recommendation is warn in recommended and strict configs', () => {
+    const recommendedAmp = sfmc.configs.recommended.find(
+        (config) => config.name === 'sfmc/recommended-ampscript',
+    );
+    const strictAmp = sfmc.configs.strict.find((config) => config.name === 'sfmc/strict-ampscript');
+    assert.equal(recommendedAmp.rules['sfmc/amp-prefer-boolean-literal'], 'warn');
+    assert.equal(strictAmp.rules['sfmc/amp-prefer-boolean-literal'], 'warn');
+    assert.equal(sfmc.configs.ampscript.rules['sfmc/amp-prefer-boolean-literal'], 'warn');
+});
 
 test('custom namespaces keep owner URLs and leave core and third-party metadata untouched', async () => {
     const eslint = new ESLint({

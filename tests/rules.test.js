@@ -21,6 +21,7 @@ import ampNoInlineStatement from '../src/rules/amp/no-inline-statement.js';
 import ampRequireVariableDeclaration from '../src/rules/amp/require-variable-declaration.js';
 import ampFunctionArity from '../src/rules/amp/function-arity.js';
 import ampArgumentTypes from '../src/rules/amp/argument-types.js';
+import ampPreferBooleanLiteral from '../src/rules/amp/prefer-boolean-literal.js';
 import ampNoEmailExcludedFunction from '../src/rules/amp/no-email-excluded-function.js';
 import ampNoDeprecatedFunction from '../src/rules/amp/no-deprecated-function.js';
 import ampNoNonfunctionalFunction from '../src/rules/amp/no-nonfunctional-function.js';
@@ -565,6 +566,45 @@ ampTester.run('amp-arg-types', ampArgumentTypes, {
                 },
             ],
         },
+    ],
+});
+
+// ── 10c. amp-prefer-boolean-literal ───────────────────────────────────────────
+
+ampTester.run('amp-prefer-boolean-literal', ampPreferBooleanLiteral, {
+    valid: [
+        { code: "%%= RaiseError('stop', true) =%%" },
+        { code: "%%= RaiseError('stop', false) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, true) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, false) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 2) =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, 'yes') =%%" },
+        { code: "%%= DatePart('2026-01-15', '1') =%%" },
+    ],
+    invalid: [
+        ...[
+            ['1', 'true'],
+            ['0', 'false'],
+            ["'true'", 'true'],
+            ["'FALSE'", 'false'],
+            ['"true"', 'true'],
+            ['"false"', 'false'],
+            ["'1'", 'true'],
+            ['"0"', 'false'],
+        ].map(([actual, preferred]) => ({
+            code: `%%= RaiseError('stop', false, '', 0, ${actual}) =%%`,
+            errors: [
+                {
+                    messageId: 'preferBooleanLiteral',
+                    data: {
+                        name: 'RaiseError',
+                        param: 'preserveDataExt',
+                        preferred,
+                        actual,
+                    },
+                },
+            ],
+        })),
     ],
 });
 

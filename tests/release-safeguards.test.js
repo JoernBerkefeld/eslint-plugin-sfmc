@@ -35,7 +35,7 @@ test('release gate rejects missing/mismatched tags and wrong checkout commits', 
 });
 
 test('documentation gate rejects identity drift, missing pages, foreign URLs and fragments', () => {
-    assert.equal(validateDocumentation(plugin, metadata, root).length, 52);
+    assert.equal(validateDocumentation(plugin, metadata, root).length, 53);
     assert.throws(() => validateDocumentation(plugin, { ...metadata, version: '0.0.0' }, root));
     const id = 'amp-arg-types';
     const original = plugin.rules[id];

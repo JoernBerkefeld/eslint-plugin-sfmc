@@ -46,8 +46,8 @@ describe('manual-autofix — eslint --fix integration', () => {
             const results = await eslint.lintFiles([scratchPath]);
             await ESLint.outputFixes(results);
 
-            const actual = readFileSync(scratchPath, 'utf8');
-            const expected = readFileSync(expectedPath, 'utf8');
+            const actual = readFileSync(scratchPath, 'utf8').replaceAll('\r\n', '\n');
+            const expected = readFileSync(expectedPath, 'utf8').replaceAll('\r\n', '\n');
 
             assert.equal(
                 actual,
