@@ -35,10 +35,9 @@ function staticLiteralValue(argument) {
     if (argument.type === 'NumberLiteral') {
         return Number(argument.value);
     }
-    if (argument.type === 'BooleanLiteral') {
-        return String(argument.value).toLowerCase() === 'true';
-    }
-    return String(argument.value);
+    return argument.type === 'BooleanLiteral'
+        ? String(argument.value).toLowerCase() === 'true'
+        : String(argument.value);
 }
 
 /**
@@ -54,10 +53,9 @@ function enumValueMatches(allowed, actual) {
     if (typeof allowed !== typeof actual) {
         return false;
     }
-    if (typeof allowed === 'string' && typeof actual === 'string') {
-        return allowed.toLowerCase() === actual.toLowerCase();
-    }
-    return allowed === actual;
+    return typeof allowed === 'string' && typeof actual === 'string'
+        ? allowed.toLowerCase() === actual.toLowerCase()
+        : allowed === actual;
 }
 
 /**

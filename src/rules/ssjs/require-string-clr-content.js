@@ -46,16 +46,10 @@ function isHttpConstructorMember(node) {
  * @returns {boolean} Whether the expression yields an HTTP request instance
  */
 function isHttpRequestInit(node) {
-    if (!node) {
-        return false;
-    }
-    if (node.type === 'NewExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    if (node.type === 'CallExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    return false;
+    return node
+        ? (node.type === 'NewExpression' || node.type === 'CallExpression') &&
+              isHttpConstructorMember(node.callee)
+        : false;
 }
 
 /**
@@ -153,10 +147,7 @@ export default {
 
             // resp.content — non-computed member read on a tracked response var.
             'MemberExpression[computed=false]'(node) {
-                if (!isTrackedContentMember(node)) {
-                    return;
-                }
-                if (isWrappedInString(node)) {
+                if (!isTrackedContentMember(node) || isWrappedInString(node)) {
                     return;
                 }
                 pending.push(node);

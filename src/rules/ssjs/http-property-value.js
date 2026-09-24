@@ -65,13 +65,10 @@ function isHttpConstructorMember(node) {
  * @returns {boolean} Whether the expression yields an HTTP request instance
  */
 function isHttpRequestInit(node) {
-    if (!node) {
-        return false;
-    }
-    if (node.type === 'NewExpression' || node.type === 'CallExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    return false;
+    return node
+        ? (node.type === 'NewExpression' || node.type === 'CallExpression') &&
+              isHttpConstructorMember(node.callee)
+        : false;
 }
 
 /**
@@ -123,10 +120,9 @@ function checkConstraint(value, constraint) {
         if (constraint.numeric === 'integer' && !Number.isSafeInteger(value)) {
             return 'must be an integer';
         }
-        if (typeof constraint.min === 'number' && value < constraint.min) {
-            return `must be >= ${constraint.min}`;
-        }
-        return null;
+        return typeof constraint.min === 'number' && value < constraint.min
+            ? `must be >= ${constraint.min}`
+            : null;
     }
     return null;
 }

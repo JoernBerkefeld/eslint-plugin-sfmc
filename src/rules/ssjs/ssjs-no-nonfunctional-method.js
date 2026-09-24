@@ -101,10 +101,7 @@ export default {
 
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') {
-                    return;
-                }
-                if (callee.property.type !== 'Identifier') {
+                if (callee.type !== 'MemberExpression' || callee.property.type !== 'Identifier') {
                     return;
                 }
                 const methodName = callee.property.name;
@@ -167,25 +164,21 @@ export default {
                 // Instance sub-path: de.Rows.Add(...) where `de` is a tracked
                 // Init(...) instance. Substitute the instance's core type for the
                 // leftmost identifier and resolve the class key.
-                if (objectPath) {
-                    const segments = objectPath.split('.');
-                    const rootCoreType = coreVariables.get(segments[0]);
-                    if (rootCoreType) {
-                        const resolvedPath = [rootCoreType, ...segments.slice(1)].join('.');
-                        const classLookup = coreNonFunctionalMethodLookup.get(
-                            resolvedPath.toLowerCase(),
-                        );
-                        if (classLookup) {
-                            const entry = classLookup.get(methodName.toLowerCase());
-                            checkNonFunctional(
-                                entry,
-                                `${resolvedPath}.${methodName}`,
-                                callee.property,
-                                true,
-                            );
-                        }
-                    }
+                if (!objectPath) {
+                    return;
                 }
+                const segments = objectPath.split('.');
+                const rootCoreType = coreVariables.get(segments[0]);
+                if (!rootCoreType) {
+                    return;
+                }
+                const resolvedPath = [rootCoreType, ...segments.slice(1)].join('.');
+                const classLookup = coreNonFunctionalMethodLookup.get(resolvedPath.toLowerCase());
+                if (!classLookup) {
+                    return;
+                }
+                const entry = classLookup.get(methodName.toLowerCase());
+                checkNonFunctional(entry, `${resolvedPath}.${methodName}`, callee.property, true);
             },
         };
     },
@@ -202,10 +195,11 @@ function getCoreInitType(node) {
         return null;
     }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') {
-        return null;
-    }
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Init'
+    ) {
         return null;
     }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {

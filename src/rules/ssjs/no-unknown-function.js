@@ -139,43 +139,44 @@ export default {
                 }
 
                 // ── Instance method calls (Core Library / WSProxy) ────────────
-                if (callee.object.type === 'Identifier') {
-                    const objectName = callee.object.name;
+                if (callee.object.type !== 'Identifier') {
+                    return;
+                }
+                const objectName = callee.object.name;
 
-                    // Core library: var de = DataExtension.Init("key"); de.Foo();
-                    const coreType = coreVariables.get(objectName);
-                    if (coreType) {
-                        const objectDefinition = coreObjectLookup.get(coreType);
-                        if (objectDefinition) {
-                            const knownMethods = new Set(
-                                objectDefinition.methods.map((m) => m.toLowerCase()),
-                            );
-                            if (!knownMethods.has(methodName.toLowerCase())) {
-                                context.report({
-                                    node: property,
-                                    messageId: 'unknownCoreMethod',
-                                    data: {
-                                        method: methodName,
-                                        objectType: coreType,
-                                        available: objectDefinition.methods.join(', '),
-                                    },
-                                });
-                            }
+                // Core library: var de = DataExtension.Init("key"); de.Foo();
+                const coreType = coreVariables.get(objectName);
+                if (coreType) {
+                    const objectDefinition = coreObjectLookup.get(coreType);
+                    if (objectDefinition) {
+                        const knownMethods = new Set(
+                            objectDefinition.methods.map((m) => m.toLowerCase()),
+                        );
+                        if (!knownMethods.has(methodName.toLowerCase())) {
+                            context.report({
+                                node: property,
+                                messageId: 'unknownCoreMethod',
+                                data: {
+                                    method: methodName,
+                                    objectType: coreType,
+                                    available: objectDefinition.methods.join(', '),
+                                },
+                            });
                         }
-                        return;
                     }
+                    return;
+                }
 
-                    // WSProxy: var api = new Script.Util.WSProxy(); api.Foo();
-                    if (
-                        wsproxyVariables.has(objectName) &&
-                        !wsproxyMethodNames.has(methodName.toLowerCase())
-                    ) {
-                        context.report({
-                            node: property,
-                            messageId: 'unknownWsproxyMethod',
-                            data: { name: methodName },
-                        });
-                    }
+                // WSProxy: var api = new Script.Util.WSProxy(); api.Foo();
+                if (
+                    wsproxyVariables.has(objectName) &&
+                    !wsproxyMethodNames.has(methodName.toLowerCase())
+                ) {
+                    context.report({
+                        node: property,
+                        messageId: 'unknownWsproxyMethod',
+                        data: { name: methodName },
+                    });
                 }
             },
         };
@@ -194,10 +195,11 @@ function getCoreInitType(node) {
         return null;
     }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') {
-        return null;
-    }
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Init'
+    ) {
         return null;
     }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {

@@ -43,21 +43,22 @@ export default {
                     return;
                 }
                 const lower = name.toLowerCase();
-                if (!declared.has(lower)) {
-                    const isFirstFix = !fixedVariables.has(lower);
-                    if (isFirstFix) {
-                        fixedVariables.add(lower);
-                    }
-
-                    context.report({
-                        node: node.target,
-                        messageId: 'undeclared',
-                        data: { name },
-                        fix: isFirstFix
-                            ? (fixer) => fixer.insertTextBefore(node, `var ${name}\n`)
-                            : undefined,
-                    });
+                if (declared.has(lower)) {
+                    return;
                 }
+                const isFirstFix = !fixedVariables.has(lower);
+                if (isFirstFix) {
+                    fixedVariables.add(lower);
+                }
+
+                context.report({
+                    node: node.target,
+                    messageId: 'undeclared',
+                    data: { name },
+                    fix: isFirstFix
+                        ? (fixer) => fixer.insertTextBefore(node, `var ${name}\n`)
+                        : undefined,
+                });
             },
         };
     },

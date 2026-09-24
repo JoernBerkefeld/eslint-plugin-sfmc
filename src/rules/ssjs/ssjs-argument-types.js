@@ -143,10 +143,7 @@ export default {
                     return;
                 }
 
-                if (callee.type !== 'MemberExpression') {
-                    return;
-                }
-                if (callee.property.type !== 'Identifier') {
+                if (callee.type !== 'MemberExpression' || callee.property.type !== 'Identifier') {
                     return;
                 }
                 const methodName = callee.property.name;
@@ -228,14 +225,16 @@ export default {
 
                 // Multi-part static: DataExtension.Rows.Add(...), TriggeredSend.Tracking.Clicks.Retrieve(...)
                 const objectPath = getMemberPath(callee.object);
-                if (objectPath && coreObjectNames.has(objectPath)) {
-                    const classLookup = coreMethodArityLookup.get(objectPath.toLowerCase());
-                    if (classLookup) {
-                        const entry = classLookup.get(methodName.toLowerCase());
-                        if (entry) {
-                            checkArguments(entry, node.arguments, `${objectPath}.${methodName}`);
-                        }
-                    }
+                if (!objectPath || !coreObjectNames.has(objectPath)) {
+                    return;
+                }
+                const classLookup = coreMethodArityLookup.get(objectPath.toLowerCase());
+                if (!classLookup) {
+                    return;
+                }
+                const entry = classLookup.get(methodName.toLowerCase());
+                if (entry) {
+                    checkArguments(entry, node.arguments, `${objectPath}.${methodName}`);
                 }
             },
         };
@@ -247,10 +246,11 @@ function getCoreInitType(node) {
         return null;
     }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') {
-        return null;
-    }
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Init'
+    ) {
         return null;
     }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {
@@ -313,19 +313,13 @@ function inferArgumentType(node) {
         ) {
             return 'string[]';
         }
-        if (
-            elements.every(
-                (element) => element.type === 'Literal' && typeof element.value === 'number',
-            )
-        ) {
-            return 'number[]';
-        }
-        return 'array';
+        return elements.every(
+            (element) => element.type === 'Literal' && typeof element.value === 'number',
+        )
+            ? 'number[]'
+            : 'array';
     }
-    if (node.type === 'ObjectExpression') {
-        return 'object';
-    }
-    return null;
+    return node.type === 'ObjectExpression' ? 'object' : null;
 }
 
 function isTypeCompatible(actual, expected) {

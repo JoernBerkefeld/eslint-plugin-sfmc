@@ -54,9 +54,18 @@ async function messages(linter, code, filePath) {
     return result.messages;
 }
 
-test('declared ESLint minimum and selected engine are explicit', () => {
+test('base and optional Unicorn ESLint floors stay distinct', () => {
     const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-    assert.equal(manifest.peerDependencies.eslint, '>=10.4.0');
+    const unicornManifest = JSON.parse(
+        readFileSync(
+            new URL('../node_modules/eslint-plugin-unicorn/package.json', import.meta.url),
+            'utf8',
+        ),
+    );
+    assert.equal(manifest.peerDependencies.eslint, '>=10.0.0');
+    assert.equal(manifest.devDependencies['eslint-minimum'], 'npm:eslint@10.0.0');
+    assert.equal(unicornManifest.version, '76.0.0');
+    assert.equal(unicornManifest.peerDependencies.eslint, '>=10.4');
     if (expectedVersion) {
         assert.equal(ESLint.version, expectedVersion);
     }
@@ -126,11 +135,13 @@ for (const style of ['raw', 'defineConfig']) {
                     active && !next ? 2 : 0,
                     file,
                 );
-                if (active) {
-                    assert.equal(effective.languageOptions.ecmaVersion, 5);
-                    assert.equal(effective.languageOptions.sourceType, 'script');
-                    assert.ok('Platform' in effective.languageOptions.globals);
+                if (!active) {
+                    continue;
                 }
+
+                assert.equal(effective.languageOptions.ecmaVersion, 5);
+                assert.equal(effective.languageOptions.sourceType, 'script');
+                assert.ok('Platform' in effective.languageOptions.globals);
             }
             for (const file of ['sample.hbs', 'mail.html/0_block.hbs']) {
                 const active = next && Array.isArray(preset);

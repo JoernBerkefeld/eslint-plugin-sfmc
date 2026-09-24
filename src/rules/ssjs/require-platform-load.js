@@ -105,10 +105,7 @@ function getCoreObjectUsage(node) {
 
     // Bare call: Now(), Write(), GUID(), Base64Encode(), Redirect(), …
     if (callee.type === 'Identifier') {
-        if (CORE_LOAD_DEPENDENT_GLOBALS.has(callee.name.toLowerCase())) {
-            return callee.name;
-        }
-        return null;
+        return CORE_LOAD_DEPENDENT_GLOBALS.has(callee.name.toLowerCase()) ? callee.name : null;
     }
 
     if (callee.type !== 'MemberExpression') {

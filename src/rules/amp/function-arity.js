@@ -45,13 +45,9 @@ function checkRepeatGroups(entry, callArguments) {
                 : null;
         }
         const trailing = actual - startIndex;
-        if (trailing % groupSize !== 0) {
-            return incompleteGroup(entry, groupSize);
-        }
-        if (trailing / groupSize < minGroups) {
-            return incompleteGroup(entry, groupSize);
-        }
-        return null;
+        return trailing % groupSize !== 0 || trailing / groupSize < minGroups
+            ? incompleteGroup(entry, groupSize)
+            : null;
     }
 
     // Two repeating groups (DataExtension Update/Upsert family): the first group's
@@ -71,10 +67,9 @@ function checkRepeatGroups(entry, callArguments) {
     const group1Arguments = countArgument * g1.groupSize;
     const group2Start = g1.startIndex + group1Arguments;
     const group2Count = actual - group2Start;
-    if (group2Count <= 0 || group2Count % g2.groupSize !== 0) {
-        return incompleteGroup(entry, g2.groupSize);
-    }
-    return null;
+    return group2Count <= 0 || group2Count % g2.groupSize !== 0
+        ? incompleteGroup(entry, g2.groupSize)
+        : null;
 }
 
 /**

@@ -63,10 +63,9 @@ export default {
          * @returns {boolean} True when the item must be flagged.
          */
         function isUnsupported(since) {
-            if (since === null || since === undefined) {
-                return true;
-            }
-            return apiVersion !== null && since > apiVersion;
+            return (
+                since === null || since === undefined || (apiVersion !== null && since > apiVersion)
+            );
         }
 
         /**

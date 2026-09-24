@@ -49,10 +49,7 @@ const ERRORUTIL_DEPRECATED = new Set(
  */
 function findDeprecatedEntry(className, methodName) {
     const classLookup = coreDeprecatedMethodLookup.get(className.toLowerCase());
-    if (!classLookup) {
-        return null;
-    }
-    return classLookup.get(methodName.toLowerCase()) || null;
+    return classLookup ? classLookup.get(methodName.toLowerCase()) || null : null;
 }
 
 /**
@@ -86,10 +83,11 @@ function getCoreInitType(node) {
         return null;
     }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression' || callee.property.type !== 'Identifier') {
-        return null;
-    }
-    if (callee.property.name !== 'Init') {
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Init'
+    ) {
         return null;
     }
     const objectPath = getMemberPath(callee.object);
@@ -124,14 +122,11 @@ function getCoreLoadVersion(node) {
         return null;
     }
     const versionArgument = arguments_[1];
-    if (
-        versionArgument &&
+    return versionArgument &&
         versionArgument.type === 'Literal' &&
         typeof versionArgument.value === 'string'
-    ) {
-        return versionArgument.value;
-    }
-    return '';
+        ? versionArgument.value
+        : '';
 }
 
 /**

@@ -36,11 +36,7 @@ export function preprocess(text, filename) {
         });
     }
 
-    if (blocks.length === 0) {
-        return [text];
-    }
-
-    return blocks;
+    return blocks.length === 0 ? [text] : blocks;
 }
 
 export function postprocess(messages, _filename) {

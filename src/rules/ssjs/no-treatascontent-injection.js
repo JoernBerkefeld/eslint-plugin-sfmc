@@ -28,15 +28,12 @@ export default {
     create(context) {
         return {
             CallExpression(node) {
-                if (!isTreatAsContentCall(node)) {
-                    return;
-                }
-                if (node.arguments.length === 0) {
+                if (!isTreatAsContentCall(node) || node.arguments.length === 0) {
                     return;
                 }
 
                 const argument = node.arguments[0];
-                if (containsConcatenation(argument)) {
+                if (hasConcatenation(argument)) {
                     context.report({ node: argument, messageId: 'injection' });
                 }
             },
@@ -65,9 +62,9 @@ function isTreatAsContentCall(node) {
     );
 }
 
-function containsConcatenation(node) {
-    if (node.type === 'BinaryExpression' && node.operator === '+') {
-        return true;
-    }
-    return node.type === 'TemplateLiteral' && node.expressions.length > 0;
+function hasConcatenation(node) {
+    return (
+        (node.type === 'BinaryExpression' && node.operator === '+') ||
+        (node.type === 'TemplateLiteral' && node.expressions.length > 0)
+    );
 }

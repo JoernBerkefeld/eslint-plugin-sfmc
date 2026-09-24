@@ -34,17 +34,18 @@ export default {
                         });
                     }
                 }
-                if (statement.type === 'VarDeclaration') {
-                    const current = counterStack.at(-1);
-                    if (current) {
-                        for (const v of statement.variables) {
-                            if (v.value.toLowerCase() === current.toLowerCase()) {
-                                context.report({
-                                    node: v,
-                                    messageId: 'counterAssign',
-                                    data: { name: v.value },
-                                });
-                            }
+                if (statement.type !== 'VarDeclaration') {
+                    continue;
+                }
+                const current = counterStack.at(-1);
+                if (current) {
+                    for (const v of statement.variables) {
+                        if (v.value.toLowerCase() === current.toLowerCase()) {
+                            context.report({
+                                node: v,
+                                messageId: 'counterAssign',
+                                data: { name: v.value },
+                            });
                         }
                     }
                 }

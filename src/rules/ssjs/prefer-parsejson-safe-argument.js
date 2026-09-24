@@ -27,10 +27,7 @@ export default {
     create(context) {
         return {
             CallExpression(node) {
-                if (!isParseJSONCall(node)) {
-                    return;
-                }
-                if (node.arguments.length === 0) {
+                if (!isParseJSONCall(node) || node.arguments.length === 0) {
                     return;
                 }
 

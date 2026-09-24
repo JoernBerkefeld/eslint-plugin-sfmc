@@ -47,19 +47,14 @@ function personalizationName(node) {
     }
     if (node.type === 'Identifier') {
         const lower = node.value.toLowerCase();
-        if (functionNames.has(lower) || AMPSCRIPT_KEYWORDS.has(lower)) {
-            return null;
-        }
-        if (isSystemPersonalizationString(node.value)) {
-            return null;
-        }
-        return node.value;
+        return functionNames.has(lower) ||
+            AMPSCRIPT_KEYWORDS.has(lower) ||
+            isSystemPersonalizationString(node.value)
+            ? null
+            : node.value;
     }
     if (node.type === 'PersonalizationString') {
-        if (isSystemPersonalizationString(node.value)) {
-            return null;
-        }
-        return node.value;
+        return isSystemPersonalizationString(node.value) ? null : node.value;
     }
     return null;
 }

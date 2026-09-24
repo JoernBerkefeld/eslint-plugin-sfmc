@@ -111,10 +111,9 @@ export default {
                         (c) =>
                             c.type === 'Block' && c.range[0] === 0 && /^\s*global\b/.test(c.value),
                     );
-                if (leadingGlobal) {
-                    return fixer.insertTextAfterRange(leadingGlobal.range, '\n\n' + entry.polyfill);
-                }
-                return fixer.insertTextBeforeRange([0, 0], entry.polyfill + '\n\n');
+                return leadingGlobal
+                    ? fixer.insertTextAfterRange(leadingGlobal.range, '\n\n' + entry.polyfill)
+                    : fixer.insertTextBeforeRange([0, 0], entry.polyfill + '\n\n');
             };
         }
 
@@ -230,17 +229,18 @@ export default {
                 }
 
                 // ── Prototype methods with NO polyfill: .trimStart(), .flat(), … ─
-                if (knownUnsupportedByPrototypeName.has(lowerMethod)) {
-                    if (ignored.has(methodName)) {
-                        return;
-                    }
-                    // Skip known SFMC top-level objects to avoid false positives.
-                    if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
-                        return;
-                    }
-                    const entry = knownUnsupportedByPrototypeName.get(lowerMethod);
-                    pendingReports.push({ node: property, entry, noPolyfill: true });
+                if (!knownUnsupportedByPrototypeName.has(lowerMethod)) {
+                    return;
                 }
+                if (ignored.has(methodName)) {
+                    return;
+                }
+                // Skip known SFMC top-level objects to avoid false positives.
+                if (receiver.type === 'Identifier' && SFMC_RECEIVERS.has(receiver.name)) {
+                    return;
+                }
+                const entry = knownUnsupportedByPrototypeName.get(lowerMethod);
+                pendingReports.push({ node: property, entry, noPolyfill: true });
             },
 
             'Program:exit'() {

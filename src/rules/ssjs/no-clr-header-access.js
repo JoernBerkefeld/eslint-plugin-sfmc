@@ -73,16 +73,10 @@ function isHttpConstructorMember(node) {
  * @returns {boolean} Whether the expression yields an HTTP request instance
  */
 function isHttpRequestInit(node) {
-    if (!node) {
-        return false;
-    }
-    if (node.type === 'NewExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    if (node.type === 'CallExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    return false;
+    return node
+        ? (node.type === 'NewExpression' || node.type === 'CallExpression') &&
+              isHttpConstructorMember(node.callee)
+        : false;
 }
 
 export default {
@@ -139,16 +133,13 @@ export default {
          * @returns {string|null} Response variable name or null
          */
         function trackedResponseName(headersMember) {
-            if (
-                headersMember.type === 'MemberExpression' &&
+            return headersMember.type === 'MemberExpression' &&
                 headersMember.property.type === 'Identifier' &&
                 headersMember.property.name === 'headers' &&
                 headersMember.object.type === 'Identifier' &&
                 responseVariables.has(headersMember.object.name)
-            ) {
-                return headersMember.object.name;
-            }
-            return null;
+                ? headersMember.object.name
+                : null;
         }
 
         /**

@@ -19,13 +19,7 @@ export const BINDING_PATTERN = /\{!\$([A-Za-z0-9_.]+)\}/g;
  * @returns {string | null} The simple helper name, or null.
  */
 export function simpleHelperName(path) {
-    if (!path || path.type !== 'PathExpression') {
-        return null;
-    }
-    if (path.data) {
-        return null;
-    }
-    if ((path.depth ?? 0) > 0) {
+    if (!path || path.type !== 'PathExpression' || path.data || (path.depth ?? 0) > 0) {
         return null;
     }
     const parts = path.parts ?? [];
@@ -33,10 +27,7 @@ export function simpleHelperName(path) {
         return null;
     }
     const name = parts[0];
-    if (!name || name === 'this') {
-        return null;
-    }
-    return name;
+    return !name || name === 'this' ? null : name;
 }
 
 /**
@@ -105,14 +96,13 @@ export function closestMatch(word, candidates) {
 
     for (const candidate of candidates) {
         const distance = levenshtein(lowerWord, candidate.toLowerCase());
-        if (distance < bestDistance) {
-            bestDistance = distance;
-            best = candidate;
+        if (!(distance < bestDistance)) {
+            continue;
         }
+
+        bestDistance = distance;
+        best = candidate;
     }
 
-    if (best !== null && bestDistance > 0 && bestDistance <= maxDistance) {
-        return best;
-    }
-    return null;
+    return best !== null && bestDistance > 0 && bestDistance <= maxDistance ? best : null;
 }

@@ -35,9 +35,9 @@ export default {
                 }
 
                 let lengthExpression = null;
-                if (containsMemberLength(test.right)) {
+                if (hasMemberLength(test.right)) {
                     lengthExpression = test.right;
-                } else if (containsMemberLength(test.left)) {
+                } else if (hasMemberLength(test.left)) {
                     lengthExpression = test.left;
                 }
 
@@ -57,15 +57,12 @@ export default {
     },
 };
 
-function containsMemberLength(node) {
-    if (!node) {
-        return false;
-    }
-    return (
-        node.type === 'MemberExpression' &&
-        node.property.type === 'Identifier' &&
-        node.property.name === 'length'
-    );
+function hasMemberLength(node) {
+    return node
+        ? node.type === 'MemberExpression' &&
+              node.property.type === 'Identifier' &&
+              node.property.name === 'length'
+        : false;
 }
 
 function buildCacheFix(forNode, lengthExpression, context) {

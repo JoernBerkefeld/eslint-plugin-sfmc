@@ -15,10 +15,9 @@ import { platformFunctionLookup } from 'ssjs-data';
  * @returns {string} The rendered list.
  */
 function formatArities(arities) {
-    if (arities.length === 1) {
-        return String(arities[0]);
-    }
-    return `${arities.slice(0, -1).join(', ')} or ${arities.at(-1)}`;
+    return arities.length === 1
+        ? String(arities[0])
+        : `${arities.slice(0, -1).join(', ')} or ${arities.at(-1)}`;
 }
 
 export default {
@@ -42,63 +41,61 @@ export default {
         return {
             CallExpression(node) {
                 const callee = node.callee;
-                if (callee.type !== 'MemberExpression') {
+                if (
+                    callee.type !== 'MemberExpression' ||
+                    callee.object.type !== 'MemberExpression' ||
+                    callee.object.object.type !== 'Identifier' ||
+                    callee.object.object.name !== 'Platform' ||
+                    callee.object.property.type !== 'Identifier' ||
+                    callee.object.property.name !== 'Function' ||
+                    callee.property.type !== 'Identifier'
+                ) {
+                    return;
+                }
+                const methodName = callee.property.name;
+                const entry = platformFunctionLookup.get(methodName.toLowerCase());
+                if (!entry) {
                     return;
                 }
 
-                if (
-                    callee.object.type === 'MemberExpression' &&
-                    callee.object.object.type === 'Identifier' &&
-                    callee.object.object.name === 'Platform' &&
-                    callee.object.property.type === 'Identifier' &&
-                    callee.object.property.name === 'Function' &&
-                    callee.property.type === 'Identifier'
+                const actual = node.arguments.length;
+
+                if (actual < entry.minArgs) {
+                    context.report({
+                        node: callee.property,
+                        messageId: 'tooFewArgs',
+                        data: {
+                            name: entry.name,
+                            min: String(entry.minArgs),
+                            actual: String(actual),
+                        },
+                    });
+                } else if (actual > entry.maxArgs) {
+                    context.report({
+                        node: callee.property,
+                        messageId: 'tooManyArgs',
+                        data: {
+                            name: entry.name,
+                            max: String(entry.maxArgs),
+                            actual: String(actual),
+                        },
+                    });
+                } else if (
+                    Array.isArray(entry.validArities) &&
+                    !entry.validArities.includes(actual)
                 ) {
-                    const methodName = callee.property.name;
-                    const entry = platformFunctionLookup.get(methodName.toLowerCase());
-                    if (!entry) {
-                        return;
-                    }
-
-                    const actual = node.arguments.length;
-
-                    if (actual < entry.minArgs) {
-                        context.report({
-                            node: callee.property,
-                            messageId: 'tooFewArgs',
-                            data: {
-                                name: entry.name,
-                                min: String(entry.minArgs),
-                                actual: String(actual),
-                            },
-                        });
-                    } else if (actual > entry.maxArgs) {
-                        context.report({
-                            node: callee.property,
-                            messageId: 'tooManyArgs',
-                            data: {
-                                name: entry.name,
-                                max: String(entry.maxArgs),
-                                actual: String(actual),
-                            },
-                        });
-                    } else if (
-                        Array.isArray(entry.validArities) &&
-                        !entry.validArities.includes(actual)
-                    ) {
-                        // Discontinuous overload: actual is within [minArgs, maxArgs]
-                        // but not one of the exact permitted arities (e.g. HTTPGet
-                        // accepts only 1 or 6 arguments; 2-5 throw at runtime).
-                        context.report({
-                            node: callee.property,
-                            messageId: 'invalidArity',
-                            data: {
-                                name: entry.name,
-                                arities: formatArities(entry.validArities),
-                                actual: String(actual),
-                            },
-                        });
-                    }
+                    // Discontinuous overload: actual is within [minArgs, maxArgs]
+                    // but not one of the exact permitted arities (e.g. HTTPGet
+                    // accepts only 1 or 6 arguments; 2-5 throw at runtime).
+                    context.report({
+                        node: callee.property,
+                        messageId: 'invalidArity',
+                        data: {
+                            name: entry.name,
+                            arities: formatArities(entry.validArities),
+                            actual: String(actual),
+                        },
+                    });
                 }
             },
         };

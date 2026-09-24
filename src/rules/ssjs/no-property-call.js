@@ -35,10 +35,10 @@ const REQUEST_PROPERTIES = new Set(
  */
 function canReplaceCallWithAssignment(node) {
     const parent = node.parent;
-    if (parent.type === 'ExpressionStatement' && parent.expression === node) {
-        return true;
-    }
-    return Boolean(parent.type === 'SequenceExpression' && parent.expressions.includes(node));
+    return (
+        (parent.type === 'ExpressionStatement' && parent.expression === node) ||
+        Boolean(parent.type === 'SequenceExpression' && parent.expressions.includes(node))
+    );
 }
 
 export default {

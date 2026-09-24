@@ -18,7 +18,7 @@ const BOOLEAN_LIKE_ENUM = [true, false, 1, 0, 'true', 'false', '1', '0'];
 function preferredBoolean(argument) {
     if (argument?.type === 'NumberLiteral') {
         const value = Number(argument.value);
-        return value === 1 ? true : value === 0 ? false : null;
+        return value === 1 || (value !== 0 && null);
     }
     if (argument?.type === 'StringLiteral') {
         const value = String(argument.value).toLowerCase();
@@ -39,10 +39,11 @@ function preferredBoolean(argument) {
  * @returns {boolean} Whether the enum contains exactly the complete eight-value set.
  */
 export function isBooleanLikeParameter(parameter) {
-    if (!Array.isArray(parameter?.enum) || parameter.enum.length !== BOOLEAN_LIKE_ENUM.length) {
-        return false;
-    }
-    return BOOLEAN_LIKE_ENUM.every((value) => parameter.enum.includes(value));
+    return (
+        Array.isArray(parameter?.enum) &&
+        parameter.enum.length === BOOLEAN_LIKE_ENUM.length &&
+        BOOLEAN_LIKE_ENUM.every((value) => parameter.enum.includes(value))
+    );
 }
 
 export default {

@@ -58,13 +58,10 @@ function isHttpConstructorMember(node) {
  * @returns {boolean} Whether the expression yields an HTTP request instance
  */
 function isHttpRequestInit(node) {
-    if (!node) {
-        return false;
-    }
-    if (node.type === 'NewExpression' || node.type === 'CallExpression') {
-        return isHttpConstructorMember(node.callee);
-    }
-    return false;
+    return node
+        ? (node.type === 'NewExpression' || node.type === 'CallExpression') &&
+              isHttpConstructorMember(node.callee)
+        : false;
 }
 
 /**
@@ -108,10 +105,9 @@ function lookupAccess(node, requestVariables) {
         return null;
     }
     const owner = resolveOwner(node.object, requestVariables);
-    if (!owner) {
-        return null;
-    }
-    return propertyAccessLookup.get(`${owner}.${node.property.name}`.toLowerCase()) ?? null;
+    return owner
+        ? (propertyAccessLookup.get(`${owner}.${node.property.name}`.toLowerCase()) ?? null)
+        : null;
 }
 
 /**

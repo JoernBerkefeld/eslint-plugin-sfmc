@@ -3149,7 +3149,7 @@ describe('unicorn-ssjs override configs', () => {
     it('turns every override rule OFF and only touches unicorn/* rules', () => {
         const rules = sfmcPlugin.configs['unicorn-ssjs'].rules;
         const ruleNames = Object.keys(rules);
-        assert.equal(ruleNames.length, 58, 'Unicorn 74 has 58 SSJS policy exclusions');
+        assert.equal(ruleNames.length, 60, 'Unicorn 76 has 60 SSJS policy exclusions');
         assert.equal(Array.isArray(sfmcPlugin.configs['unicorn-ssjs']), false);
         assert.equal(Array.isArray(sfmcPlugin.configs['unicorn-ssjs-embedded']), false);
         for (const name of ruleNames) {
@@ -3197,8 +3197,8 @@ describe('unicorn-ssjs override configs', () => {
         );
         const disabledSection = document.split('## Section 2', 2)[1].split('## Section 3', 1)[0];
         const activeSection = document
-            .split('<!-- BEGIN 250-OK-LIST -->', 2)[1]
-            .split('<!-- END 250-OK-LIST -->', 1)[0];
+            .split('<!-- BEGIN 255-OK-LIST -->', 2)[1]
+            .split('<!-- END 255-OK-LIST -->', 1)[0];
         const documentedDisabled = Array.from(
             disabledSection.matchAll(/^\| \[`([^`]+)`\]/gm),
             (match) => `unicorn/${match[1]}`,
@@ -3224,7 +3224,7 @@ describe('unicorn-ssjs override configs', () => {
                 .toSorted((a, b) => a.localeCompare(b)),
         );
         assert.equal(documentedActive.length, recommended.length - overridden.length);
-        assert.equal(recommended.length, 308);
+        assert.equal(recommended.length, 315);
         const unclassified = recommended.filter(
             (name) => !documentedDisabled.includes(name) && !documentedActive.includes(name),
         );
@@ -3265,7 +3265,7 @@ describe('Unicorn array mutation compatibility integration', () => {
                 assert.equal(
                     diagnostic.fix,
                     undefined,
-                    'Unicorn 74 uses suggestions, not automatic fixes',
+                    'Unicorn 76 uses suggestions, not automatic fixes',
                 );
                 const replacement = ruleId.endsWith('compare')
                     ? '=>'
@@ -3286,10 +3286,12 @@ describe('Unicorn array mutation compatibility integration', () => {
                     const suggested =
                         source.slice(0, fix.range[0]) + fix.text + source.slice(fix.range[1]);
                     assert.ok(suggested.includes(replacement));
-                    if (embedded) {
-                        assert.ok(suggested.startsWith('<script runat="server">'));
-                        assert.ok(suggested.endsWith('</script>'));
+                    if (!embedded) {
+                        continue;
                     }
+
+                    assert.ok(suggested.startsWith('<script runat="server">'));
+                    assert.ok(suggested.endsWith('</script>'));
                 }
             }
             const safeConfig = [

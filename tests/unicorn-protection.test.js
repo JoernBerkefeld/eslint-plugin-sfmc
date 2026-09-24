@@ -12,8 +12,22 @@ const witnesses = [
         code: 'function visit(values) { for (var i = 0; i < values.length; i++) { consume(values[i]); } }',
         output: 'function visit(values) { for (const value of values) { consume(value); } }',
         kind: 'fix',
-        // The v74 visitor needs block scopes, absent with strict ES5 parsing.
+        // The v76 visitor needs block scopes, absent with strict ES5 parsing.
         ecmaVersion: 2015,
+    },
+    {
+        rule: 'prefer-iterator-zip',
+        code: 'for (let i = 0; i < Math.min(first.length, second.length); i++) { consume(first[i], second[i]); }',
+        output: 'for (const [element, element_] of Iterator.zip([first, second])) { consume(element, element_); }',
+        kind: 'suggestion',
+        ecmaVersion: 2015,
+    },
+    {
+        rule: 'prefer-temporal-conversion',
+        code: 'Temporal.PlainDate.from(Temporal.PlainDateTime.from(value));',
+        output: 'Temporal.PlainDateTime.from(value).toPlainDate();',
+        kind: 'fix',
+        ecmaVersion: 2022,
     },
     {
         rule: 'prefer-default-parameters',
@@ -34,7 +48,7 @@ const witnesses = [
     },
     {
         rule: 'no-new-array',
-        // Unknown parameter prevents static evaluation: v74 string-method type
+        // Unknown parameter prevents static evaluation: v76 string-method type
         // inference, not a constant numeric argument, makes this fix reachable.
         code: 'function allocate(value) { return new Array("abc".indexOf(value)); }',
         output: 'function allocate(value) { return Array.from({length: "abc".indexOf(value)}); }',
@@ -47,7 +61,7 @@ const witnesses = [
         kind: 'fix',
     },
     // CloudPage probe evidence establishes target failures; these cases only pin
-    // installed v74 transformations, not native SSJS execution or equivalence.
+    // installed v76 transformations, not native SSJS execution or equivalence.
     {
         rule: 'prefer-string-slice',
         code: '"Hello".substring();',
@@ -184,9 +198,9 @@ function assertUpstreamReport(witness, result, embedded) {
     );
 }
 
-describe('Unicorn 74 syntax/API and measured-target protection witnesses', () => {
+describe('Unicorn 76 syntax/API and measured-target protection witnesses', () => {
     it('executes the intended upstream major version', () => {
-        assert.match(unicorn.meta.version, /^74\./);
+        assert.match(unicorn.meta.version, /^76\./);
     });
 
     for (const witness of witnesses) {
@@ -224,7 +238,7 @@ describe('Unicorn 74 syntax/API and measured-target protection witnesses', () =>
     }
 
     // Reuse the existing splice-defect suite rather than restating native bugs.
-    // These only establish v74's ownership/used-return suggestion guards.
+    // These only establish v76's ownership/used-return suggestion guards.
     for (const code of [
         'function update() { var values = [1,2,3]; var alias = values; values.splice(1,1,9); }',
         'function update() { var values = [1,2,3]; return values.splice(1,1,9); }',

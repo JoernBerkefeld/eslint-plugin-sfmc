@@ -44,18 +44,16 @@ export default {
                 }
 
                 const key = name.toLowerCase();
-                if (reported.has(key)) {
+                if (reported.has(key) || pattern.test(name)) {
                     return;
                 }
 
-                if (!pattern.test(name)) {
-                    reported.add(key);
-                    context.report({
-                        node,
-                        messageId: 'badName',
-                        data: { name, format },
-                    });
-                }
+                reported.add(key);
+                context.report({
+                    node,
+                    messageId: 'badName',
+                    data: { name, format },
+                });
             },
         };
     },

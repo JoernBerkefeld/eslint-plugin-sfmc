@@ -103,14 +103,10 @@ function getCoreObjectUsage(node) {
         return `${callee.object.object.name}.${callee.object.property.name}`;
     }
 
-    if (
-        callee.object.type === 'Identifier' &&
+    return callee.object.type === 'Identifier' &&
         TOP_LEVEL_CORE_NAMES.has(callee.object.name) &&
         callee.property.type === 'Identifier' &&
         callee.property.name === 'Init'
-    ) {
-        return callee.object.name;
-    }
-
-    return null;
+        ? callee.object.name
+        : null;
 }

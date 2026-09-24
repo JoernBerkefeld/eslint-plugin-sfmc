@@ -136,10 +136,11 @@ function getCoreInitType(node) {
         return null;
     }
     const callee = node.callee;
-    if (callee.type !== 'MemberExpression') {
-        return null;
-    }
-    if (callee.property.type !== 'Identifier' || callee.property.name !== 'Init') {
+    if (
+        callee.type !== 'MemberExpression' ||
+        callee.property.type !== 'Identifier' ||
+        callee.property.name !== 'Init'
+    ) {
         return null;
     }
     if (callee.object.type === 'Identifier' && coreObjectNames.has(callee.object.name)) {

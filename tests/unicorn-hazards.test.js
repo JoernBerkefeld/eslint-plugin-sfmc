@@ -137,9 +137,9 @@ function assertReport(witness, result, embedded) {
     );
 }
 
-describe('Unicorn 74 focused semantic hazards', () => {
-    it('loads upstream Unicorn 74', () => {
-        assert.match(unicorn.meta.version, /^74\./);
+describe('Unicorn 76 focused semantic hazards', () => {
+    it('loads upstream Unicorn 76', () => {
+        assert.match(unicorn.meta.version, /^76\./);
     });
 
     for (const witness of witnesses) {

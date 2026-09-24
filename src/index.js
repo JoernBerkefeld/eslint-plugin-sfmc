@@ -390,8 +390,8 @@ function standaloneHandlebarsConfigs(configName) {
 // ── Optional eslint-plugin-unicorn override for SSJS ──────────────────────────
 
 /**
- * The 58 `eslint-plugin-unicorn` recommended rules (analysed against
- * unicorn v74.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
+ * The 60 `eslint-plugin-unicorn` recommended rules (analysed against
+ * unicorn v76.0.0) that are incompatible with the SFMC SSJS (JINT / ES3-ES5)
  * engine — they either fix/suggest code using a missing built-in or forbid a required
  * SFMC workaround, or enforce ES-module / async / ES6-only syntax that the
  * engine cannot run. Each is mapped to `'off'`.
@@ -454,6 +454,10 @@ const unicornSsjsOffRules = {
     'unicorn/prefer-map-from-entries': 'off',
     'unicorn/prefer-group-by': 'off',
     'unicorn/prefer-iterator-helpers': 'off',
+    // Unicorn 76 suggestions introduce Iterator.zip(), unavailable in SFMC SSJS.
+    'unicorn/prefer-iterator-zip': 'off',
+    // Temporal is unavailable, so direct Temporal conversion methods are unsafe.
+    'unicorn/prefer-temporal-conversion': 'off',
     'unicorn/prefer-structured-clone': 'off',
     // Native match/search miss results and splice behavior are not standard JS.
     'unicorn/prefer-regexp-test': 'off',
@@ -869,7 +873,7 @@ plugin.configs = {
     // ── Required overrides when eslint-plugin-unicorn covers SSJS ────────────
 
     /**
-     * REQUIRED when unicorn covers standalone `.ssjs` files: turns off the 58
+     * REQUIRED when unicorn covers standalone `.ssjs` files: turns off the 60
      * unicorn recommended rules incompatible with SFMC SSJS. Plain rules object with NO
      * `plugins` key — eslint-plugin-sfmc does not load unicorn. Insert this object
      * AFTER your own unicorn config (which registers the `unicorn` plugin);
@@ -883,7 +887,7 @@ plugin.configs = {
     },
 
     /**
-     * REQUIRED when unicorn covers SSJS embedded in HTML: same 58-rule override
+     * REQUIRED when unicorn covers SSJS embedded in HTML: same 60-rule override
      * for virtual `**\/*.html/*.js` files. Insert AFTER your unicorn config.
      * Omit this config if unicorn is not enabled for embedded SSJS.
      */
