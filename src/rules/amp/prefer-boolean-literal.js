@@ -1,8 +1,8 @@
 /**
  * Rule: prefer-boolean-literal
  *
- * Recommends bare boolean literals for catalog parameters that accept booleans
- * together with numeric or quoted boolean-like alternatives.
+ * Recommends and safely fixes bare boolean literals for every catalogued
+ * boolean-like parameter, all of which accept the same eight static forms.
  */
 
 import { functionLookup } from 'ampscript-data';
@@ -52,9 +52,11 @@ export default {
     meta: {
         type: 'suggestion',
         docs: {
-            description: 'Recommend bare boolean literals for boolean-like AMPscript parameters',
+            description:
+                'Auto-fix accepted boolean-like AMPscript alternatives to recommended bare booleans',
             recommended: true,
         },
+        fixable: 'code',
         messages: {
             preferBooleanLiteral:
                 "Use bare {{preferred}} for boolean-like argument '{{param}}' of '{{name}}' instead of {{actual}}.",
@@ -87,6 +89,9 @@ export default {
                             param: parameter.name,
                             preferred: String(preferred),
                             actual: context.sourceCode.getText(argument),
+                        },
+                        fix(fixer) {
+                            return fixer.replaceText(argument, String(preferred));
                         },
                     });
                 }

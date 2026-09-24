@@ -579,6 +579,7 @@ ampTester.run('amp-prefer-boolean-literal', ampPreferBooleanLiteral, {
         { code: "%%= RaiseError('stop', false, '', 0, false) =%%" },
         { code: "%%= RaiseError('stop', false, '', 0, 2) =%%" },
         { code: "%%= RaiseError('stop', false, '', 0, 'yes') =%%" },
+        { code: "%%= RaiseError('stop', false, '', 0, @preserveDataExt) =%%" },
         { code: "%%= DatePart('2026-01-15', '1') =%%" },
     ],
     invalid: [
@@ -587,12 +588,15 @@ ampTester.run('amp-prefer-boolean-literal', ampPreferBooleanLiteral, {
             ['0', 'false'],
             ["'true'", 'true'],
             ["'FALSE'", 'false'],
-            ['"true"', 'true'],
+            ['"TRUE"', 'true'],
             ['"false"', 'false'],
             ["'1'", 'true'],
+            ["'0'", 'false'],
+            ['"1"', 'true'],
             ['"0"', 'false'],
         ].map(([actual, preferred]) => ({
             code: `%%= RaiseError('stop', false, '', 0, ${actual}) =%%`,
+            output: `%%= RaiseError('stop', false, '', 0, ${preferred}) =%%`,
             errors: [
                 {
                     messageId: 'preferBooleanLiteral',
@@ -605,7 +609,17 @@ ampTester.run('amp-prefer-boolean-literal', ampPreferBooleanLiteral, {
                 },
             ],
         })),
+        {
+            code: "%%= RaiseError('stop', false, '', 0, 'TRUE') =%%",
+            output: "%%= RaiseError('stop', false, '', 0, true) =%%",
+            errors: [{ messageId: 'preferBooleanLiteral' }],
+        },
     ],
+});
+
+ampTester.run('amp-prefer-boolean-literal — fixed output is idempotent', ampPreferBooleanLiteral, {
+    valid: [{ code: "%%= RaiseError('stop', false, '', 0, true) =%%" }],
+    invalid: [],
 });
 
 // ── 11. amp-no-email-excluded-function ────────────────────────────────────────

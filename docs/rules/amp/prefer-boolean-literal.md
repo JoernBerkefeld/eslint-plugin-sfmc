@@ -6,13 +6,13 @@
 |---|---|
 | **Type** | `suggestion` |
 | **Default severity** | `warn` in `recommended` and `strict` |
-| **Fixable** | — |
+| **Fixable** | Yes — `eslint --fix` or editor quick fix |
 
 ## Why This Rule Exists
 
-Some catalogued AMPscript parameters accept bare booleans as well as equivalent numeric and quoted forms. All of those forms are valid, so `sfmc/amp-arg-types` accepts them. This separate style rule recommends the clearer bare `true` or `false` form without describing the alternatives as invalid syntax.
+All catalogued boolean-like AMPscript parameters accept the same eight values: bare `true` and `false`; numeric `1` and `0`; and quoted `'true'`, `'false'`, `'1'`, and `'0'` (with either quote style and case-insensitive word matching). All eight are valid, so `sfmc/amp-arg-types` accepts them. This separate style rule recommends the clearer bare `true` or `false` form without describing the alternatives as invalid syntax.
 
-The rule derives its scope from `ampscript-data` metadata. It only checks parameters whose enum contains both bare booleans and alternative string or numeric representations. String matching remains case-insensitive.
+The rule derives its scope from `ampscript-data` metadata and checks every catalogued boolean-like parameter. Each discouraged static alternative is safely auto-fixed by replacing only that argument with bare `true` or `false`; surrounding code and formatting remain unchanged. Apply fixes with `eslint --fix` or an editor's ESLint quick fix.
 
 ## Settings
 

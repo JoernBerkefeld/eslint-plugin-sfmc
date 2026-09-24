@@ -1,0 +1,10 @@
+%%[
+RaiseError("stop", 1)
+RaiseError("stop", 0)
+RaiseError("stop", 'TRUE')
+RaiseError("stop", "false")
+RaiseError("stop", false, "", 0, '1')
+RaiseError("stop", false, "", 0, "0")
+RaiseError("stop", false, "", 0, @dynamicValue)
+RaiseError("stop", false, "", 0, 2)
+]%%

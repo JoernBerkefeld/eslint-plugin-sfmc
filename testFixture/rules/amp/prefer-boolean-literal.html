@@ -10,7 +10,7 @@ RaiseError("stop", false, "", 0, false)
 RaiseError("stop", false, "", 0, 2)
 RaiseError("stop", false, "", 0, "yes")
 
-/* FAIL — accepted alternatives receive recommendation warnings */
+/* FAIL — accepted alternatives receive auto-fixable recommendations */
 RaiseError("stop", 1)
 RaiseError("stop", "false")
 RaiseError("stop", false, "", 0, "TRUE")

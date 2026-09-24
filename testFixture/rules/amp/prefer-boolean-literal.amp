@@ -9,7 +9,7 @@ RaiseError("stop", false, "", 0, false)
 RaiseError("stop", false, "", 0, 2)
 RaiseError("stop", false, "", 0, "yes")
 
-/* FAIL — accepted alternatives receive one recommendation warning each */
+/* FAIL — accepted alternatives receive one auto-fixable recommendation each */
 RaiseError("stop", 1)
 RaiseError("stop", 0)
 RaiseError("stop", "true")

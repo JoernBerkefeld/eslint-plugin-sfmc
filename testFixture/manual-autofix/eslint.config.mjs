@@ -42,6 +42,7 @@ export default [
         languageOptions: { parser: ampscriptParser },
         rules: {
             'sfmc/amp-require-variable-declaration': 'error',
+            'sfmc/amp-prefer-boolean-literal': 'error',
         },
     },
 ];
