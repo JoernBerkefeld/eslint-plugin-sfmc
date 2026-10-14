@@ -6,6 +6,25 @@ import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import unicorn from 'eslint-plugin-unicorn';
 import sfmc from '../src/index.js';
+import { ESLint as RepoESLint } from 'eslint';
+
+test('repository autofix preserves starred multiline JSDoc', async () => {
+    const eslint = new RepoESLint({
+        cwd: fileURLToPath(new URL('..', import.meta.url)),
+        fix: true,
+    });
+    const filePath = 'src/jsdoc-regression.js';
+    const rule = 'unicorn/no-asterisk-prefix-in-documentation-comments';
+    const config = await eslint.calculateConfigForFile(filePath);
+    assert.equal(config.rules[rule][0], 0);
+    const comment =
+        '/**\n * A representative documentation comment.\n * A second starred line.\n */';
+    const code = `${comment}\nexport const answer = 42;\n`;
+    const [result] = await eslint.lintText(code, { filePath });
+    assert.equal(result.fatalErrorCount, 0);
+    assert.ok((result.output ?? code).includes(comment));
+    assert.ok(result.messages.every((message) => message.ruleId !== rule));
+});
 
 // Point at an isolated ESLint lib/api.js to exercise the actual minimum engine.
 const enginePath = process.env.SFMC_TEST_ESLINT_PATH;

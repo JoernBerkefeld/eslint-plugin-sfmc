@@ -105,7 +105,17 @@ function annotateNode(node, lineStarts, comments) {
     }
 
     if (node.type === 'Comment') {
-        comments.push(node);
+        const isBlock = node.value.startsWith('/*');
+        const value = node.value.slice(2);
+        comments.push({
+            type: isBlock ? 'Block' : 'Line',
+            value: isBlock && value.endsWith('*/') ? value.slice(0, -2) : value,
+            range: [...node.range],
+            loc: {
+                start: { ...node.loc.start },
+                end: { ...node.loc.end },
+            },
+        });
     }
 
     const keys = visitorKeys[node.type];

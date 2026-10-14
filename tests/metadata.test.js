@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { test } from 'node:test';
-import { ESLint } from 'eslint';
+import { ESLint, Linter } from 'eslint';
+import * as ampParser from '../src/ampscript-parser.js';
+import { parse as sharedParse } from 'ampscript-parser';
 import mso from 'eslint-plugin-mso-email';
 import { FUNCTIONS } from 'ampscript-data';
 import sfmc from '../src/index.js';
@@ -14,6 +16,65 @@ const require = createRequire(import.meta.url);
 const metadata = require('../package.json');
 const root = new URL('../', import.meta.url);
 const base = `https://github.com/JoernBerkefeld/eslint-plugin-sfmc/blob/v${metadata.version}/`;
+
+test('AMPscript adapter separates ESLint comment tokens from canonical AST nodes', () => {
+    const code = '%%[\r\n/* first\r\nsecond */\r\n/*tail*/\r\n]%%';
+    const original = sharedParse(code).children.at(0).statements;
+    const { ast } = ampParser.parseForESLint(code);
+    const nodes = ast.body[0].statements;
+    assert.equal(ast.comments.length, 2);
+    for (const [index, node] of nodes.entries()) {
+        const token = ast.comments[index];
+        assert.equal(node.type, 'Comment');
+        assert.equal(node.value, original[index].value);
+        assert.equal(node.start, original[index].start);
+        assert.equal(node.end, original[index].end);
+        assert.notEqual(token, node);
+        assert.equal(token.type, 'Block');
+        assert.equal(token.value, node.value.slice(2, -2));
+        assert.deepEqual(token.range, [node.start, node.end]);
+        assert.deepEqual(token.loc, node.loc);
+        assert.notEqual(token.range, node.range);
+        assert.notEqual(token.loc, node.loc);
+        assert.equal(code.slice(...token.range), node.value);
+    }
+    assert.deepEqual(ast.comments[0].loc, {
+        start: { line: 2, column: 0 },
+        end: { line: 3, column: 9 },
+    });
+    assert.equal(ampParser.parseForESLint('%%[/*tail]%%').ast.comments[0].value, 'tail');
+    assert.equal(ampParser.parseForESLint('%%[/**/]%%').ast.comments[0].value, '');
+});
+
+test('core spaced-comment validates and fixes AMPscript comments at original positions', () => {
+    const linter = new Linter();
+    const config = {
+        languageOptions: { parser: ampParser },
+        rules: { 'spaced-comment': ['error', 'always', { block: { balanced: true } }] },
+    };
+    assert.deepEqual(linter.verify('%%[/* good */]%%', config), []);
+    const code = '%%[\n/*bad*/\n]%%';
+    const messages = linter.verify(code, config);
+    assert.equal(messages.length, 2);
+    for (const message of messages) {
+        assert.equal(message.ruleId, 'spaced-comment');
+        assert.equal(message.line, 2);
+        assert.equal(message.column, 1);
+        assert.equal(message.endLine, 2);
+        assert.equal(message.endColumn, 8);
+    }
+    assert.deepEqual(
+        messages.map((message) => message.fix.range),
+        [
+            [6, 6],
+            [9, 9],
+        ],
+    );
+    const fixed = linter.verifyAndFix(code, config);
+    assert.equal(fixed.output, '%%[\n/* bad */\n]%%');
+    assert.equal(fixed.fixed, true);
+    assert.deepEqual(fixed.messages, []);
+});
 
 test('all public rules retain metadata and link to existing release-owned documentation', async () => {
     assert.equal(sfmc.meta.version, metadata.version);

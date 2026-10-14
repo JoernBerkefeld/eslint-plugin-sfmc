@@ -68,7 +68,7 @@ SFMC rule metadata links to the owning plugin version's documentation under `blo
 - Updated `ampscript-data` to `^4.1.0` and `ssjs-data` to `^2.1.1`, including the complete boolean-like parameter metadata used by both AMPscript rules.
 - No existing rule IDs, public configuration shapes, or supported inputs were removed or changed incompatibly.
 
-Version **5.2.0** exports 53 SFMC rules. Every rule retains version-pinned documentation metadata, and release checks verify the tagged documentation and packed npm artifact.
+Version **5.2.3** exports 53 SFMC rules. Every rule retains version-pinned documentation metadata, and release checks verify the tagged documentation and packed npm artifact. The AMPscript parser adapter exposes ESLint-compatible comment tokens, allowing core comment rules such as `spaced-comment` to validate and autofix comments without changing the canonical AMPscript AST.
 
 ## Configs
 
