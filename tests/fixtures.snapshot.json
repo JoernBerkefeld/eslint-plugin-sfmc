@@ -139,6 +139,34 @@
       "messageId": "badName"
     }
   ],
+  "testFixture/rules/amp/no-ambiguous-personalization-delimiter.amp": [
+    {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 19,
+      "messageId": "systemString"
+    },
+    {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 20,
+      "messageId": "unknownName"
+    }
+  ],
+  "testFixture/rules/amp/no-ambiguous-personalization-delimiter.html": [
+    {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 28,
+      "messageId": "systemString"
+    },
+    {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 31,
+      "messageId": "unknownName"
+    }
+  ],
   "testFixture/rules/amp/no-deprecated-function.amp": [
     {
       "ruleId": "sfmc/amp-no-deprecated-function",
@@ -299,9 +327,21 @@
   ],
   "testFixture/rules/amp/no-nested-ampscript-delimiter.html": [
     {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 20,
+      "messageId": "systemString"
+    },
+    {
+      "ruleId": "sfmc/amp-no-ambiguous-personalization-delimiter",
+      "severity": 1,
+      "line": 20,
+      "messageId": "unknownName"
+    },
+    {
       "ruleId": "sfmc/amp-no-nested-ampscript-delimiter",
       "severity": 2,
-      "line": 18,
+      "line": 26,
       "messageId": "nestedDelimiterInScript"
     }
   ],
@@ -990,11 +1030,43 @@
       "messageId": "loadAfterUse"
     }
   ],
+  "testFixture/rules/ssjs/require-platform-load.html": [
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 19,
+      "messageId": "missingLoad"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 20,
+      "messageId": "missingLoad"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 25,
+      "messageId": "missingLoad"
+    }
+  ],
   "testFixture/rules/ssjs/require-platform-load.ssjs": [
     {
       "ruleId": "sfmc/ssjs-require-platform-load",
       "severity": 2,
-      "line": 11,
+      "line": 12,
+      "messageId": "missingLoad"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 16,
+      "messageId": "missingLoad"
+    },
+    {
+      "ruleId": "sfmc/ssjs-require-platform-load",
+      "severity": 2,
+      "line": 17,
       "messageId": "missingLoad"
     }
   ],

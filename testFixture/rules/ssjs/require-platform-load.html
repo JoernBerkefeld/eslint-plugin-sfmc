@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<!-- Rule: sfmc/ssjs-require-platform-load
+     Platform.Load("core", "1") must be present before Core library objects
+     or globals that depend on it (such as HTTP) are used.
+     Each server-side script block is checked on its own. -->
+
+<!-- ACCEPTED - Platform.Load called before HTTP.Get and DataExtension.Init -->
+<script runat="server">
+Platform.Load("Core", "1.1.5");
+var loadedResult = HTTP.Get("https://example.com/api");
+var loadedDe = DataExtension.Init("MyKey");
+</script>
+
+<!-- FAIL - HTTP.Get and HTTP.Post called with no Platform.Load in this block -->
+<script runat="server">
+var getResult = HTTP.Get("https://example.com/api");
+var postResult = HTTP.Post("https://example.com/api", "application/json", "{}");
+</script>
+
+<!-- FAIL - DataExtension.Init called with no Platform.Load in this block -->
+<script runat="server">
+var de = DataExtension.Init("MyKey");
+</script>
+
+</body>
+</html>

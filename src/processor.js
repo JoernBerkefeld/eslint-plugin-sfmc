@@ -9,6 +9,9 @@
  *   4. <script runat="server"> (non-ampscript) → virtual .js files
  *   5. {{ ... }} Handlebars expressions and {!$...} bindings → one virtual .hbs
  *      file holding the whole document with AMPscript regions blanked out
+ *   6. %%name%% personalization strings directly followed by [ or = → one
+ *      virtual .amp file holding only those strings at their original offsets,
+ *      so the AMPscript rule for them can check the text between the regions
  *
  * Returns extracted regions as virtual files for ESLint to lint with the
  * appropriate parser/rules based on file extension matching.
@@ -20,6 +23,7 @@
  * processor (this one) runs on every HTML file and no processor conflict arises.
  */
 
+import { matchPersonalizationString } from 'ampscript-parser';
 import { preprocess as msoPreprocess } from 'eslint-plugin-mso-email/processor';
 import { MSO_COMMENT_PATTERN } from 'eslint-plugin-mso-email/comment-pattern';
 
@@ -30,13 +34,12 @@ const SSJS_SCRIPT_OPEN_RE =
 const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
 
 /**
- * AMPscript region patterns blanked before the Handlebars parser runs.
+ * AMPscript script tags blanked before the Handlebars parser runs. The
+ * %%[ ... ]%% and %%= ... =%% regions are blanked from the offsets found by the
+ * delimiter scan in `preprocess`, so both agree on what a region is.
  */
-const AMPSCRIPT_REGION_PATTERNS = [
-    /%%\[[\s\S]*?\]%%/g,
-    /%%=[\s\S]*?=%%/g,
-    /<script\s[^>]*language\s*=\s*["']ampscript["'][^>]*>[\s\S]*?<\/script>/gi,
-];
+const AMPSCRIPT_SCRIPT_REGION_RE =
+    /<script\s[^>]*language\s*=\s*["']ampscript["'][^>]*>[\s\S]*?<\/script>/gi;
 
 function countNewlinesBefore(text, pos) {
     let count = 0;
@@ -73,29 +76,53 @@ function findInlineExpressionEnd(text, from) {
  * Mirrors `getSanitizedHandlebarsText` in sfmc-language-lsp.
  *
  * @param {string} text - Full document text.
+ * @param {[number, number][]} delimitedRegions - Start (inclusive) and end
+ * (exclusive) offsets of the %%[ ... ]%% and %%= ... =%% regions.
  * @returns {string} Text with AMPscript regions blanked out.
  */
-function sanitizeAmpscriptRegions(text) {
+function sanitizeAmpscriptRegions(text, delimitedRegions) {
     const chars = Array.from(text);
-    for (const pattern of AMPSCRIPT_REGION_PATTERNS) {
-        pattern.lastIndex = 0;
-        let match;
-        while ((match = pattern.exec(text)) !== null) {
-            const end = match.index + match[0].length;
-            for (let index = match.index; index < end && index < chars.length; index++) {
-                if (chars[index] !== '\n' && chars[index] !== '\r') {
-                    chars[index] = ' ';
-                }
+    const regions = [...delimitedRegions];
+    AMPSCRIPT_SCRIPT_REGION_RE.lastIndex = 0;
+    let match;
+    while ((match = AMPSCRIPT_SCRIPT_REGION_RE.exec(text)) !== null) {
+        regions.push([match.index, match.index + match[0].length]);
+    }
+    for (const [start, end] of regions) {
+        for (let index = start; index < end && index < chars.length; index++) {
+            if (chars[index] !== '\n' && chars[index] !== '\r') {
+                chars[index] = ' ';
             }
         }
     }
     return chars.join('');
 }
 
+/**
+ * Returns a copy of the document where everything outside the given regions is
+ * replaced with spaces, preserving newlines and overall offsets.
+ *
+ * @param {string} text - Full document text.
+ * @param {[number, number][]} regions - Start (inclusive) and end (exclusive)
+ * offsets of the regions to keep.
+ * @returns {string} Text with only the given regions left in place.
+ */
+function keepOnlyRegions(text, regions) {
+    let result = '';
+    let position = 0;
+    for (const [start, end] of regions) {
+        result += text.slice(position, start).replaceAll(/[^\n\r]/g, ' ') + text.slice(start, end);
+        position = end;
+    }
+    return result + text.slice(position).replaceAll(/[^\n\r]/g, ' ');
+}
+
 export function preprocess(text, filename) {
     const blocks = [];
     let ampCount = 0;
     let ssjsCount = 0;
+    const delimitedRegions = [];
+    const ambiguousPersonalizations = [];
 
     // --- Pass 1: extract AMPscript regions ---
     let index = 0;
@@ -144,6 +171,7 @@ export function preprocess(text, filename) {
             if (depth !== 0) {
                 continue;
             }
+            delimitedRegions.push([blockStart, index]);
             const fullBlock = text.slice(blockStart, index);
             const padding = '\n'.repeat(countNewlinesBefore(text, blockStart));
             blocks.push({
@@ -158,9 +186,12 @@ export function preprocess(text, filename) {
             const expressionStart = index;
             const expressionEnd = findInlineExpressionEnd(text, index + 3);
             if (expressionEnd === -1) {
+                // Unclosed opener: step past it, otherwise the scan never advances.
+                index += 3;
                 continue;
             }
             index = expressionEnd;
+            delimitedRegions.push([expressionStart, index]);
             const innerCode = text.slice(expressionStart + 3, index - 3);
             const wrappedBlock = `%%[${innerCode}]%%`;
             const padding = '\n'.repeat(countNewlinesBefore(text, expressionStart));
@@ -171,10 +202,24 @@ export function preprocess(text, filename) {
             continue;
         }
 
+        // %%name%% personalisation string: plain text. Skip it whole so its
+        // closing %% is never read as the start of a %%[ / %%= delimiter.
+        if (text[index] === '%' && text[index + 1] === '%') {
+            const personalizationEnd = matchPersonalizationString(text, index);
+            if (personalizationEnd !== -1) {
+                if (text[personalizationEnd] === '[' || text[personalizationEnd] === '=') {
+                    ambiguousPersonalizations.push([index, personalizationEnd + 1]);
+                }
+                index = personalizationEnd;
+                continue;
+            }
+        }
+
         index++;
     }
 
     // --- Pass 2: extract SSJS regions ---
+    const ssjsRegions = [];
     let match;
     SSJS_SCRIPT_OPEN_RE.lastIndex = 0;
     while ((match = SSJS_SCRIPT_OPEN_RE.exec(text)) !== null) {
@@ -185,6 +230,7 @@ export function preprocess(text, filename) {
             break;
         }
 
+        ssjsRegions.push([openEnd, closeMatch.index]);
         const jsCode = text.slice(openEnd, closeMatch.index);
         const linesBefore = text.slice(0, openEnd).split('\n');
         const startLine = linesBefore.length - 1;
@@ -203,11 +249,28 @@ export function preprocess(text, filename) {
     // a single virtual .hbs file. Only emit it when the document actually
     // contains Handlebars/binding syntax to avoid paying the parse cost on plain
     // HTML/AMPscript content.
-    const sanitizedForHbs = sanitizeAmpscriptRegions(text);
+    const sanitizedForHbs = sanitizeAmpscriptRegions(text, delimitedRegions);
     if (sanitizedForHbs.includes('{{') || sanitizedForHbs.includes('{!$')) {
         blocks.push({
             text: sanitizedForHbs,
             filename: `${filename}/handlebars-block-0.hbs`,
+        });
+    }
+
+    // --- Personalization strings between the AMPscript regions ---
+    // AMPscript rules only see the extracted regions. A personalization string
+    // directly followed by [ or = sits in the text between them, so those strings
+    // (and nothing else — the surrounding HTML is blanked, offsets preserved) are
+    // emitted as one more virtual .amp file for
+    // sfmc/amp-no-ambiguous-personalization-delimiter. Strings inside server-side
+    // JavaScript are left out. Only emitted when such a string exists.
+    const reportablePersonalizations = ambiguousPersonalizations.filter(([start]) =>
+        ssjsRegions.every(([from, to]) => !(start >= from && start < to)),
+    );
+    if (reportablePersonalizations.length > 0) {
+        blocks.push({
+            text: keepOnlyRegions(text, reportablePersonalizations),
+            filename: `${filename}/ampscript-personalization.amp`,
         });
     }
 

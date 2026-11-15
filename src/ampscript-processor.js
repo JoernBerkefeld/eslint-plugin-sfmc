@@ -10,6 +10,8 @@
  * Line offsets are preserved so ESLint reports errors at correct locations.
  */
 
+import { matchPersonalizationString } from 'ampscript-parser';
+
 const SCRIPT_OPEN_RE =
     /^<script\b(?=[^>]*\brunat\s*=\s*['"]server['"])(?=[^>]*\blanguage\s*=\s*['"]ampscript['"])[^>]*>/i;
 const SCRIPT_CLOSE_G = /<\/script\s*>/gi;
@@ -110,6 +112,8 @@ export function preprocess(text, filename) {
             const expressionStart = index;
             const expressionEnd = findInlineExpressionEnd(text, index + 3);
             if (expressionEnd === -1) {
+                // Unclosed opener: step past it, otherwise the scan never advances.
+                index += 3;
                 continue;
             }
             index = expressionEnd;
@@ -125,6 +129,16 @@ export function preprocess(text, filename) {
                 filename: `${filename}/ampscript-block-${blocks.length}.amp`,
             });
             continue;
+        }
+
+        // %%name%% personalisation string: plain text. Skip it whole so its
+        // closing %% is never read as the start of a %%[ / %%= delimiter.
+        if (text[index] === '%' && text[index + 1] === '%') {
+            const personalizationEnd = matchPersonalizationString(text, index);
+            if (personalizationEnd !== -1) {
+                index = personalizationEnd;
+                continue;
+            }
         }
 
         index++;

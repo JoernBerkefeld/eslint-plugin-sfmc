@@ -1,0 +1,20 @@
+%%[
+/* Rule: sfmc/amp-no-ambiguous-personalization-delimiter
+   Flags a personalization string whose closing percent signs are directly
+   followed by an opening square bracket or an equals sign. Whether that
+   starts AMPscript depends on whether the name resolves.
+
+   The examples sit in the template text below this block, one per line:
+   ACCEPTED - the personalization string is followed by an ampersand
+   ACCEPTED - a space separates the personalization string from the equals sign
+   ACCEPTED - a normal inline expression
+   FAIL - system personalization string directly followed by an equals sign
+   FAIL - other name directly followed by an opening square bracket */
+VAR @greeting
+SET @greeting = "Hello"
+]%%
+<a href="https://example.com/?e=%%emailaddr%%&id=1">Open</a>
+<p>%%emailaddr%% = 1</p>
+<p>%%=V(@greeting)=%%</p>
+<a href="https://example.com/?e=%%emailaddr%%=1">Open</a>
+<p>%%First Name%%[x]</p>

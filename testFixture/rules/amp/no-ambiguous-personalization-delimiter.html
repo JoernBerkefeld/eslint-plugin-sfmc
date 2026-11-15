@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<!-- Rule: sfmc/amp-no-ambiguous-personalization-delimiter
+     Flags a personalization string whose closing percent signs are directly
+     followed by an opening square bracket or an equals sign. Whether that
+     starts AMPscript depends on whether the name resolves. -->
+
+<script language="ampscript" runat="server">
+VAR @greeting
+SET @greeting = "Hello"
+</script>
+
+<!-- ACCEPTED - the personalization string is followed by an ampersand -->
+<a href="https://example.com/?e=%%emailaddr%%&id=1">Open</a>
+
+<!-- ACCEPTED - a space separates the personalization string from the equals sign -->
+<p>%%emailaddr%% = 1</p>
+
+<!-- ACCEPTED - inside a server-side JavaScript block the string is not checked -->
+<script runat="server">
+Platform.Load("core", "1.1.5");
+var link = "https://example.com/?e=%%emailaddr%%=1";
+</script>
+
+<!-- FAIL - system personalization string directly followed by an equals sign -->
+<a href="https://example.com/?e=%%emailaddr%%=1">Open</a>
+
+<!-- FAIL - other name directly followed by an opening square bracket -->
+<p>%%First Name%%[x]</p>
+
+</body>
+</html>

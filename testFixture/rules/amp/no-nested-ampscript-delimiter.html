@@ -12,6 +12,14 @@ VAR @name
 SET @name = "Jane"
 </script>
 
+<!-- ACCEPTED - personalisation strings next to an equals sign or an opening
+     square bracket are plain text, not delimiters; the inline expression after
+     them is a region of its own.
+     Secondary diagnostics: sfmc/amp-no-ambiguous-personalization-delimiter
+     warns about both strings on purpose; that is unavoidable for this case. -->
+<a href="https://example.com/?e=%%emailaddr%%=1">%%First Name%%[x]</a>
+<p>%%=Lowercase("HELLO")=%%</p>
+
 <!-- FAIL - an open-bracket delimiter nested inside the script block -->
 <script language="ampscript" runat="server">
 VAR @a

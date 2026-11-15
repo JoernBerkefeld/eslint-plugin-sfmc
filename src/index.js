@@ -38,6 +38,7 @@ import ampNoHtmlComment from './rules/amp/no-html-comment.js';
 import ampNoJsLineComment from './rules/amp/no-js-line-comment.js';
 import ampNoNestedScriptTag from './rules/amp/no-nested-script-tag.js';
 import ampNoNestedAmpscriptDelimiter from './rules/amp/no-nested-ampscript-delimiter.js';
+import ampNoAmbiguousPersonalizationDelimiter from './rules/amp/no-ambiguous-personalization-delimiter.js';
 
 // ── SSJS rules ────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,7 @@ const plugin = {
         'amp-no-js-line-comment': ampNoJsLineComment,
         'amp-no-nested-script-tag': ampNoNestedScriptTag,
         'amp-no-nested-ampscript-delimiter': ampNoNestedAmpscriptDelimiter,
+        'amp-no-ambiguous-personalization-delimiter': ampNoAmbiguousPersonalizationDelimiter,
 
         // SSJS rules (ssjs- prefix)
         'ssjs-require-platform-load': ssjsRequirePlatformLoad,
@@ -246,6 +248,7 @@ const ampRecommendedRules = {
     'sfmc/amp-no-js-line-comment': 'warn',
     'sfmc/amp-no-nested-script-tag': 'error',
     'sfmc/amp-no-nested-ampscript-delimiter': 'error',
+    'sfmc/amp-no-ambiguous-personalization-delimiter': 'warn',
 };
 
 const ampStrictRules = {
@@ -271,6 +274,7 @@ const ampStrictRules = {
     'sfmc/amp-no-js-line-comment': 'error',
     'sfmc/amp-no-nested-script-tag': 'error',
     'sfmc/amp-no-nested-ampscript-delimiter': 'error',
+    'sfmc/amp-no-ambiguous-personalization-delimiter': 'warn',
 };
 
 // ── SSJS rule sets ────────────────────────────────────────────────────────────

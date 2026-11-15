@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { RuleTester, ESLint } from 'eslint';
+import jsdoc from 'eslint-plugin-jsdoc';
 import * as parser from '../src/ampscript-parser.js';
 import sfmcPlugin from '../src/index.js';
 
@@ -11,6 +12,7 @@ import ampNoHtmlComment from '../src/rules/amp/no-html-comment.js';
 import ampNoJsLineComment from '../src/rules/amp/no-js-line-comment.js';
 import ampNoNestedScriptTag from '../src/rules/amp/no-nested-script-tag.js';
 import ampNoNestedAmpscriptDelimiter from '../src/rules/amp/no-nested-ampscript-delimiter.js';
+import ampNoAmbiguousPersonalizationDelimiter from '../src/rules/amp/no-ambiguous-personalization-delimiter.js';
 import ampNoVariableRedeclaration from '../src/rules/amp/no-variable-redeclaration.js';
 import ampSetRequiresTarget from '../src/rules/amp/set-requires-target.js';
 import ampNoEmptyBlock from '../src/rules/amp/no-empty-block.js';
@@ -72,6 +74,7 @@ import * as handlebarsParser from '../src/handlebars-parser.js';
 // ── Processor imports ─────────────────────────────────────────────────────────
 
 import { preprocess, postprocess } from '../src/processor.js';
+import { preprocess as ampscriptPreprocess } from '../src/ampscript-processor.js';
 
 // ── AMPscript RuleTester ──────────────────────────────────────────────────────
 
@@ -887,6 +890,10 @@ ssjsTester.run('ssjs-require-platform-load', ssjsRequirePlatformLoad, {
         {
             code: 'Platform.Load("core","1"); var rows = DataExtension.Rows.Init("DE"); rows.Retrieve();',
         },
+        {
+            // HTTP is a requiresCoreLoad global (ssjs-data >= 2.1.2)
+            code: 'Platform.Load("core", "1.1.5"); var res = HTTP.Get("https://example.com");',
+        },
     ],
     invalid: [
         {
@@ -905,6 +912,17 @@ ssjsTester.run('ssjs-require-platform-load', ssjsRequirePlatformLoad, {
             code: 'var rows = DataExtension.Rows.Init("MyDE");',
             output: 'Platform.Load("core", "1.1.5");\nvar rows = DataExtension.Rows.Init("MyDE");',
             errors: [{ messageId: 'missingLoad' }],
+        },
+        {
+            // HTTP object used without Platform.Load
+            code: 'var res = HTTP.Get("https://example.com");',
+            output: 'Platform.Load("core", "1.1.5");\nvar res = HTTP.Get("https://example.com");',
+            errors: [{ messageId: 'missingLoad', data: { name: 'HTTP.Get' } }],
+        },
+        {
+            code: 'var res = HTTP.Post("https://example.com", "application/json", "{}");',
+            output: 'Platform.Load("core", "1.1.5");\nvar res = HTTP.Post("https://example.com", "application/json", "{}");',
+            errors: [{ messageId: 'missingLoad', data: { name: 'HTTP.Post' } }],
         },
     ],
 });
@@ -2476,6 +2494,20 @@ ampTester.run('amp-no-nested-ampscript-delimiter', ampNoNestedAmpscriptDelimiter
         { code: '<script runat="server" language="ampscript">\nset @x = 1\n</script>' },
         // Two sibling blocks in a raw .amp file: the 2nd %%[ is not nested.
         { code: '%%[ set @x = 1 ]%%\n\n%%[ set @y = 2 ]%%' },
+        // The closing %% of a personalisation string is not the start of a delimiter.
+        { code: '<a href="x?e=%%emailaddr%%=1">go</a>\n<p>x</p>\n%%=v(@a)=%%' },
+        { code: '<td>%%First Name%%[x]</td>' },
+        { code: '<a href="x?e=%%emailaddr%%&a=1">go</a> %%=v(@a)=%%' },
+        { code: '<td width="100%%">%%=v(@a)=%%</td>' },
+        // Two adjacent inline expressions are siblings.
+        { code: '%%=v(@a)=%%%%=v(@b)=%%' },
+        // Content after </script> is template text again, not script body.
+        {
+            code: '<script runat="server" language="ampscript">\nset @x = 1\n</script>\n<a href="x?e=%%emailaddr%%=1">go</a>',
+        },
+        {
+            code: '<script runat="server" language="ampscript">\nset @x = 1\n</script>\n%%[ set @y = 2 ]%% %%=v(@y)=%%',
+        },
     ],
     invalid: [
         {
@@ -2488,8 +2520,112 @@ ampTester.run('amp-no-nested-ampscript-delimiter', ampNoNestedAmpscriptDelimiter
             errors: [{ messageId: 'nestedDelimiterInScript', data: { delimiter: '%%[' } }],
             output: '<script runat="server" language="ampscript">\n set @x = 1 \n</script>',
         },
+        {
+            // Only the script body is reported; the fix leaves the trailing
+            // personalisation string and its "=" alone.
+            code: '<script runat="server" language="ampscript">\n%%= v(@x)\n</script>\n<a href="x?e=%%emailaddr%%=1">go</a>',
+            errors: [{ messageId: 'nestedDelimiterInScript', data: { delimiter: '%%=' }, line: 2 }],
+            output: '<script runat="server" language="ampscript">\n v(@x)\n</script>\n<a href="x?e=%%emailaddr%%=1">go</a>',
+        },
+        {
+            // Real nesting after a script block is still reported.
+            code: '<script runat="server" language="ampscript">\nset @x = 1\n</script>\n%%[\n  %%[ set @inner = 1 ]%%\n]%%',
+            errors: [{ messageId: 'nestedDelimiter', data: { delimiter: '%%[' }, line: 5 }],
+            output: '<script runat="server" language="ampscript">\nset @x = 1\n</script>\n%%[\n   set @inner = 1 \n]%%',
+        },
+        {
+            // Personalisation strings before the block do not hide real nesting.
+            code: '<a href="x?e=%%emailaddr%%=1">%%First Name%%[x]</a>\n%%[\n  %%[ set @inner = 1 ]%%\n]%%',
+            errors: [{ messageId: 'nestedDelimiter', data: { delimiter: '%%[' }, line: 3 }],
+            output: '<a href="x?e=%%emailaddr%%=1">%%First Name%%[x]</a>\n%%[\n   set @inner = 1 \n]%%',
+        },
     ],
 });
+
+// ── 20. amp-no-ambiguous-personalization-delimiter ───────────────────────────
+
+ampTester.run(
+    'amp-no-ambiguous-personalization-delimiter',
+    ampNoAmbiguousPersonalizationDelimiter,
+    {
+        valid: [
+            // The opposite side is the normal URL-parameter form.
+            { code: '<a href="x?e=%%emailaddr%%&a=1">go</a>' },
+            { code: '<p>%%emailaddr%% = 1</p>' },
+            { code: '<p>%%First Name%% [x]</p>' },
+            { code: '%%=v(@a)=%%%%=v(@b)=%%' },
+            // Inside AMPscript regions the string is not template text.
+            { code: "%%[ set @a = '%%emailaddr%%=1' ]%%" },
+            { code: '%%=Concat("%%emailaddr%%=1", "")=%%' },
+            {
+                code: '<script runat="server" language="ampscript">\nset @a = "%%emailaddr%%=1"\n</script>',
+            },
+            // Server-side JavaScript bodies are not checked.
+            { code: '<script runat="server">\nvar link = "%%emailaddr%%=1";\n</script>' },
+            { code: '<td width="100%%">%%=v(@a)=%%</td>' },
+        ],
+        invalid: [
+            {
+                code: '<a href="x?e=%%emailaddr%%=1">go</a>',
+                errors: [
+                    {
+                        messageId: 'systemString',
+                        data: { string: '%%emailaddr%%', character: '=' },
+                        line: 1,
+                        column: 14,
+                        endLine: 1,
+                        endColumn: 28,
+                    },
+                ],
+            },
+            {
+                code: '%%emailaddr%%=v(@a)=%%',
+                errors: [
+                    {
+                        messageId: 'systemString',
+                        data: { string: '%%emailaddr%%', character: '=' },
+                        column: 1,
+                        endColumn: 15,
+                    },
+                ],
+            },
+            {
+                code: '<td>%%First Name%%[x]</td>',
+                errors: [
+                    {
+                        messageId: 'unknownName',
+                        data: { string: '%%First Name%%', character: '[' },
+                        column: 5,
+                        endColumn: 20,
+                    },
+                ],
+            },
+            {
+                code: '50%%off%%[ set @x = 1 ]%%',
+                errors: [
+                    {
+                        messageId: 'unknownName',
+                        data: { string: '%%off%%', character: '[' },
+                        column: 3,
+                        endColumn: 11,
+                    },
+                ],
+            },
+            {
+                // Template text around real AMPscript regions and after a
+                // server-side JavaScript block is still checked.
+                code: '%%[ set @a = 1 ]%%\n<script runat="server">var s = "%%emailaddr%%=1";</script>\n<p>%%memberid%%[x] %%=v(@a)=%%</p>',
+                errors: [
+                    {
+                        messageId: 'systemString',
+                        data: { string: '%%memberid%%', character: '[' },
+                        line: 3,
+                    },
+                ],
+            },
+        ],
+    },
+);
 
 console.log('All new AMPscript syntax rule tests passed.');
 
@@ -2606,6 +2742,142 @@ describe('combined SFMC processor', () => {
         const messages = [['msg1', 'msg2'], ['msg3']];
         const result = postprocess(messages);
         assert.deepEqual(result, ['msg1', 'msg2', 'msg3']);
+    });
+});
+
+// Personalisation strings (%%name%%) are plain text: their closing %% must not
+// be read as the start of a %%[ / %%= delimiter. Both processors share the scan.
+const PERSONALIZATION_CASES = [
+    {
+        name: 'personalisation string followed by "=" and a later inline expression',
+        html: '<a href="x?e=%%emailaddr%%=1">go</a>\n<p>x</p>\n%%=v(@a)=%%',
+        amp: ['\n\n%%[v(@a)]%%'],
+        personalization: `${' '.repeat(13)}%%emailaddr%%=${' '.repeat(9)}\n${' '.repeat(8)}\n${' '.repeat(11)}`,
+        messageIds: ['systemString'],
+    },
+    {
+        name: 'personalisation string followed by "["',
+        html: '<td>%%First Name%%[x]</td>',
+        amp: [],
+        personalization: `${' '.repeat(4)}%%First Name%%[${' '.repeat(7)}`,
+        messageIds: ['unknownName'],
+    },
+    {
+        name: 'personalisation string preceded by "=" and a later inline expression',
+        html: '<a href="x?e=%%emailaddr%%&a=1">go</a> %%=v(@a)=%%',
+        amp: ['%%[v(@a)]%%'],
+    },
+    {
+        name: 'literal %% directly before an inline expression',
+        html: '<td width="100%%">%%=v(@a)=%%</td>',
+        amp: ['%%[v(@a)]%%'],
+    },
+    {
+        name: 'two adjacent inline expressions',
+        html: '%%=v(@a)=%%%%=v(@b)=%%',
+        amp: ['%%[v(@a)]%%', '%%[v(@b)]%%'],
+    },
+];
+
+describe('processors treat personalisation strings as plain text', () => {
+    for (const { name, html, amp, personalization, messageIds = [] } of PERSONALIZATION_CASES) {
+        it(`combined processor: ${name}`, () => {
+            const result = preprocess(html, 'test.html');
+            const ampTexts = result
+                .filter((b) => b.filename && b.filename.includes('/ampscript-block-'))
+                .map((b) => b.text);
+            assert.deepEqual(ampTexts, amp);
+            // A personalisation string directly followed by [ or = is handed to
+            // the AMPscript rules in a block of its own, at its original offset.
+            const personalizationTexts = result
+                .filter((b) => b.filename === 'test.html/ampscript-personalization.amp')
+                .map((b) => b.text);
+            assert.deepEqual(personalizationTexts, personalization ? [personalization] : []);
+        });
+
+        it(`AMPscript processor: ${name}`, () => {
+            const result = ampscriptPreprocess(html, 'test.html');
+            assert.deepEqual(
+                result,
+                amp.length === 0
+                    ? [html]
+                    : amp.map((text, index) => ({
+                          text,
+                          filename: `test.html/ampscript-block-${index}.amp`,
+                      })),
+            );
+        });
+
+        if (personalization || amp.length > 0) {
+            for (const configName of ['strict', 'embedded']) {
+                it(`${configName} config reports only the ambiguous string: ${name}`, async () => {
+                    const eslint = new ESLint({
+                        overrideConfigFile: true,
+                        overrideConfig: sfmcPlugin.configs[configName],
+                        cwd: process.cwd(),
+                        warnIgnored: false,
+                    });
+                    const results = await eslint.lintText(html, { filePath: 'fixture.html' });
+                    assert.deepEqual(
+                        results[0].messages.map((m) => [m.ruleId, m.messageId, m.severity]),
+                        messageIds.map((messageId) => [
+                            'sfmc/amp-no-ambiguous-personalization-delimiter',
+                            messageId,
+                            1,
+                        ]),
+                    );
+                });
+            }
+        }
+    }
+
+    it('reports an ambiguous string at its position in an HTML document with comments and SSJS', async () => {
+        const html = [
+            '<!-- header -->',
+            '%%[ var @a set @a = "x" ]%%',
+            '<script runat="server">',
+            'Platform.Load("core", "1.1.5");',
+            'var link = "x?e=%%emailaddr%%=1";',
+            '</script>',
+            '<a href="https://example.com/?e=%%emailaddr%%=1">go</a>',
+        ].join('\n');
+        const eslint = new ESLint({
+            overrideConfigFile: true,
+            overrideConfig: sfmcPlugin.configs.strict,
+            cwd: process.cwd(),
+            warnIgnored: false,
+        });
+        const results = await eslint.lintText(html, { filePath: 'fixture.html' });
+        assert.deepEqual(
+            results[0].messages.map((m) => [m.ruleId, m.messageId, m.line, m.column, m.endColumn]),
+            [['sfmc/amp-no-ambiguous-personalization-delimiter', 'systemString', 7, 33, 47]],
+        );
+    });
+
+    it('does not emit a personalization block for strings inside server-side JavaScript', () => {
+        const html = '<script runat="server">var link = "x?e=%%emailaddr%%=1";</script>';
+        const result = preprocess(html, 'test.html');
+        assert.deepEqual(
+            result.map((b) => b.filename),
+            ['test.html/ssjs-block-0.js'],
+        );
+    });
+
+    it('keeps Handlebars next to a personalisation string in the virtual .hbs file', () => {
+        const html = '<a href="x?e=%%emailaddr%%=1">{{firstName}}</a>\n%%=v(@a)=%%';
+        const result = preprocess(html, 'test.html');
+        const hbsBlocks = result.filter((b) => b.filename && b.filename.endsWith('.hbs'));
+        assert.equal(hbsBlocks.length, 1);
+        assert.equal(
+            hbsBlocks[0].text,
+            '<a href="x?e=%%emailaddr%%=1">{{firstName}}</a>\n' + ' '.repeat(11),
+        );
+    });
+
+    it('does not hang on an unclosed inline expression opener', () => {
+        const html = '<a>%%= v(@a)</a>';
+        assert.deepEqual(preprocess(html, 'test.html'), [html]);
+        assert.deepEqual(ampscriptPreprocess(html, 'test.html'), [html]);
     });
 });
 
@@ -3086,6 +3358,23 @@ describe('MSO config wiring (embedded HTML)', () => {
             ruleIds.includes('mso/valid-mso-condition'),
             `Expected mso/valid-mso-condition in embedded, got ${JSON.stringify(ruleIds)}`,
         );
+    });
+
+    it('retains MSO diagnostics with unscoped jsdoc/check-access without crashing', async () => {
+        const messages = await lintHtml(
+            [
+                { plugins: { jsdoc }, rules: { 'jsdoc/check-access': 'error' } },
+                ...sfmcPlugin.configs.embedded,
+            ],
+            html,
+        );
+        assert.ok(
+            messages.every((message) => !message.fatal),
+            'No fatal parser diagnostics',
+        );
+        const ruleIds = messages.map((message) => message.ruleId);
+        assert.ok(ruleIds.includes('mso/valid-mso-condition'));
+        assert.ok(ruleIds.includes('mso/table-presentation-role'));
     });
 
     it('does not emit an MSO document block for plain HTML without MSO markup', () => {

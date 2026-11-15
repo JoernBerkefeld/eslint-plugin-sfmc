@@ -79,7 +79,7 @@ test('core spaced-comment validates and fixes AMPscript comments at original pos
 test('all public rules retain metadata and link to existing release-owned documentation', async () => {
     assert.equal(sfmc.meta.version, metadata.version);
     assert.equal(sfmc.meta.name, metadata.name);
-    assert.equal(Object.keys(sfmc.rules).length, 53);
+    assert.equal(Object.keys(sfmc.rules).length, 54);
     const readme = readFileSync(new URL('README.md', root), 'utf8');
     for (const [id, rule] of Object.entries(sfmc.rules)) {
         const path = `docs/rules/${id.replace(/-/, '/')}.md`;

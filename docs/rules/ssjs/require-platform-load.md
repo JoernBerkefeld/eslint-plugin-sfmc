@@ -12,6 +12,8 @@
 
 SFMC's SSJS runtime requires `Platform.Load("core", "1.1.5")` to be called before any Core library object (`DataExtension`, `Subscriber`, `Email`, `SFMC`, etc.) is used. Without it, calls to `DataExtension.Init()` and similar methods crash at runtime with an object-not-found error. The Platform.Load call initialises the Core library and makes its classes available.
 
+The same applies to the globals that only exist once the Core library is loaded. This includes the `HTTP` object: `HTTP.Get(...)` and `HTTP.Post(...)` are reported when the file has no `Platform.Load("core", ...)` call.
+
 ## Settings
 
 | Setting | Values | Default |
@@ -29,12 +31,21 @@ var de = DataExtension.Init("MyDE");
 var rows = de.Rows.Retrieve();
 ```
 
+```js
+var response = HTTP.Get("https://example.com/api");
+```
+
 **Allowed:**
 
 ```js
 Platform.Load("core", "1.1.5");
 var de = DataExtension.Init("MyDE");
 var rows = de.Rows.Retrieve();
+```
+
+```js
+Platform.Load("core", "1.1.5");
+var response = HTTP.Get("https://example.com/api");
 ```
 
 ## Fix
@@ -49,7 +60,7 @@ What the fix does: inserts `Platform.Load("core", "1.1.5");` at the very beginni
 
 ## When to Disable
 
-Only disable this rule if you are intentionally writing SSJS that does not use Core library objects.
+Only disable this rule if you are intentionally writing SSJS that uses neither Core library objects nor globals that depend on the Core library, such as `HTTP`.
 
 ```js
 // eslint.config.js
