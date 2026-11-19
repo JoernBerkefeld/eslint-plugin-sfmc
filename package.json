@@ -49,6 +49,8 @@
     },
     "scripts": {
         "test": "node --test tests/release-safeguards.test.js tests/metadata.test.js && node --test tests/rules.test.js && node --test tests/deprecated-catalog.test.js && node --test tests/fixtures.test.mjs && node --test tests/autofix-manual.test.mjs && node --test tests/unicorn-protection.test.js tests/unicorn-hazards.test.js tests/unicorn-configs.test.js && node --test tests/unicorn-minimum.test.js",
+        "verify:own-dependencies-latest": "node scripts/verify-own-dependencies-latest.mjs",
+        "preversion": "npm run verify:own-dependencies-latest",
         "test:release": "node --test tests/release-safeguards.test.js",
         "validate:release-docs": "node scripts/validate-release-documentation.js",
         "test:autofix-manual": "node --test tests/autofix-manual.test.mjs",
