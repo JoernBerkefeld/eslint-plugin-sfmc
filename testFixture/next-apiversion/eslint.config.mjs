@@ -5,10 +5,12 @@
  *
  * The default `-next` configs enable those rules with no `apiVersion` (only
  * never-in-MCN items are flagged). This folder pins apiVersion: 65 (Winter '26)
- * so items introduced in 67 (Summer '26) are additionally flagged as "too new
- * for target":
- *   - Handlebars helpers: dateAdd, dateDiff, now, timeZoneConversion,
+ * so items introduced in 67 (Summer '26) or 68 (Winter '27) are additionally
+ * flagged as "too new for target":
+ *   - Handlebars helpers from 67: dateAdd, dateDiff, now, timeZoneConversion,
  *     getContentBlock, hash, jsonPath, query, queryFirst, raiseError, lookup.
+ *   - Handlebars helpers from 68, e.g. md5, sha256, encode, claimRow, guid,
+ *     regExMatch, buildRowSetFromXml, impressionRegion.
  *   - AMPscript functions whose `mcnSince` is 67.
  *
  * SSJS is never supported in MCN, so `apiVersion` has no effect there — all SSJS

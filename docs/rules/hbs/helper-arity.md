@@ -12,7 +12,7 @@
 
 Each Marketing Cloud Next helper has a fixed set of positional parameters defined in the catalog. Calling a helper with too few required arguments, or with more arguments than it accepts, fails at render time. This rule validates every helper invocation against the helper's `params` definition.
 
-Only **positional** arguments are checked. Helpers with a variadic trailing parameter (for example `concat`, `and`, `set`) have no upper bound. Hash (named) arguments are not counted as positional arguments. A bare `{{foo}}` mustache with no arguments is a data binding, not an invocation, and is skipped.
+Only **positional** arguments are checked. Helpers with a variadic trailing parameter (for example `concat`, `and`, `set`) have no upper bound. Hash (named) arguments such as `charset="UTF-16"` are not counted as positional arguments, and helpers that accept named arguments (for example `md5`, `regExMatch`, `query`, `claimRow`) likewise have no upper bound. A bare `{{foo}}` mustache with no arguments is a data binding, not an invocation, and is skipped.
 
 Handlebars only exists when targeting MCN, so this rule is enabled only in the `-next` configs.
 
@@ -45,6 +45,12 @@ This rule has no configuration options.
 
 {{! concat is variadic — any number of arguments is fine }}
 {{concat firstName " " lastName}}
+
+{{! named arguments are not counted: md5 takes one positional argument }}
+{{md5 emailAddress charset="UTF-16"}}
+
+{{! query takes named arguments only }}
+{{#each (query object="Account" type="CRM")}}{{this.Name}}{{/each}}
 ```
 
 ## When to Disable

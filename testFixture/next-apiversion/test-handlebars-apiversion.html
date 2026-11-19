@@ -6,7 +6,8 @@
   <body>
     <!-- ── hbs-no-mcn-unsupported · apiVersion 65 (Winter '26) ────────────────
        This folder's eslint.config.mjs sets apiVersion: 65. Helpers whose
-       `mcnSince` is 67 (Summer '26) are flagged as "too new for target".
+       `mcnSince` is 67 (Summer '26) or 68 (Winter '27) are flagged as "too new
+       for target".
        ────────────────────────────────────────────────────────────────────── -->
 
     <!-- ✅ mcnSince 65 helpers → available at apiVersion 65 → no error -->
@@ -23,6 +24,12 @@
     <p>{{getContentBlock "welcome-banner"}}</p>
 
     <!-- ❌ query shipped in 67 → [hbs-no-mcn-unsupported helperTooNew] -->
-    {{#each (query "Account" "CRM")}}<p>{{this.Name}}</p>{{/each}}
+    {{#each (query object="Account" type="CRM")}}<p>{{this.Name}}</p>{{/each}}
+
+    <!-- ❌ md5 shipped in 68 → [hbs-no-mcn-unsupported helperTooNew] -->
+    <p>{{md5 emailAddress}}</p>
+
+    <!-- ❌ claimRow shipped in 68 → [hbs-no-mcn-unsupported helperTooNew] -->
+    <p>{{claimRow object="Coupons" claimCol="IsClaimed" Email=emailAddress}}</p>
   </body>
 </html>

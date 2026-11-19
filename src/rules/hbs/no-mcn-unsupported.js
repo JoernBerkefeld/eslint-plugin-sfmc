@@ -18,7 +18,8 @@ import { simpleHelperName, isInvocation, BINDING_PATTERN } from './_shared.js';
  *
  * The MCN Handlebars catalog currently has no null-`mcnSince` items, so with no
  * `apiVersion` set nothing is flagged; e.g. `apiVersion: 65` flags the helpers
- * introduced in 67, and `apiVersion: 40` flags every helper and binding.
+ * introduced in 67 and 68, `apiVersion: 67` flags those introduced in 68, and
+ * `apiVersion: 40` flags every helper and binding.
  */
 export default {
     meta: {
@@ -43,7 +44,7 @@ export default {
                     apiVersion: {
                         type: 'number',
                         description:
-                            'The targeted Marketing Cloud Next API version (e.g. 65 = Winter \u{2019}26, 67 = Summer \u{2019}26). Helpers and bindings newer than this are flagged.',
+                            'The targeted Marketing Cloud Next API version (e.g. 65 = Winter \u{2019}26, 67 = Summer \u{2019}26, 68 = Winter \u{2019}27). Helpers and bindings newer than this are flagged.',
                     },
                 },
                 additionalProperties: false,

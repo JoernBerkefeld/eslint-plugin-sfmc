@@ -27,14 +27,14 @@ Unknown helpers and bindings — ones that are not part of Marketing Cloud Next 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `apiVersion` | `number` | — | The targeted Marketing Cloud Next API version (e.g. `65` = Winter '26, `67` = Summer '26). |
+| `apiVersion` | `number` | — | The targeted Marketing Cloud Next API version (e.g. `65` = Winter '26, `67` = Summer '26, `68` = Winter '27). |
 
 **What `apiVersion` does** (shared with the AMPscript and SSJS MCN rules):
 
 - **Leave it unset** to check against _any_ MCN release: a helper or binding is flagged only if it is never supported in Marketing Cloud Next. Anything that works in some MCN release is allowed.
 - **Set it to your target release** (for example `65`) to also flag helpers and bindings that were added in a _later_ MCN release than the one you run. An item is allowed only when it is available in your target release or an earlier one.
 
-Every Handlebars helper and binding is available in some MCN release, so with no `apiVersion` set nothing is flagged. Setting `apiVersion` to an earlier release flags the helpers and bindings added after it — for example, `apiVersion: 65` flags the helpers introduced in release 67.
+Every Handlebars helper and binding is available in some MCN release, so with no `apiVersion` set nothing is flagged. Setting `apiVersion` to an earlier release flags the helpers and bindings added after it — for example, `apiVersion: 65` flags the helpers introduced in releases 67 and 68, and `apiVersion: 67` flags those introduced in release 68 (for example `md5`, `guid` or `claimRow`).
 
 ## Examples
 

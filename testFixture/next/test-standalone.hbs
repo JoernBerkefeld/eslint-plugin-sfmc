@@ -28,5 +28,13 @@
 {{! Too few arguments → [hbs-helper-arity] (add requires 2) }}
 <p>{{add price}}</p>
 
+{{! Helpers added with MCN API 68; named arguments are not counted → no error }}
+<p>{{md5 emailAddress charset="UTF-16"}}</p>
+<p>{{claimRow object="Coupons" claimCol="IsClaimed" Email=emailAddress}}</p>
+{{#each (query object="Account" type="CRM")}}<p>{{this.Name}}</p>{{/each}}
+
+{{! Too few arguments → [hbs-helper-arity] (datePart requires a date and a part) }}
+<p>{{datePart orderDate}}</p>
+
 {{! Partial → [hbs-no-unsupported-construct] (MCN cannot register partials) }}
 {{> myPartial}}

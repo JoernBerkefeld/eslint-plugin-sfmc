@@ -39,6 +39,23 @@
     <!-- ❌ Too many arguments → [hbs-helper-arity] (uppercase accepts at most 2) -->
     <p>{{uppercase firstName "en-US" extra}}</p>
 
+    <!-- ✅ Helpers added with MCN API 68; named arguments are not counted → no error -->
+    <p>{{md5 emailAddress charset="UTF-16"}}</p>
+    <p>{{regExMatch orderNumber "(\d+)" "1" ignoreCase=true}}</p>
+    <p>{{claimRow object="Coupons" claimCol="IsClaimed" Email=emailAddress}}</p>
+    <p>{{encode alg="sha256" value=emailAddress}}</p>
+    {{#each (query object="Account" type="CRM")}}<p>{{this.Name}}</p>{{/each}}
+    {{#each (buildRowSetFromXml payload "/items/item" returnEmptyOnError=true)}}<p>{{this}}</p>{{/each}}
+
+    <!-- ❌ Too few arguments → [hbs-helper-arity] (regExMatch requires subject, pattern and group) -->
+    <p>{{regExMatch orderNumber "(\d+)" ignoreCase=true}}</p>
+
+    <!-- ❌ Too many arguments → [hbs-helper-arity] (guid takes none) -->
+    <p>{{guid "x"}}</p>
+
+    <!-- ❌ Unknown helper → [hbs-no-unknown-helper] (typo of sha256) -->
+    <p>{{sha265 emailAddress}}</p>
+
     <!-- ❌ Partial → [hbs-no-unsupported-construct] (MCN cannot register partials) -->
     {{> myPartial}}
 

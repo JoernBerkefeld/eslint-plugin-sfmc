@@ -3002,6 +3002,14 @@ hbsTester.run('hbs-no-unknown-helper', hbsNoUnknownHelper, {
         { code: '<p>Hello world</p>' },
         // Known helper as subexpression
         { code: '{{uppercase (concat first last)}}' },
+        // Helpers added with MCN API 68 (categories Data, Encryption, HTTP and others)
+        { code: '{{md5 emailAddress}}' },
+        { code: '{{sha256 emailAddress charset="UTF-16"}}' },
+        { code: '{{encodeURIComponent query}}' },
+        { code: '{{isNullDefault nickname firstName}}' },
+        { code: '{{claimRow object="Coupons" claimCol="IsClaimed" Email=emailAddress}}' },
+        { code: '{{#impressionRegion "hero"}}<p>Hi</p>{{/impressionRegion}}' },
+        { code: '{{uppercase (guid)}}' },
     ],
     invalid: [
         // Unknown inline helper (with args → invocation)
@@ -3031,6 +3039,21 @@ hbsTester.run('hbs-no-unknown-helper', hbsNoUnknownHelper, {
             code: '{{uppercase (fooBar x)}}',
             errors: [{ messageId: 'unknownHelper', data: { kind: 'helper', name: 'fooBar' } }],
         },
+        // Typo of an API 68 helper → suggestion from the new catalog entries
+        {
+            code: '{{sha265 emailAddress}}',
+            errors: [
+                {
+                    messageId: 'unknownHelperSuggest',
+                    data: { kind: 'helper', name: 'sha265', suggestion: 'sha256' },
+                },
+            ],
+        },
+        // AMPscript-style name that is not a Handlebars helper
+        {
+            code: '{{claimRowValue object="Coupons" claimCol="IsClaimed"}}',
+            errors: [{ messageId: 'unknownHelper' }],
+        },
     ],
 });
 
@@ -3049,6 +3072,24 @@ hbsTester.run('hbs-helper-arity', hbsHelperArity, {
         { code: '{{firstName}}' },
         // Unknown helper — arity rule defers to no-unknown-helper
         { code: '{{fooBar 1 2 3}}' },
+        // Named (hash) arguments are never counted as positional arguments
+        { code: '{{md5 emailAddress}}' },
+        { code: '{{md5 emailAddress charset="UTF-16"}}' },
+        { code: '{{base64Encode text characterEncoding="UTF-8"}}' },
+        { code: String.raw`{{regExMatch subject "(\\d+)" "1"}}` },
+        { code: String.raw`{{regExMatch subject "(\\d+)" "1" ignoreCase=true multiline=true}}` },
+        { code: '{{buildRowSetFromXml xml "/a/b" returnEmptyOnError=true}}' },
+        { code: '{{buildUrl "https://example.com" utm_source="email" promo="x"}}' },
+        // Named-argument-only helpers have no positional arguments at all
+        { code: '{{claimRow object="Coupons" claimCol="IsClaimed" Email=emailAddress}}' },
+        { code: '{{encode alg="sha256" value=emailAddress}}' },
+        { code: '{{#each (query object="Account" type="CRM")}}{{this.Name}}{{/each}}' },
+        { code: '{{#each (query object="Orders" type="MO" limit=5)}}{{this.Id}}{{/each}}' },
+        // Fixed-arity helpers added with MCN API 68
+        { code: '{{datePart orderDate "Y"}}' },
+        { code: '{{isNullDefault nickname firstName}}' },
+        { code: '{{uppercase (guid)}}' },
+        { code: '{{#impressionRegion "hero"}}<p>Hi</p>{{/impressionRegion}}' },
     ],
     invalid: [
         // add with too few args
@@ -3065,6 +3106,59 @@ hbsTester.run('hbs-helper-arity', hbsHelperArity, {
         {
             code: '{{uppercase (concat)}}',
             errors: [{ messageId: 'tooFewArgs', data: { name: 'concat', min: '1', actual: '0' } }],
+        },
+        // md5 needs its text even when a named argument is given
+        {
+            code: '{{uppercase (md5 charset="UTF-16")}}',
+            errors: [{ messageId: 'tooFewArgs', data: { name: 'md5', min: '1', actual: '0' } }],
+        },
+        // regExMatch requires subject, pattern and group
+        {
+            code: String.raw`{{regExMatch subject "(\\d+)" ignoreCase=true}}`,
+            errors: [
+                { messageId: 'tooFewArgs', data: { name: 'regExMatch', min: '3', actual: '2' } },
+            ],
+        },
+        // buildRowSetFromXml requires the xml and the xpath
+        {
+            code: '{{buildRowSetFromXml xml returnEmptyOnError=true}}',
+            errors: [
+                {
+                    messageId: 'tooFewArgs',
+                    data: { name: 'buildRowSetFromXml', min: '2', actual: '1' },
+                },
+            ],
+        },
+        // datePart and isNullDefault take exactly two arguments
+        {
+            code: '{{datePart orderDate}}',
+            errors: [
+                { messageId: 'tooFewArgs', data: { name: 'datePart', min: '2', actual: '1' } },
+            ],
+        },
+        {
+            code: '{{isNullDefault nickname firstName lastName}}',
+            errors: [
+                {
+                    messageId: 'tooManyArgs',
+                    data: { name: 'isNullDefault', max: '2', actual: '3' },
+                },
+            ],
+        },
+        // guid takes no arguments
+        {
+            code: '{{guid "x"}}',
+            errors: [{ messageId: 'tooManyArgs', data: { name: 'guid', max: '0', actual: '1' } }],
+        },
+        // impressionRegion block without its name
+        {
+            code: '{{#impressionRegion}}<p>Hi</p>{{/impressionRegion}}',
+            errors: [
+                {
+                    messageId: 'tooFewArgs',
+                    data: { name: 'impressionRegion', min: '1', actual: '0' },
+                },
+            ],
         },
     ],
 });
@@ -3151,6 +3245,18 @@ hbsTester.run('hbs-no-mcn-unsupported', hbsNoMcnUnsupported, {
         { code: '{{totallyUnknownHelper x}}', options: [{ apiVersion: 65 }] },
         // Supported binding at the target version passes.
         { code: '{!$organization.Address}', options: [{ apiVersion: 65 }] },
+        // Helpers introduced in 68 pass with no target and when targeting 68.
+        { code: '{{md5 emailAddress}}' },
+        { code: '{{md5 emailAddress}}', options: [{ apiVersion: 68 }] },
+        {
+            code: '{{claimRow object="Coupons" claimCol="IsClaimed"}}',
+            options: [{ apiVersion: 68 }],
+        },
+        // query shipped in 67 and stays available when targeting 67.
+        {
+            code: '{{#each (query object="Account" type="CRM")}}{{this.Name}}{{/each}}',
+            options: [{ apiVersion: 67 }],
+        },
     ],
     invalid: [
         // dateAdd (mcnSince 67) used while targeting 65.
@@ -3172,6 +3278,36 @@ hbsTester.run('hbs-no-mcn-unsupported', hbsNoMcnUnsupported, {
                 {
                     messageId: 'helperTooNew',
                     data: { name: 'lookup', since: '67', target: '65' },
+                },
+            ],
+        },
+        // md5 (mcnSince 68) used while targeting 67.
+        {
+            code: '{{md5 emailAddress}}',
+            options: [{ apiVersion: 67 }],
+            errors: [
+                { messageId: 'helperTooNew', data: { name: 'md5', since: '68', target: '67' } },
+            ],
+        },
+        // Named-argument-only helper (claimRow, mcnSince 68) while targeting 67.
+        {
+            code: '{{claimRow object="Coupons" claimCol="IsClaimed"}}',
+            options: [{ apiVersion: 67 }],
+            errors: [
+                {
+                    messageId: 'helperTooNew',
+                    data: { name: 'claimRow', since: '68', target: '67' },
+                },
+            ],
+        },
+        // impressionRegion block (mcnSince 68) while targeting 65.
+        {
+            code: '{{#impressionRegion "hero"}}<p>Hi</p>{{/impressionRegion}}',
+            options: [{ apiVersion: 65 }],
+            errors: [
+                {
+                    messageId: 'helperTooNew',
+                    data: { name: 'impressionRegion', since: '68', target: '65' },
                 },
             ],
         },
