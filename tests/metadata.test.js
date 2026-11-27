@@ -270,6 +270,7 @@ test('Handlebars parse errors carry a readable message and their real position',
         2,
         1,
     ]);
+    assert.deepEqual(hbsErrorOf('{{foo bar=}}'), ['Missing value after bar=.', 1, 10]);
     assert.deepEqual(hbsErrorOf('{{#if a}}x{{/each}}'), [
         '{{/each}} does not close {{#if}}. Expected {{/if}}.',
         1,
