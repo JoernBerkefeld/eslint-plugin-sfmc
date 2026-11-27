@@ -154,8 +154,15 @@ export function parseForESLint(code) {
         const rawMessage = (ex && ex.message) || 'Handlebars syntax error.';
         const messageLines = rawMessage.split('\n').filter((line) => line.trim().length > 0);
         const error = new SyntaxError(messageLines.at(-1) || rawMessage);
-        error.lineNumber = loc ? Math.max(1, loc.first_line) : 1;
-        error.column = loc ? Math.max(1, loc.first_column + 1) : 1;
+        // Jison-class errors carry `hash.loc`; exception-class errors (a block
+        // closed with the wrong name) carry `lineNumber` and a 0-based `column`.
+        if (loc) {
+            error.lineNumber = Math.max(1, loc.first_line);
+            error.column = Math.max(1, loc.first_column + 1);
+        } else {
+            error.lineNumber = Math.max(1, ex?.lineNumber ?? 1);
+            error.column = Math.max(1, (ex?.column ?? 0) + 1);
+        }
         throw error;
     }
 

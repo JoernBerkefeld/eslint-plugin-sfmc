@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { test } from 'node:test';
 import { ESLint, Linter } from 'eslint';
 import * as ampParser from '../src/ampscript-parser.js';
+import * as hbsParser from '../src/handlebars-parser.js';
 import { parse as sharedParse } from 'ampscript-parser';
 import mso from 'eslint-plugin-mso-email';
 import { FUNCTIONS } from 'ampscript-data';
@@ -246,4 +247,32 @@ test('parser failures remain explicitly outside rule metadata', async () => {
     assert.equal(results[0].messages[0].ruleId, null);
     assert.equal(results[0].messages[0].fatal, true);
     assert.deepEqual(eslint.getRulesMetaForResults(results), {});
+});
+
+/**
+ * Parse Handlebars source and return the thrown error's message and position.
+ *
+ * @param {string} code - Template text.
+ * @returns {[string, number, number] | null} Message, line and column, or null when it parses.
+ */
+function hbsErrorOf(code) {
+    try {
+        hbsParser.parseForESLint(code);
+        return null;
+    } catch (ex) {
+        return [ex.message, ex.lineNumber, ex.column];
+    }
+}
+
+test('Handlebars parse errors carry a readable message and their real position', () => {
+    assert.deepEqual(hbsErrorOf('<p>a</p>\n{{upp'), [
+        "Unclosed expression {{upp: expected '}}'.",
+        2,
+        1,
+    ]);
+    assert.deepEqual(hbsErrorOf('{{#if a}}x{{/each}}'), [
+        '{{/each}} does not close {{#if}}. Expected {{/if}}.',
+        1,
+        4,
+    ]);
 });
